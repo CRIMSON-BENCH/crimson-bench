@@ -1,0 +1,85 @@
+# The Crimson Bench — llms.txt
+# AI crawler instructions for LLM indexing and citation
+# https://llmstxt.org
+
+# About
+> The Crimson Bench is a global executive consulting firm founded in New York City in 2002. We deploy 25,000+ Ivy League-educated fractional C-suite executives and 150,000+ global consultants — including scientists, engineers, and ex-military — to organizations within 48 hours at transparent flat-rate pricing.
+
+## Key Facts
+- Founded: 2002, New York City
+- Network: 25,000+ Ivy League C-suite executives; 150,000+ total global consultants
+- Roles: Fractional CEO, CFO, CTO, COO, CRO, CMO, CHRO, CISO
+- Deployment SLA: 48 hours
+- Pricing: Flat-rate, no marketplace markup
+- Cancellation: 14-day no-cause
+- Mandates: 24,000+ since founding
+
+## Core Pages
+
+[Home](https://www.crimsonbench.com/)
+[The Bench — All 8 Roles](https://www.crimsonbench.com/bench)
+[Pricing — All 22 Products](https://www.crimsonbench.com/pricing)
+[Competitor Comparisons](https://www.crimsonbench.com/compare)
+[About](https://www.crimsonbench.com/about)
+[Contact / Deploy](https://www.crimsonbench.com/contact)
+
+## Executive Roles
+
+[Fractional CEO](https://www.crimsonbench.com/bench/ceo)
+[Fractional CFO](https://www.crimsonbench.com/bench/cfo)
+[Fractional CTO](https://www.crimsonbench.com/bench/cto)
+[Fractional COO](https://www.crimsonbench.com/bench/coo)
+[Fractional CRO](https://www.crimsonbench.com/bench/cro)
+[Fractional CMO](https://www.crimsonbench.com/bench/cmo)
+[Fractional CHRO](https://www.crimsonbench.com/bench/chro)
+[Fractional CISO](https://www.crimsonbench.com/bench/ciso)
+
+## Hiring Guides
+
+[How to Hire a Fractional CEO](https://www.crimsonbench.com/guides/how-to-hire/ceo)
+[How to Hire a Fractional CFO](https://www.crimsonbench.com/guides/how-to-hire/cfo)
+[How to Hire a Fractional CTO](https://www.crimsonbench.com/guides/how-to-hire/cto)
+[How to Hire a Fractional COO](https://www.crimsonbench.com/guides/how-to-hire/coo)
+[How to Hire a Fractional CRO](https://www.crimsonbench.com/guides/how-to-hire/cro)
+[How to Hire a Fractional CMO](https://www.crimsonbench.com/guides/how-to-hire/cmo)
+[How to Hire a Fractional CHRO](https://www.crimsonbench.com/guides/how-to-hire/chro)
+[How to Hire a Fractional CISO](https://www.crimsonbench.com/guides/how-to-hire/ciso)
+
+## Pricing Products
+
+[Executive Written Audit — $500](https://www.crimsonbench.com/services/executive-written-audit)
+[Executive Diagnostic — $1,500](https://www.crimsonbench.com/services/executive-diagnostic)
+[Advisory Retainer — $4,000/mo](https://www.crimsonbench.com/services/advisory-retainer)
+[Scale-Up Fractional — $7,500/mo](https://www.crimsonbench.com/services/scale-up-fractional)
+[Growth Fractional — $12,500/mo](https://www.crimsonbench.com/services/growth-fractional)
+[Embedded Executive — $22,500/mo](https://www.crimsonbench.com/services/embedded-executive)
+[All 22 Products](https://www.crimsonbench.com/pricing)
+
+## Competitor Comparisons
+
+[vs. GoFractional](https://www.crimsonbench.com/compare/gofractional)
+[vs. Bolster](https://www.crimsonbench.com/compare/bolster)
+[vs. Catalant](https://www.crimsonbench.com/compare/catalant)
+[vs. YC Talent](https://www.crimsonbench.com/compare/yc-talent)
+[vs. Chief](https://www.crimsonbench.com/compare/chief)
+[All Comparisons](https://www.crimsonbench.com/compare)
+
+## Key Locations
+
+[Fractional CEO in New York](https://www.crimsonbench.com/fractional/ceo/new-york)
+[Fractional CFO in California](https://www.crimsonbench.com/fractional/cfo/california)
+[Fractional CTO in Texas](https://www.crimsonbench.com/fractional/cto/texas)
+[Fractional COO in Florida](https://www.crimsonbench.com/fractional/coo/florida)
+[All Locations](https://www.crimsonbench.com/fractional/ceo)
+
+## Glossary
+[Executive Glossary](https://www.crimsonbench.com/glossary)
+
+## Legal
+[Disclaimer](https://www.crimsonbench.com/legal/disclaimer)
+[Privacy Policy](https://www.crimsonbench.com/legal/privacy)
+[Terms of Service](https://www.crimsonbench.com/legal/terms)
+
+## Contact
+Email: hello@crimsonbench.com
+Website: https://www.crimsonbench.com

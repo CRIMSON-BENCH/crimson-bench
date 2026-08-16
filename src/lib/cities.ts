@@ -1,11 +1,5 @@
-export interface City {
-  name: string
-  slug: string
-  state: string       // full state name
-  stateSlug: string   // e.g. "new-york"
-  stateAbbr: string   // e.g. "NY"
-  population?: number // approximate
-}
+export type { City } from './city-types'
+import type { City } from './city-types'
 
 export const CITIES: City[] = [
   // ── NEW YORK ──
@@ -457,16 +451,30 @@ export const CITIES: City[] = [
   { name: 'Portsmouth', slug: 'portsmouth', state: 'New Hampshire', stateSlug: 'new-hampshire', stateAbbr: 'NH', population: 21956 },
 ]
 
+import { CITIES_WEST } from './cities-west'
+import { CITIES_SOUTH } from './cities-south'
+import { CITIES_MIDWEST } from './cities-midwest'
+import { CITIES_NORTHEAST } from './cities-northeast'
+
+
+export const ALL_CITIES: City[] = [
+  ...CITIES,
+  ...CITIES_WEST,
+  ...CITIES_SOUTH,
+  ...CITIES_MIDWEST,
+  ...CITIES_NORTHEAST,
+]
+
 export function getCityBySlug(slug: string): City | undefined {
-  return CITIES.find(c => c.slug === slug)
+  return ALL_CITIES.find(c => c.slug === slug)
 }
 
 export function getCitiesByState(stateSlug: string): City[] {
-  return CITIES.filter(c => c.stateSlug === stateSlug)
+  return ALL_CITIES.filter(c => c.stateSlug === stateSlug)
 }
 
 export function getAllCitySlugs(): { citySlug: string; stateSlug: string }[] {
-  return CITIES.map(c => ({ citySlug: c.slug, stateSlug: c.stateSlug }))
+  return ALL_CITIES.map(c => ({ citySlug: c.slug, stateSlug: c.stateSlug }))
 }
 
 export function toSlug(text: string): string {
