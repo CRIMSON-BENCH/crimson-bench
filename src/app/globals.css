@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --crimson: #B01C24;
+  --crimson-dark: #8A151C;
+  --slate-950: #020617;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100;
+  }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .btn-crimson {
+    @apply inline-block bg-[#B01C24] text-white font-mono text-xs tracking-widest uppercase px-6 py-3 hover:bg-[#8A151C] transition-colors;
+  }
+  .btn-outline {
+    @apply inline-block border border-[#B01C24] text-[#B01C24] font-mono text-xs tracking-widest uppercase px-6 py-3 hover:bg-[#B01C24] hover:text-white transition-colors;
+  }
+  .section-eyebrow {
+    @apply font-mono text-xs tracking-widest uppercase text-[#B01C24];
+  }
+  .section-heading {
+    @apply font-serif text-3xl font-normal tracking-tight text-slate-900 dark:text-slate-100;
+  }
+  .disclaimer {
+    @apply text-xs text-slate-400 dark:text-slate-600 leading-relaxed border-t border-slate-200 dark:border-slate-800 pt-6 mt-6;
+  }
+}
