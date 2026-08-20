@@ -449,6 +449,240 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'annual-operating-budget-model',
   },
+
+  {
+    id: 'cohort-ltv-simulator', name: 'Cohort Retention & LTV Simulator', category: 'Revenue',
+    tagline: 'Watch one cohort decay — and see its true lifetime value.',
+    description: 'Track a single customer cohort month by month as churn erodes it, and see cumulative revenue and lifetime value per customer. The honest way to value a customer.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cohort', label: 'Cohort size', default: 100 },
+      { key: 'arpu', label: 'Monthly revenue / customer', default: 50, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 80, suffix: '%' },
+      { key: 'churn', label: 'Monthly churn', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cum = 0
+      let active = v.cohort
+      for (let m = 1; m <= 12; m++) {
+        active = v.cohort * Math.pow(1 - v.churn / 100, m - 1)
+        const rev = active * v.arpu * (v.margin / 100)
+        cum += rev
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(active).toString(), money(rev), money(cum)])
+      }
+      const retained = Math.pow(1 - v.churn / 100, 11)
+      return {
+        metrics: [
+          { label: 'Retained at 12mo', value: pct(retained) },
+          { label: 'LTV / customer', value: money(v.cohort > 0 ? cum / v.cohort : 0), highlight: true },
+          { label: 'Cohort value (12mo)', value: money(cum), highlight: true },
+        ],
+        columns: ['Month', 'Active', 'Margin Revenue', 'Cumulative'],
+        rows,
+        note: `Each customer is worth about ${money(v.cohort > 0 ? cum / v.cohort : 0)} in the first year. Churn is the lever — halving it roughly doubles this without a single new sale.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'sales-pipeline-forecast', name: 'Sales Pipeline Forecast Simulator', category: 'Revenue',
+    tagline: 'Turn top-of-funnel into a revenue forecast you can defend.',
+    description: 'Enter leads and stage-by-stage conversion rates to see how many deals and how much revenue your pipeline actually produces — and where it leaks.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'leads', label: 'Leads', default: 500 },
+      { key: 'mql', label: 'Lead → MQL', default: 40, suffix: '%' },
+      { key: 'sql', label: 'MQL → SQL', default: 50, suffix: '%' },
+      { key: 'win', label: 'SQL → Won', default: 25, suffix: '%' },
+      { key: 'deal', label: 'Average deal size', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const mql = v.leads * (v.mql / 100)
+      const sql = mql * (v.sql / 100)
+      const won = sql * (v.win / 100)
+      const revenue = won * v.deal
+      return {
+        metrics: [
+          { label: 'Deals won', value: won.toFixed(0) },
+          { label: 'Revenue', value: money(revenue), highlight: true },
+          { label: 'Lead → won', value: pct(v.leads > 0 ? won / v.leads : 0), highlight: true },
+        ],
+        columns: ['Stage', 'Count', 'Conversion'],
+        rows: [
+          ['Leads', Math.round(v.leads).toString(), '—'],
+          ['MQLs', Math.round(mql).toString(), pct(v.mql / 100)],
+          ['SQLs', Math.round(sql).toString(), pct(v.sql / 100)],
+          ['Won', won.toFixed(1), pct(v.win / 100)],
+        ],
+        note: `This pipeline yields about ${money(revenue)}. Find your weakest conversion stage — a 2x there beats a 10% lift everywhere else, and it costs nothing but focus.`,
+      }
+    },
+    sells: 'sales-playbook-template',
+  },
+  {
+    id: 'annual-budget-simulator', name: 'Annual Budget Simulator', category: 'Finance',
+    tagline: 'Allocate revenue across departments and see the profit left.',
+    description: 'Set departmental spend as a percentage of revenue and instantly see the budget, operating profit, and margin — a board-ready budget in seconds.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Revenue', default: 2000000, prefix: '$' },
+      { key: 'payroll', label: 'Payroll %', default: 45, suffix: '%' },
+      { key: 'marketing', label: 'Marketing %', default: 15, suffix: '%' },
+      { key: 'product', label: 'Product / R&D %', default: 12, suffix: '%' },
+      { key: 'gna', label: 'G&A %', default: 10, suffix: '%' },
+    ],
+    compute: v => {
+      const depts = [
+        ['Payroll', v.payroll], ['Marketing', v.marketing], ['Product / R&D', v.product], ['G&A', v.gna],
+      ] as [string, number][]
+      const rows = depts.map(([name, pct2]) => [name, money(v.revenue * (pct2 / 100)), `${pct2}%`])
+      const totalPct = depts.reduce((a, [, p]) => a + p, 0)
+      const opex = v.revenue * (totalPct / 100)
+      const profit = v.revenue - opex
+      return {
+        metrics: [
+          { label: 'Total opex', value: money(opex) },
+          { label: 'Operating profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Operating margin', value: pct(v.revenue > 0 ? profit / v.revenue : 0), highlight: true },
+        ],
+        columns: ['Department', 'Budget', '% of Revenue'],
+        rows: [...rows, ['Operating profit', money(profit), pct(v.revenue > 0 ? profit / v.revenue : 0)]],
+        note: profit < 0 ? `Your allocations spend more than you earn — margin is negative. Something has to come down before this is a real budget.` : `A ${pct(v.revenue > 0 ? profit / v.revenue : 0)} operating margin. Budget from a target profit backward, not spending forward — it forces the hard trade-offs early.`,
+      }
+    },
+    sells: 'annual-operating-budget-model',
+  },
+  {
+    id: 'debt-payoff-schedule', name: 'Debt Payoff Schedule Simulator', category: 'Finance',
+    tagline: 'The full year-by-year path out of debt.',
+    description: 'Enter a balance, APR, and monthly payment to generate a complete payoff schedule — how each year splits between interest and principal until you hit zero.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Balance', default: 25000, prefix: '$' },
+      { key: 'apr', label: 'APR', default: 18, suffix: '%' },
+      { key: 'payment', label: 'Monthly payment', default: 600, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.apr / 1200
+      const rows: string[][] = []
+      let bal = v.balance, totalInt = 0, months = 0
+      if (v.payment <= bal * r) {
+        return { metrics: [{ label: 'Months to payoff', value: 'Never', highlight: true }, { label: 'Warning', value: 'Payment ≤ interest' }, { label: 'Total interest', value: '∞' }], columns: ['Year', 'Paid', 'Interest', 'Balance'], rows: [['—', '—', '—', money(bal)]], note: `Your payment barely covers interest — the balance never falls. Raise the payment above the monthly interest to make any progress at all.` }
+      }
+      for (let y = 1; y <= 30 && bal > 0; y++) {
+        let yearInt = 0, yearPaid = 0
+        for (let m = 0; m < 12 && bal > 0; m++) {
+          const i = bal * r
+          const principal = Math.min(v.payment - i, bal)
+          bal -= principal; yearInt += i; yearPaid += principal + i; totalInt += i; months++
+        }
+        rows.push([`Year ${y}`, money(yearPaid), money(yearInt), money(Math.max(0, bal))])
+      }
+      return {
+        metrics: [
+          { label: 'Months to payoff', value: months.toString(), highlight: true },
+          { label: 'Total interest', value: money(totalInt), highlight: true },
+          { label: 'Total paid', value: money(v.balance + totalInt) },
+        ],
+        columns: ['Year', 'Paid', 'Interest', 'Balance'],
+        rows,
+        note: `You're debt-free in ${months} months, paying ${money(totalInt)} of interest. Adding even $50/month to the payment cuts both the time and the interest sharply.`,
+      }
+    },
+    sells: 'annual-operating-budget-model',
+  },
+  {
+    id: 'retirement-projection-simulator', name: 'Retirement Projection Simulator', category: 'Money',
+    tagline: 'Watch your nest egg grow to your retirement year.',
+    description: 'Project savings from your current age to retirement with contributions and compounding. See your balance climb — and how much of it is pure growth.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'age', label: 'Current age', default: 35 },
+      { key: 'retire', label: 'Retirement age', default: 65 },
+      { key: 'savings', label: 'Current savings', default: 50000, prefix: '$' },
+      { key: 'monthly', label: 'Monthly contribution', default: 1000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 7, suffix: '%' },
+    ],
+    compute: v => {
+      const years = Math.max(0, v.retire - v.age)
+      const r = v.return / 1200
+      const rows: string[][] = []
+      let bal = v.savings, contributed = v.savings
+      for (let y = 1; y <= years; y++) {
+        for (let m = 0; m < 12; m++) { bal = bal * (1 + r) + v.monthly; contributed += v.monthly }
+        if (y % 5 === 0 || y === years) rows.push([`Age ${v.age + y}`, money(bal), money(contributed)])
+      }
+      return {
+        metrics: [
+          { label: 'Balance at retirement', value: money(bal), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Growth', value: money(bal - contributed), highlight: true },
+        ],
+        columns: ['Age', 'Balance', 'Contributed'],
+        rows,
+        note: `You'd retire with about ${money(bal)} — and ${money(bal - contributed)} of it is compounding, not your own deposits. Starting earlier matters more than saving more.`,
+      }
+    },
+  },
+  {
+    id: 'marketing-growth-simulator', name: 'Marketing Growth Simulator', category: 'Marketing',
+    tagline: 'Turn ad spend into a 12-month customer and revenue curve.',
+    description: 'Model spend, CAC, churn, and ARPU forward a year to see your active customers and MRR — and whether your spend actually compounds or just treads water.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'spend', label: 'Monthly spend', default: 20000, prefix: '$' },
+      { key: 'cac', label: 'CAC', default: 40, prefix: '$' },
+      { key: 'churn', label: 'Monthly churn', default: 4, suffix: '%' },
+      { key: 'arpu', label: 'ARPU / month', default: 60, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let active = 0
+      const newPer = v.cac > 0 ? v.spend / v.cac : 0
+      for (let m = 1; m <= 12; m++) {
+        active = active * (1 - v.churn / 100) + newPer
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(newPer).toString(), Math.round(active).toString(), money(active * v.arpu)])
+      }
+      return {
+        metrics: [
+          { label: 'Customers (mo 12)', value: Math.round(active).toString(), highlight: true },
+          { label: 'MRR (mo 12)', value: money(active * v.arpu), highlight: true },
+          { label: 'CAC payback', value: `${(v.arpu > 0 ? v.cac / v.arpu : 0).toFixed(1)} mo` },
+        ],
+        columns: ['Month', 'New', 'Active', 'MRR'],
+        rows,
+        note: `Spend builds to about ${money(active * v.arpu)} MRR by month 12. If active customers plateau, churn is eating your spend — fix retention before adding budget.`,
+      }
+    },
+    sells: 'marketing-metrics-dashboard',
+  },
+  {
+    id: 'cash-runway-scenarios', name: 'Cash Runway Scenario Simulator', category: 'Finance',
+    tagline: 'Three burn scenarios, side by side.',
+    description: 'Enter cash and burn to compare lean, base, and growth spending scenarios — and exactly how many months each one buys you.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cash', label: 'Cash in bank', default: 500000, prefix: '$' },
+      { key: 'burn', label: 'Base monthly burn', default: 80000, prefix: '$' },
+    ],
+    compute: v => {
+      const scenarios: [string, number][] = [['Lean (−30%)', v.burn * 0.7], ['Base', v.burn], ['Growth (+40%)', v.burn * 1.4]]
+      const rows = scenarios.map(([name, burn]) => [name, money(burn), burn > 0 ? `${(v.cash / burn).toFixed(1)} mo` : '∞'])
+      const base = v.burn > 0 ? v.cash / v.burn : 0
+      return {
+        metrics: [
+          { label: 'Lean runway', value: `${(v.cash / (v.burn * 0.7)).toFixed(1)} mo` },
+          { label: 'Base runway', value: `${base.toFixed(1)} mo`, highlight: true },
+          { label: 'Growth runway', value: `${(v.cash / (v.burn * 1.4)).toFixed(1)} mo` },
+        ],
+        columns: ['Scenario', 'Monthly Burn', 'Runway'],
+        rows,
+        note: `Base case gives you about ${base.toFixed(1)} months. Decide which scenario you're in *before* the market does — raise or cut with 9–12 months left, never 3.`,
+      }
+    },
+    sells: 'runway-burn-tracker',
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
