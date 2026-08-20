@@ -12,7 +12,7 @@ import JsonLd from '@/components/JsonLd'
 import { orgSchema, faqSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
-  title: 'Digital Products — 100+ Executive Templates, Models & Playbooks | The Crimson Bench',
+  title: 'Digital Products — 500+ Executive Templates, Models & Playbooks',
   description:
     'Instant-download templates, financial models, and playbooks built by Ivy League-educated operators. Board decks, 13-week cash models, 100-day plans, sales playbooks and more — from $39. Buy once, download instantly, keep forever.',
   alternates: { canonical: '/digital-products' },

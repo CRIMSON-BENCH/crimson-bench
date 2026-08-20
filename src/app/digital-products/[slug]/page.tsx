@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const product = getDigitalProductById(slug)
   if (!product) return {}
   return {
-    title: `${product.name} — ${formatDigitalPrice(product)} Instant Download | The Crimson Bench`,
+    title: `${product.name} — ${formatDigitalPrice(product)} Instant Download`,
     description: `${product.tagline} ${product.description}`,
     alternates: { canonical: `/digital-products/${product.id}` },
   }
