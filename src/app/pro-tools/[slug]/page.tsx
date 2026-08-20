@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PRO_TOOLS, getProToolById } from '@/lib/pro-tools'
 import { getDigitalProductById, formatDigitalPrice } from '@/lib/digital-products'
-import ProToolRunner from '@/components/ProToolRunner'
+import ProGate from '@/components/ProGate'
 import Breadcrumb from '@/components/Breadcrumb'
 import CTABlock from '@/components/CTABlock'
 import JsonLd from '@/components/JsonLd'
@@ -68,7 +68,7 @@ export default async function ProToolPage({ params }: { params: Promise<{ slug: 
       {/* The simulator */}
       <section className="px-6 py-12">
         <div className="max-w-5xl mx-auto">
-          <ProToolRunner id={tool.id} />
+          <ProGate id={tool.id} />
 
           {/* Pro unlock bar */}
           <div className="mt-6 border border-[#F0B34A]/40 bg-[#F0B34A]/5 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

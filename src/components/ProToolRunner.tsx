@@ -3,8 +3,9 @@
 import { useMemo, useState } from 'react'
 import { getProToolById } from '@/lib/pro-tools'
 import { downloadResults, requestAIAnalysis } from '@/lib/tool-actions'
+import { TOOLKIT_PRO_URL } from '@/lib/entitlement'
 
-export default function ProToolRunner({ id }: { id: string }) {
+export default function ProToolRunner({ id, locked = false }: { id: string; locked?: boolean }) {
   const tool = getProToolById(id)
   const [vals, setVals] = useState<Record<string, number>>(
     () => Object.fromEntries((tool?.inputs ?? []).map(i => [i.key, i.default]))
@@ -14,6 +15,9 @@ export default function ProToolRunner({ id }: { id: string }) {
 
   const result = useMemo(() => (tool ? tool.compute(vals) : null), [tool, vals])
   if (!tool || !result) return null
+
+  const visibleRows = locked ? result.rows.slice(0, 2) : result.rows
+  const hiddenRows = locked ? result.rows.slice(2) : []
 
   const onDownload = () => {
     const rows: [string, string][] = [
@@ -81,7 +85,7 @@ export default function ProToolRunner({ id }: { id: string }) {
                 </tr>
               </thead>
               <tbody>
-                {result.rows.map((row, i) => (
+                {visibleRows.map((row, i) => (
                   <tr key={i} className="border-t border-white/10">
                     {row.map((cell, j) => (
                       <td key={j} className={`py-2.5 pr-6 whitespace-nowrap tabular-nums ${j === 0 ? 'text-white/70 font-mono text-xs' : 'text-white/90 font-mono'}`}>{cell}</td>
@@ -91,23 +95,59 @@ export default function ProToolRunner({ id }: { id: string }) {
               </tbody>
             </table>
           </div>
-          <div className="mt-6 border-l-2 border-[#B01C24] pl-4">
-            <p className="font-mono text-[10px] tracking-widest uppercase text-[#F0B34A] mb-1">The Operator&apos;s Read</p>
-            <p className="text-sm text-white/85 leading-relaxed">{result.note}</p>
-          </div>
+
+          {/* Locked preview: blurred remaining rows + unlock overlay */}
+          {locked && hiddenRows.length > 0 && (
+            <div className="relative mt-1 overflow-hidden">
+              <div className="pointer-events-none select-none blur-[6px] opacity-60">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {hiddenRows.map((row, i) => (
+                      <tr key={i} className="border-t border-white/10">
+                        {row.map((cell, j) => (
+                          <td key={j} className={`py-2.5 pr-6 whitespace-nowrap tabular-nums ${j === 0 ? 'text-white/70 font-mono text-xs' : 'text-white/90 font-mono'}`}>{cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-gradient-to-b from-transparent to-black/60 px-6">
+                <p className="text-2xl mb-1">🔒</p>
+                <p className="text-white font-serif text-lg mb-1">Unlock the full projection</p>
+                <p className="text-white/60 text-sm mb-4">Every row, plus Excel/PDF export and AI analysis.</p>
+                <a href={TOOLKIT_PRO_URL} className="btn-crimson py-2.5 px-6">Unlock Toolkit Pro →</a>
+              </div>
+            </div>
+          )}
+
+          {/* Operator's read (unlocked) */}
+          {!locked && (
+            <div className="mt-6 border-l-2 border-[#B01C24] pl-4">
+              <p className="font-mono text-[10px] tracking-widest uppercase text-[#F0B34A] mb-1">The Operator&apos;s Read</p>
+              <p className="text-sm text-white/85 leading-relaxed">{result.note}</p>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="mt-4 flex flex-wrap gap-3">
-        <button onClick={onDownload} className="btn-outline py-2 px-4 text-sm">↓ Download projection (CSV)</button>
-        <button onClick={onAI} disabled={aiState === 'loading'} className="btn-crimson py-2 px-4 text-sm disabled:opacity-60">
-          {aiState === 'loading' ? 'Analyzing…' : '✦ Get AI analysis'}
-        </button>
-        <a href="/contact" className="btn-outline py-2 px-4 text-sm">Ask an operator →</a>
-      </div>
+      {locked ? (
+        <div className="mt-4 border border-[#F0B34A]/40 bg-[#F0B34A]/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm text-slate-700 dark:text-slate-300">🔒 Save scenarios, export to Excel &amp; PDF, run AI analysis, and unlock every simulator.</p>
+          <a href={TOOLKIT_PRO_URL} className="btn-crimson py-2.5 px-5 whitespace-nowrap">Unlock Toolkit Pro →</a>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button onClick={onDownload} className="btn-outline py-2 px-4 text-sm">↓ Download projection (CSV)</button>
+          <button onClick={onAI} disabled={aiState === 'loading'} className="btn-crimson py-2 px-4 text-sm disabled:opacity-60">
+            {aiState === 'loading' ? 'Analyzing…' : '✦ Get AI analysis'}
+          </button>
+          <a href="/contact" className="btn-outline py-2 px-4 text-sm">Ask an operator →</a>
+        </div>
+      )}
 
-      {(aiText || aiState === 'soon' || aiState === 'error') && (
+      {!locked && (aiText || aiState === 'soon' || aiState === 'error') && (
         <div className="mt-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6">
           <p className="font-mono text-[10px] tracking-widest uppercase text-[#B01C24] mb-2">AI Analysis</p>
           {aiState === 'soon' && (
