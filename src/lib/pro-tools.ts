@@ -1037,6 +1037,348 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'annual-operating-budget-model',
   },
+
+  {
+    id: 'saas-arr-buildout-simulator', name: 'SaaS ARR Buildout Simulator', category: 'SaaS',
+    tagline: 'Project ARR from new logos, expansion, and churn.',
+    description: 'Model 24 months of ARR: new bookings plus expansion against gross churn, to see recurring revenue compound.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'arr', label: 'Starting ARR', default: 1000000, prefix: '$' },
+      { key: 'newARR', label: 'New ARR / month', default: 80000, prefix: '$' },
+      { key: 'expansion', label: 'Monthly expansion', default: 1.5, suffix: '%' },
+      { key: 'churn', label: 'Monthly gross churn', default: 1, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let arr = v.arr
+      for (let m = 1; m <= 24; m++) {
+        arr = arr + v.newARR + arr * (v.expansion / 100) - arr * (v.churn / 100)
+        if (m % 3 === 0) rows.push([`Month ${m}`, money(arr), money(arr / 12)])
+      }
+      return {
+        metrics: [
+          { label: 'ARR (mo 24)', value: money(arr), highlight: true },
+          { label: 'MRR (mo 24)', value: money(arr / 12), highlight: true },
+          { label: 'Multiple of start', value: `${(v.arr > 0 ? arr / v.arr : 0).toFixed(1)}x` },
+        ],
+        columns: ['Month', 'ARR', 'MRR'],
+        rows,
+        note: `Expansion above churn means the base grows itself — new logos then compound on a rising floor. Net revenue retention is the quiet engine of every great SaaS ARR curve.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'healthcare-practice-simulator', name: 'Healthcare Practice Revenue Simulator', category: 'Healthcare',
+    tagline: 'Project practice revenue as the patient panel grows.',
+    description: 'Model a year of patient-panel growth against attrition to see how monthly revenue builds.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'patients', label: 'Starting patients', default: 3000 },
+      { key: 'new', label: 'New patients / month', default: 60 },
+      { key: 'attrition', label: 'Monthly attrition', default: 1, suffix: '%' },
+      { key: 'annualValue', label: 'Annual value / patient', default: 300, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let p = v.patients
+      for (let m = 1; m <= 12; m++) {
+        p = p * (1 - v.attrition / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(p).toString(), money(p * v.annualValue / 12)])
+      }
+      return {
+        metrics: [
+          { label: 'Patients (mo 12)', value: Math.round(p).toString(), highlight: true },
+          { label: 'Monthly revenue', value: money(p * v.annualValue / 12), highlight: true },
+          { label: 'Annualized', value: money(p * v.annualValue) },
+        ],
+        columns: ['Month', 'Patients', 'Monthly Revenue'],
+        rows,
+        note: `Attrition sets the ceiling — the panel plateaus where new patients equal those lost. Recall systems and access (getting patients seen) lower attrition and lift the plateau.`,
+      }
+    },
+  },
+  {
+    id: 'dental-production-simulator', name: 'Dental Production Ramp Simulator', category: 'Dental',
+    tagline: 'Project production as your patient base grows.',
+    description: 'Model a year of patient growth and per-patient production to see monthly production build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'patients', label: 'Active patients', default: 1500 },
+      { key: 'new', label: 'New patients / month', default: 40 },
+      { key: 'attrition', label: 'Monthly attrition', default: 0.5, suffix: '%' },
+      { key: 'prod', label: 'Production / patient / month', default: 75, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let p = v.patients
+      for (let m = 1; m <= 12; m++) {
+        p = p * (1 - v.attrition / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(p).toString(), money(p * v.prod)])
+      }
+      return {
+        metrics: [
+          { label: 'Patients (mo 12)', value: Math.round(p).toString(), highlight: true },
+          { label: 'Monthly production', value: money(p * v.prod), highlight: true },
+          { label: 'Annualized', value: money(p * v.prod * 12) },
+        ],
+        columns: ['Month', 'Patients', 'Monthly Production'],
+        rows,
+        note: `New-patient flow drives the ramp, but production per patient — hygiene recall plus accepted treatment — is what separates a busy practice from a profitable one.`,
+      }
+    },
+  },
+  {
+    id: 'mortgage-payoff-simulator', name: 'Mortgage Payoff Simulator', category: 'Money',
+    tagline: 'See how extra payments crush a mortgage.',
+    description: 'Enter your mortgage plus an extra monthly payment to see how many years and how much interest you save.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Loan balance', default: 350000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate', default: 6.5, suffix: '%' },
+      { key: 'payment', label: 'Monthly payment (P&I)', default: 2200, prefix: '$' },
+      { key: 'extra', label: 'Extra payment / month', default: 300, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.rate / 1200
+      const pay = v.payment + v.extra
+      const rows: string[][] = []
+      let bal = v.balance, totalInt = 0, months = 0
+      if (pay <= bal * r) {
+        return { metrics: [{ label: 'Payoff', value: 'Never', highlight: true }, { label: 'Note', value: 'Payment ≤ interest' }], columns: ['Year', 'Interest', 'Balance'], rows: [['—', '—', money(bal)]], note: `The payment barely covers interest — raise it above the monthly interest to make progress.` }
+      }
+      for (let y = 1; y <= 40 && bal > 0; y++) {
+        let yInt = 0
+        for (let m = 0; m < 12 && bal > 0; m++) { const i = bal * r; const p = Math.min(pay - i, bal); bal -= p; yInt += i; totalInt += i; months++ }
+        rows.push([`Year ${y}`, money(yInt), money(Math.max(0, bal))])
+      }
+      return {
+        metrics: [
+          { label: 'Payoff time', value: `${(months / 12).toFixed(1)} yr`, highlight: true },
+          { label: 'Total interest', value: money(totalInt), highlight: true },
+          { label: 'Months saved', value: `${Math.max(0, 360 - months)}` },
+        ],
+        columns: ['Year', 'Interest', 'Balance'],
+        rows,
+        note: `An extra $${v.extra}/month pays the loan off in about ${(months / 12).toFixed(1)} years. Extra principal early is astonishingly powerful — it skips all the future interest that dollar would have carried.`,
+      }
+    },
+  },
+  {
+    id: 'savings-goal-simulator', name: 'Savings Goal Simulator', category: 'Money',
+    tagline: 'How long until you hit your number.',
+    description: 'Enter a goal, current savings, monthly contribution, and return to see how long it takes to get there.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'goal', label: 'Savings goal', default: 100000, prefix: '$' },
+      { key: 'current', label: 'Current savings', default: 10000, prefix: '$' },
+      { key: 'monthly', label: 'Monthly contribution', default: 800, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const r = v.return / 1200
+      const rows: string[][] = []
+      let bal = v.current, months = 0, contributed = v.current
+      while (bal < v.goal && months < 600) { bal = bal * (1 + r) + v.monthly; contributed += v.monthly; months++; if (months % 12 === 0) rows.push([`Year ${months / 12}`, money(bal), money(contributed)]) }
+      if (bal < v.goal) rows.push(['50 yr', money(bal), money(contributed)])
+      return {
+        metrics: [
+          { label: 'Time to goal', value: bal >= v.goal ? `${(months / 12).toFixed(1)} yr` : '50+ yr', highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Growth earned', value: money(Math.max(0, v.goal - contributed)) },
+        ],
+        columns: ['Year', 'Balance', 'Contributed'],
+        rows,
+        note: `You reach the goal in about ${(months / 12).toFixed(1)} years. Raising the monthly contribution shortens this far more than chasing a higher return early on — savings rate beats rate of return until the balance is large.`,
+      }
+    },
+  },
+  {
+    id: 'subscription-box-simulator', name: 'Subscription Box Growth Simulator', category: 'E-Commerce',
+    tagline: 'Project subscribers and revenue against churn.',
+    description: 'Model a year of a subscription box: new sign-ups against churn, with MRR and monthly contribution.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Starting subscribers', default: 500 },
+      { key: 'new', label: 'New subs / month', default: 80 },
+      { key: 'churn', label: 'Monthly churn', default: 8, suffix: '%' },
+      { key: 'price', label: 'Box price', default: 40, prefix: '$' },
+      { key: 'cogs', label: 'Box COGS', default: 18, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let subs = v.start
+      for (let m = 1; m <= 12; m++) {
+        subs = subs * (1 - v.churn / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(subs).toString(), money(subs * v.price), money(subs * (v.price - v.cogs))])
+      }
+      return {
+        metrics: [
+          { label: 'Subscribers (mo 12)', value: Math.round(subs).toString(), highlight: true },
+          { label: 'MRR (mo 12)', value: money(subs * v.price), highlight: true },
+          { label: 'Monthly contribution', value: money(subs * (v.price - v.cogs)) },
+        ],
+        columns: ['Month', 'Subscribers', 'MRR', 'Contribution'],
+        rows,
+        note: `At 8% churn you replace nearly your whole base each year — subscription boxes live or die on the first three shipments. Onboarding and product delight beat acquisition every time.`,
+      }
+    },
+  },
+  {
+    id: 'coaching-cohort-simulator', name: 'Coaching Cohort Revenue Simulator', category: 'Creator',
+    tagline: 'Project revenue from cohort-based programs.',
+    description: 'Model quarterly cohorts at your size and price to project a year of program revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'size', label: 'Cohort size', default: 20 },
+      { key: 'price', label: 'Price per seat', default: 2000, prefix: '$' },
+      { key: 'cohortsPerQuarter', label: 'Cohorts / quarter', default: 1 },
+      { key: 'growth', label: 'Cohort size growth / qtr', default: 10, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let size = v.size, yearRevenue = 0
+      for (let q = 1; q <= 4; q++) {
+        if (q > 1) size *= 1 + v.growth / 100
+        const seats = size * v.cohortsPerQuarter
+        const revenue = seats * v.price
+        yearRevenue += revenue
+        rows.push([`Q${q}`, Math.round(seats).toString(), money(revenue)])
+      }
+      return {
+        metrics: [
+          { label: 'Year revenue', value: money(yearRevenue), highlight: true },
+          { label: 'Q4 revenue', value: money(size * v.cohortsPerQuarter * v.price), highlight: true },
+          { label: 'Per-seat price', value: money(v.price) },
+        ],
+        columns: ['Quarter', 'Seats', 'Revenue'],
+        rows,
+        note: `Cohort models create urgency and community that evergreen courses lack — and let you raise price as demand grows. Filling each cohort fuller is the cleanest lever on this revenue.`,
+      }
+    },
+    sells: 'digital-product-launch-kit',
+  },
+  {
+    id: 'brrrr-portfolio-simulator', name: 'BRRRR Portfolio Simulator', category: 'Real Estate',
+    tagline: 'Recycle capital into a growing rental portfolio.',
+    description: 'Model acquiring properties each year via BRRRR and watch your doors and monthly cash flow compound.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dealsPerYear', label: 'Deals per year', default: 3 },
+      { key: 'cashFlow', label: 'Cash flow / door / month', default: 300, prefix: '$' },
+      { key: 'years', label: 'Years', default: 5 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let properties = 0
+      const yrs = Math.min(Math.max(v.years, 1), 20)
+      for (let y = 1; y <= yrs; y++) {
+        properties += v.dealsPerYear
+        rows.push([`Year ${y}`, properties.toString(), money(properties * v.cashFlow), money(properties * v.cashFlow * 12)])
+      }
+      return {
+        metrics: [
+          { label: 'Doors', value: properties.toString(), highlight: true },
+          { label: 'Monthly cash flow', value: money(properties * v.cashFlow), highlight: true },
+          { label: 'Annual cash flow', value: money(properties * v.cashFlow * 12) },
+        ],
+        columns: ['Year', 'Doors', 'Monthly Cash Flow', 'Annual'],
+        rows,
+        note: `BRRRR's magic is recycling the same capital deal after deal — so the portfolio compounds without new savings. The real constraints are deal flow and financing, not cash.`,
+      }
+    },
+  },
+  {
+    id: 'franchise-expansion-simulator', name: 'Franchise Expansion Simulator', category: 'Franchise',
+    tagline: 'Project system revenue as you open units.',
+    description: 'Model opening units over several years to see system revenue and owner profit scale.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Starting units', default: 1 },
+      { key: 'newPerYear', label: 'New units / year', default: 1 },
+      { key: 'revPerUnit', label: 'Revenue per unit', default: 800000, prefix: '$' },
+      { key: 'margin', label: 'Unit margin', default: 12, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let units = v.start
+      for (let y = 1; y <= 5; y++) {
+        if (y > 1) units += v.newPerYear
+        const rev = units * v.revPerUnit
+        rows.push([`Year ${y}`, units.toString(), money(rev), money(rev * (v.margin / 100))])
+      }
+      return {
+        metrics: [
+          { label: 'Units (yr 5)', value: units.toString(), highlight: true },
+          { label: 'System revenue', value: money(units * v.revPerUnit), highlight: true },
+          { label: 'Owner profit', value: money(units * v.revPerUnit * (v.margin / 100)) },
+        ],
+        columns: ['Year', 'Units', 'System Revenue', 'Profit'],
+        rows,
+        note: `Multi-unit ownership spreads management overhead across locations, so later units are often more profitable than the first. The constraint is usually operators and capital, not demand.`,
+      }
+    },
+  },
+  {
+    id: 'nonprofit-sustainer-simulator', name: 'Nonprofit Sustainer Growth Simulator', category: 'Nonprofit',
+    tagline: 'Project recurring donor revenue over a year.',
+    description: 'Model monthly-donor growth against churn to see your recurring giving base build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Starting sustainers', default: 300 },
+      { key: 'new', label: 'New sustainers / month', default: 40 },
+      { key: 'churn', label: 'Monthly churn', default: 2, suffix: '%' },
+      { key: 'gift', label: 'Average monthly gift', default: 25, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let s = v.start
+      for (let m = 1; m <= 12; m++) {
+        s = s * (1 - v.churn / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(s).toString(), money(s * v.gift)])
+      }
+      return {
+        metrics: [
+          { label: 'Sustainers (mo 12)', value: Math.round(s).toString(), highlight: true },
+          { label: 'Monthly giving', value: money(s * v.gift), highlight: true },
+          { label: 'Annual recurring', value: money(s * v.gift * 12) },
+        ],
+        columns: ['Month', 'Sustainers', 'Monthly Giving'],
+        rows,
+        note: `Sustainer revenue is the most stable money a nonprofit can build — low churn, low cost, and it funds the mission predictably. Growing this base beats chasing one-time gifts.`,
+      }
+    },
+  },
+  {
+    id: 'insurance-book-simulator', name: 'Insurance Book Growth Simulator', category: 'Advisor',
+    tagline: 'Project your book and recurring commission.',
+    description: 'Model premium book growth from new business and retention to see recurring commission build over years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'premium', label: 'Starting book premium', default: 2000000, prefix: '$' },
+      { key: 'newPerYear', label: 'New premium / year', default: 400000, prefix: '$' },
+      { key: 'retention', label: 'Retention rate', default: 88, suffix: '%' },
+      { key: 'commission', label: 'Commission rate', default: 12, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let premium = v.premium
+      for (let y = 1; y <= 5; y++) {
+        premium = premium * (v.retention / 100) + v.newPerYear
+        rows.push([`Year ${y}`, money(premium), money(premium * (v.commission / 100))])
+      }
+      return {
+        metrics: [
+          { label: 'Book (yr 5)', value: money(premium), highlight: true },
+          { label: 'Commission (yr 5)', value: money(premium * (v.commission / 100)), highlight: true },
+        ],
+        columns: ['Year', 'Book Premium', 'Commission'],
+        rows,
+        note: `Retention compounds a book into an annuity — each renewal pays again for little new effort. It's why a high-retention insurance book sells for a healthy multiple of commission.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
