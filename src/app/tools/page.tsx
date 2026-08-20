@@ -31,6 +31,17 @@ export default function ToolsPage() {
         </div>
       </section>
 
+      {/* Pro upsell banner */}
+      <section className="bg-slate-900 dark:bg-black px-6 py-8">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] tracking-widest uppercase text-[#F0B34A] mb-1">Toolkit Pro</p>
+            <p className="text-white/85">Need to model the whole business? Full simulators — 5-year projections, dilution, growth &amp; valuation.</p>
+          </div>
+          <a href="/pro-tools" className="btn-crimson py-2.5 px-5 whitespace-nowrap">See the Pro Simulators →</a>
+        </div>
+      </section>
+
       <div className="max-w-6xl mx-auto px-6 py-16 space-y-14">
         {sections.map(section => (
           <div key={section.label}>

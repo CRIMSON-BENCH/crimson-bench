@@ -34,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/bench" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">The Bench</a>
               <a href="/pricing" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Pricing</a>
               <a href="/tools" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Tools</a>
+              <a href="/pro-tools" className="font-mono text-xs tracking-wider uppercase text-[#B0801A] dark:text-[#F0B34A] hover:text-[#B01C24] transition-colors">Pro</a>
               <a href="/digital-products" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Store</a>
               <a href="/blog" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Insights</a>
               <a href="/glossary" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Glossary</a>
