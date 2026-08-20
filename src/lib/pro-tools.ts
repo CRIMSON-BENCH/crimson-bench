@@ -1379,6 +1379,392 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'hotel-revenue-simulator', name: 'Hotel Revenue Simulator', category: 'Hospitality',
+    tagline: 'Project revenue as occupancy ramps at your ADR.',
+    description: 'Model a year of hotel revenue: occupancy climbing toward stabilization at your average daily rate, with monthly revenue and RevPAR.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rooms', label: 'Rooms', default: 80 },
+      { key: 'occ', label: 'Starting occupancy', default: 60, suffix: '%' },
+      { key: 'ramp', label: 'Occupancy gain / month (pts)', default: 1.5 },
+      { key: 'adr', label: 'Average daily rate', default: 150, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let occ = v.occ
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) occ = Math.min(95, occ + v.ramp)
+        const revenue = v.rooms * (occ / 100) * v.adr * 30
+        if (m % 2 === 0) rows.push([`Month ${m}`, `${occ.toFixed(0)}%`, money(revenue)])
+      }
+      const revpar = (occ / 100) * v.adr
+      return {
+        metrics: [
+          { label: 'Occupancy (mo 12)', value: `${occ.toFixed(0)}%`, highlight: true },
+          { label: 'Monthly revenue', value: money(v.rooms * (occ / 100) * v.adr * 30), highlight: true },
+          { label: 'RevPAR', value: money(revpar) },
+        ],
+        columns: ['Month', 'Occupancy', 'Monthly Revenue'],
+        rows,
+        note: `RevPAR (rate × occupancy) is the number hotels live by. Pushing ADR on high-demand nights usually beats chasing the last points of occupancy — full rooms at a low rate leave money on the table.`,
+      }
+    },
+  },
+  {
+    id: 'sales-team-ramp-simulator', name: 'Sales Team Ramp Simulator', category: 'Revenue',
+    tagline: 'Project bookings as new reps ramp to quota.',
+    description: 'Model a sales team ramping to full productivity to see monthly bookings build toward capacity.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'reps', label: 'Reps', default: 5 },
+      { key: 'ramp', label: 'Ramp to full (months)', default: 4 },
+      { key: 'quota', label: 'Full monthly quota / rep', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cum = 0
+      for (let m = 1; m <= 12; m++) {
+        const factor = Math.min(m / v.ramp, 1)
+        const bookings = v.reps * v.quota * factor
+        cum += bookings
+        if (m % 2 === 0) rows.push([`Month ${m}`, `${(factor * 100).toFixed(0)}%`, money(bookings)])
+      }
+      return {
+        metrics: [
+          { label: 'Bookings (mo 12)', value: money(v.reps * v.quota), highlight: true },
+          { label: 'At-capacity / mo', value: money(v.reps * v.quota), highlight: true },
+          { label: '12-mo bookings', value: money(cum) },
+        ],
+        columns: ['Month', 'Ramp', 'Bookings'],
+        rows,
+        note: `Ramp time is a real, hidden cost — a rep who takes ${v.ramp} months to full quota carries months of salary before full output. Faster onboarding is worth more than it looks.`,
+      }
+    },
+    sells: 'sales-comp-plan-builder',
+  },
+  {
+    id: 'marketing-payback-simulator', name: 'Marketing Payback Simulator', category: 'Marketing',
+    tagline: 'When does your ad spend turn net-positive?',
+    description: 'Model monthly spend acquiring customers who pay back over time, and find the month cumulative margin overtakes cumulative spend.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'spend', label: 'Monthly spend', default: 20000, prefix: '$' },
+      { key: 'cac', label: 'CAC', default: 40, prefix: '$' },
+      { key: 'contribution', label: 'Contribution / customer / mo', default: 30, prefix: '$' },
+      { key: 'churn', label: 'Monthly churn', default: 4, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let active = 0, cumSpend = 0, cumMargin = 0, payback = 0
+      const newPer = v.cac > 0 ? v.spend / v.cac : 0
+      for (let m = 1; m <= 12; m++) {
+        active = active * (1 - v.churn / 100) + newPer
+        cumSpend += v.spend
+        cumMargin += active * v.contribution
+        if (payback === 0 && cumMargin >= cumSpend) payback = m
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(active).toString(), money(cumMargin - cumSpend)])
+      }
+      return {
+        metrics: [
+          { label: 'Payback month', value: payback ? `Month ${payback}` : '> 12mo', highlight: true },
+          { label: 'Active (mo 12)', value: Math.round(active).toString() },
+          { label: 'Net (mo 12)', value: money(cumMargin - cumSpend), highlight: true },
+        ],
+        columns: ['Month', 'Active Customers', 'Cumulative Net'],
+        rows,
+        note: `Steady spend runs a loss until the customer base is large enough to out-earn it. That trough is the cash you must fund — under-capitalized growth dies in this valley even when the model works.`,
+      }
+    },
+    sells: 'marketing-metrics-dashboard',
+  },
+  {
+    id: 'auto-shop-growth-simulator', name: 'Auto Shop Growth Simulator', category: 'Auto',
+    tagline: 'Project revenue as car count grows.',
+    description: 'Model a year of repair-order growth at your average RO to see revenue build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'ros', label: 'Repair orders / month', default: 250 },
+      { key: 'growth', label: 'Growth / month', default: 3, suffix: '%' },
+      { key: 'avgRO', label: 'Average repair order', default: 450, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let ros = v.ros
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) ros *= 1 + v.growth / 100
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(ros).toString(), money(ros * v.avgRO)])
+      }
+      return {
+        metrics: [
+          { label: 'Revenue (mo 12)', value: money(ros * v.avgRO), highlight: true },
+          { label: 'Annualized', value: money(ros * v.avgRO * 12), highlight: true },
+          { label: 'ROs (mo 12)', value: Math.round(ros).toString() },
+        ],
+        columns: ['Month', 'Repair Orders', 'Revenue'],
+        rows,
+        note: `Average RO — through recommended maintenance and inspections — usually grows revenue faster and cheaper than chasing more cars. Fill the bays you have before adding more.`,
+      }
+    },
+  },
+  {
+    id: 'construction-backlog-simulator', name: 'Construction Backlog Simulator', category: 'Construction',
+    tagline: 'Project recognized revenue from your job pipeline.',
+    description: 'Model winning jobs each month and recognizing revenue over the build period to see revenue and backlog.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'newJobs', label: 'New jobs / month', default: 2 },
+      { key: 'avgJob', label: 'Average job value', default: 150000, prefix: '$' },
+      { key: 'months', label: 'Months to complete', default: 3 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cumRecognized = 0
+      for (let m = 1; m <= 12; m++) {
+        const active = Math.min(m, v.months) * v.newJobs
+        const recognized = active * (v.avgJob / v.months)
+        cumRecognized += recognized
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(active).toString(), money(recognized)])
+      }
+      const totalStartedValue = 12 * v.newJobs * v.avgJob
+      return {
+        metrics: [
+          { label: 'Steady revenue / mo', value: money(v.months * v.newJobs * (v.avgJob / v.months)), highlight: true },
+          { label: '12-mo recognized', value: money(cumRecognized), highlight: true },
+          { label: 'Backlog value', value: money(Math.max(0, totalStartedValue - cumRecognized)) },
+        ],
+        columns: ['Month', 'Active Jobs', 'Revenue Recognized'],
+        rows,
+        note: `Backlog is a contractor's best asset and worst trap — it feels like money but it's cash you haven't collected yet. Watch backlog and cash flow together; growing backlog can still starve you.`,
+      }
+    },
+  },
+  {
+    id: 'childcare-enrollment-simulator', name: 'Childcare Enrollment Simulator', category: 'Childcare',
+    tagline: 'Project tuition revenue as enrollment fills.',
+    description: 'Model a year of enrollment growth against attrition to see monthly tuition revenue build toward capacity.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'children', label: 'Starting enrollment', default: 40 },
+      { key: 'new', label: 'New / month', default: 6 },
+      { key: 'attrition', label: 'Monthly attrition', default: 2, suffix: '%' },
+      { key: 'tuition', label: 'Monthly tuition', default: 1200, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let c = v.children
+      for (let m = 1; m <= 12; m++) {
+        c = c * (1 - v.attrition / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(c).toString(), money(c * v.tuition)])
+      }
+      return {
+        metrics: [
+          { label: 'Enrollment (mo 12)', value: Math.round(c).toString(), highlight: true },
+          { label: 'Monthly revenue', value: money(c * v.tuition), highlight: true },
+          { label: 'Annualized', value: money(c * v.tuition * 12) },
+        ],
+        columns: ['Month', 'Children', 'Monthly Tuition'],
+        rows,
+        note: `Because staffing ratios are near-fixed, filling every licensed slot is where the profit is. An empty seat is lost revenue against a cost you're already paying.`,
+      }
+    },
+  },
+  {
+    id: 'investment-tax-drag-simulator', name: 'Investment Tax Drag Simulator', category: 'Money',
+    tagline: 'How much taxes quietly cost your portfolio.',
+    description: 'Compare a taxable account to a tax-advantaged one over the years, so you can see the long-run cost of tax drag.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'principal', label: 'Starting balance', default: 100000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 8, suffix: '%' },
+      { key: 'drag', label: 'Annual tax drag', default: 1.5, suffix: '%' },
+      { key: 'years', label: 'Years', default: 20 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let taxable = v.principal, advantaged = v.principal
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) {
+        taxable *= 1 + (v.return - v.drag) / 100
+        advantaged *= 1 + v.return / 100
+        if (y % 5 === 0 || y === yrs) rows.push([`Year ${y}`, money(taxable), money(advantaged)])
+      }
+      return {
+        metrics: [
+          { label: 'Taxable (end)', value: money(taxable) },
+          { label: 'Tax-advantaged (end)', value: money(advantaged), highlight: true },
+          { label: 'Cost of tax drag', value: money(advantaged - taxable), highlight: true },
+        ],
+        columns: ['Year', 'Taxable Account', 'Tax-Advantaged'],
+        rows,
+        note: `Tax drag compounds against you the same way returns compound for you — over ${yrs} years it costs about ${money(advantaged - taxable)} here. Maxing tax-advantaged accounts is one of the highest-return "investments" available.`,
+      }
+    },
+  },
+  {
+    id: 'debt-freedom-simulator', name: 'Debt Freedom Simulator', category: 'Money',
+    tagline: 'What an extra payment really buys you.',
+    description: 'Compare paying the minimum to adding an extra payment, and see the months and interest you save.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Balance', default: 40000, prefix: '$' },
+      { key: 'apr', label: 'APR', default: 18, suffix: '%' },
+      { key: 'payment', label: 'Monthly payment', default: 1000, prefix: '$' },
+      { key: 'extra', label: 'Extra payment', default: 250, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.apr / 1200
+      const payoff = (pay: number) => {
+        if (pay <= v.balance * r) return { months: 999, interest: v.balance }
+        let b = v.balance, ti = 0, m = 0
+        while (b > 0 && m < 600) { const i = b * r; const p = Math.min(pay - i, b); b -= p; ti += i; m++ }
+        return { months: m, interest: ti }
+      }
+      const base = payoff(v.payment)
+      const acc = payoff(v.payment + v.extra)
+      return {
+        metrics: [
+          { label: 'Months saved', value: `${Math.max(0, base.months - acc.months)}`, highlight: true },
+          { label: 'Interest saved', value: money(base.interest - acc.interest), highlight: true },
+          { label: 'Debt-free in', value: acc.months >= 999 ? 'Never' : `${(acc.months / 12).toFixed(1)} yr` },
+        ],
+        columns: ['Scenario', 'Months to Free', 'Interest'],
+        rows: [
+          ['Minimum only', base.months >= 999 ? 'Never' : `${base.months}`, money(base.interest)],
+          [`With +$${v.extra}/mo`, acc.months >= 999 ? 'Never' : `${acc.months}`, money(acc.interest)],
+        ],
+        note: `An extra $${v.extra}/month saves about ${money(base.interest - acc.interest)} in interest and years of payments. High-interest debt is a guaranteed return — paying it down beats most investments risk-free.`,
+      }
+    },
+  },
+  {
+    id: 'veterinary-wellness-simulator', name: 'Vet Wellness Plan Simulator', category: 'Veterinary',
+    tagline: 'Project recurring revenue from wellness plans.',
+    description: 'Model a year of wellness-plan growth against churn to see recurring revenue build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Starting members', default: 200 },
+      { key: 'new', label: 'New members / month', default: 25 },
+      { key: 'churn', label: 'Monthly churn', default: 2, suffix: '%' },
+      { key: 'fee', label: 'Monthly plan fee', default: 45, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let m2 = v.start
+      for (let m = 1; m <= 12; m++) {
+        m2 = m2 * (1 - v.churn / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(m2).toString(), money(m2 * v.fee)])
+      }
+      return {
+        metrics: [
+          { label: 'Members (mo 12)', value: Math.round(m2).toString(), highlight: true },
+          { label: 'MRR (mo 12)', value: money(m2 * v.fee), highlight: true },
+          { label: 'Annual recurring', value: money(m2 * v.fee * 12) },
+        ],
+        columns: ['Month', 'Members', 'MRR'],
+        rows,
+        note: `Wellness plans turn lumpy vet revenue into a predictable base — and members visit more and stay loyal. It's the closest a clinic gets to SaaS-like recurring revenue.`,
+      }
+    },
+  },
+  {
+    id: 'consulting-pipeline-simulator', name: 'Consulting Pipeline Simulator', category: 'Freelance',
+    tagline: 'Project revenue from leads through wins.',
+    description: 'Model a growing lead flow through proposal and win rates to project monthly consulting revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'leads', label: 'Leads / month', default: 30 },
+      { key: 'growth', label: 'Lead growth / month', default: 5, suffix: '%' },
+      { key: 'proposalRate', label: 'Lead → proposal', default: 40, suffix: '%' },
+      { key: 'winRate', label: 'Proposal → win', default: 30, suffix: '%' },
+      { key: 'project', label: 'Average project', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let leads = v.leads, cum = 0
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) leads *= 1 + v.growth / 100
+        const wins = leads * (v.proposalRate / 100) * (v.winRate / 100)
+        const revenue = wins * v.project
+        cum += revenue
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(leads).toString(), wins.toFixed(1), money(revenue)])
+      }
+      return {
+        metrics: [
+          { label: 'Revenue (mo 12)', value: money(leads * (v.proposalRate / 100) * (v.winRate / 100) * v.project), highlight: true },
+          { label: '12-mo revenue', value: money(cum), highlight: true },
+          { label: 'Leads (mo 12)', value: Math.round(leads).toString() },
+        ],
+        columns: ['Month', 'Leads', 'Wins', 'Revenue'],
+        rows,
+        note: `Win rate compounds through the funnel — lifting proposal quality and qualification moves revenue more than raw lead volume. Fix conversion before buying more leads.`,
+      }
+    },
+  },
+  {
+    id: 'flip-portfolio-simulator', name: 'Fix & Flip Portfolio Simulator', category: 'Real Estate',
+    tagline: 'Project profit as you scale flips per year.',
+    description: 'Model doing several flips a year with growing per-flip profit to see cumulative profit build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'flips', label: 'Flips per year', default: 4 },
+      { key: 'profit', label: 'Profit per flip', default: 35000, prefix: '$' },
+      { key: 'growth', label: 'Profit growth / year', default: 5, suffix: '%' },
+      { key: 'years', label: 'Years', default: 5 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let profit = v.profit, cum = 0
+      const yrs = Math.min(Math.max(v.years, 1), 20)
+      for (let y = 1; y <= yrs; y++) {
+        if (y > 1) profit *= 1 + v.growth / 100
+        const yearProfit = v.flips * profit
+        cum += yearProfit
+        rows.push([`Year ${y}`, v.flips.toString(), money(yearProfit), money(cum)])
+      }
+      return {
+        metrics: [
+          { label: 'Year profit (end)', value: money(v.flips * profit), highlight: true },
+          { label: 'Cumulative profit', value: money(cum), highlight: true },
+          { label: 'Total flips', value: (v.flips * yrs).toString() },
+        ],
+        columns: ['Year', 'Flips', 'Year Profit', 'Cumulative'],
+        rows,
+        note: `Flipping is active income, not passive — it stops when you do. Many flippers use the profits to buy rentals, converting one-time gains into a cash-flowing portfolio.`,
+      }
+    },
+  },
+  {
+    id: 'service-plan-simulator', name: 'Home Service Plan Simulator', category: 'Home Services',
+    tagline: 'Project recurring revenue from maintenance plans.',
+    description: 'Model a year of service-plan membership growth against churn to see recurring revenue build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Starting plans', default: 200 },
+      { key: 'new', label: 'New plans / month', default: 30 },
+      { key: 'churn', label: 'Monthly churn', default: 3, suffix: '%' },
+      { key: 'fee', label: 'Monthly plan fee', default: 20, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let p = v.start
+      for (let m = 1; m <= 12; m++) {
+        p = p * (1 - v.churn / 100) + v.new
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(p).toString(), money(p * v.fee)])
+      }
+      return {
+        metrics: [
+          { label: 'Plans (mo 12)', value: Math.round(p).toString(), highlight: true },
+          { label: 'MRR (mo 12)', value: money(p * v.fee), highlight: true },
+          { label: 'Annual recurring', value: money(p * v.fee * 12) },
+        ],
+        columns: ['Month', 'Plans', 'MRR'],
+        rows,
+        note: `Maintenance plans transform a home-service business — recurring revenue, guaranteed repeat visits, and first crack at every repair. They also make the business far more valuable to a buyer.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
