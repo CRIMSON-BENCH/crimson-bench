@@ -9603,6 +9603,425 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'cap-table-model',
   },
+
+  {
+    id: 'opportunity-zone-simulator', name: 'Opportunity Zone Simulator', category: 'Finance',
+    tagline: 'Defer today’s gain, and grow the new one tax-free.',
+    description: 'Model reinvesting a capital gain into an Opportunity Zone fund to see the tax-free appreciation over a 10-year hold. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'gain', label: 'Capital gain invested', default: 500000, prefix: '$' },
+      { key: 'appreciation', label: 'Annual appreciation', default: 8, suffix: '%' },
+      { key: 'taxRate', label: 'Cap gains tax rate', default: 25, suffix: '%' },
+      { key: 'years', label: 'Hold (years)', default: 10 },
+    ],
+    compute: v => {
+      const fv = v.gain * Math.pow(1 + v.appreciation / 100, v.years)
+      const appreciationGain = fv - v.gain
+      const taxSaved = appreciationGain * (v.taxRate / 100)
+      return {
+        metrics: [
+          { label: 'Value after hold', value: money(fv), highlight: true },
+          { label: 'Appreciation (tax-free)', value: money(appreciationGain), highlight: true },
+          { label: 'Tax saved on exit', value: money(taxSaved), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gain invested', money(v.gain)], ['Value after ' + v.years + ' yrs', money(fv)], ['Appreciation', money(appreciationGain)], ['Tax saved', money(taxSaved)]],
+        note: `Opportunity Zones defer the original gain and — after a 10-year hold — make the new investment's appreciation entirely tax-free. It's one of the most powerful tools for reinvesting a large gain, but the investment must stand on its own merits. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'espp-simulator', name: 'ESPP Return Simulator', category: 'Finance',
+    tagline: 'The near-guaranteed return of a stock purchase plan.',
+    description: 'Model an employee stock purchase plan discount to see the instant gain if you sell right after buying. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'Contribution / period', default: 10000, prefix: '$' },
+      { key: 'discount', label: 'Purchase discount', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const marketValue = v.contribution / (1 - v.discount / 100)
+      const gain = marketValue - v.contribution
+      const gainPct = v.contribution > 0 ? gain / v.contribution : 0
+      return {
+        metrics: [
+          { label: 'Shares market value', value: money(marketValue), highlight: true },
+          { label: 'Instant gain', value: money(gain), highlight: true },
+          { label: 'Return on contribution', value: pct(gainPct), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Contribution', money(v.contribution)], ['Market value at purchase', money(marketValue)], ['Gain', money(gain)]],
+        note: `A ${v.discount}% discount is a ${pct(gainPct)} instant return — and with a "lookback" feature it's often much more. Maxing an ESPP and selling promptly is one of the best deals in employee comp, if you can float the contributions. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'eps-accretion-simulator', name: 'M&A EPS Accretion / Dilution Simulator', category: 'Fundraising',
+    tagline: 'Will this acquisition raise or lower EPS?',
+    description: 'Model a debt-financed acquisition to see whether the added earnings beat the financing cost — making the deal accretive or dilutive.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acquirerNI', label: 'Acquirer net income', default: 10000000, prefix: '$' },
+      { key: 'shares', label: 'Acquirer shares', default: 5000000 },
+      { key: 'targetNI', label: 'Target net income', default: 2000000, prefix: '$' },
+      { key: 'price', label: 'Purchase price', default: 25000000, prefix: '$' },
+      { key: 'rate', label: 'Financing rate', default: 6, suffix: '%' },
+    ],
+    compute: v => {
+      const standaloneEPS = v.shares > 0 ? v.acquirerNI / v.shares : 0
+      const financingCost = v.price * (v.rate / 100)
+      const combinedNI = v.acquirerNI + v.targetNI - financingCost
+      const proFormaEPS = v.shares > 0 ? combinedNI / v.shares : 0
+      const change = standaloneEPS > 0 ? proFormaEPS / standaloneEPS - 1 : 0
+      return {
+        metrics: [
+          { label: 'Standalone EPS', value: `$${standaloneEPS.toFixed(2)}` },
+          { label: 'Pro forma EPS', value: `$${proFormaEPS.toFixed(2)}`, highlight: true },
+          { label: 'Accretion / (dilution)', value: pct(change), highlight: change < 0 },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Combined net income', money(v.acquirerNI + v.targetNI)], ['Less financing cost', money(-financingCost)], ['Pro forma net income', money(combinedNI)]],
+        note: change >= 0 ? `Accretive — the target's earnings exceed the cost of financing the deal, so EPS rises. Accretion isn't the same as a good deal, but it's what Wall Street reacts to first.` : `Dilutive — the financing cost outweighs the earnings added, so EPS falls. Can still be right strategically, but expect the market to frown. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'search-fund-simulator', name: 'Search Fund Return Simulator', category: 'Fundraising',
+    tagline: 'Buy a business with debt and grow it.',
+    description: 'Model acquiring a business with leverage, growing EBITDA, and selling to see the searcher’s equity return.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'price', label: 'Purchase price', default: 5000000, prefix: '$' },
+      { key: 'down', label: 'Equity (down) %', default: 30, suffix: '%' },
+      { key: 'ebitda', label: 'EBITDA', default: 1000000, prefix: '$' },
+      { key: 'growth', label: 'EBITDA growth / yr', default: 10, suffix: '%' },
+      { key: 'exitMultiple', label: 'Exit multiple', default: 5 },
+      { key: 'years', label: 'Hold (years)', default: 5 },
+    ],
+    compute: v => {
+      const equity = v.price * (v.down / 100)
+      const debt = v.price - equity
+      const exitEBITDA = v.ebitda * Math.pow(1 + v.growth / 100, v.years)
+      const exitValue = exitEBITDA * v.exitMultiple
+      const equityOut = exitValue - debt
+      const moic = equity > 0 ? equityOut / equity : 0
+      const irr = moic > 0 ? Math.pow(moic, 1 / v.years) - 1 : 0
+      return {
+        metrics: [
+          { label: 'Equity out', value: money(equityOut), highlight: true },
+          { label: 'MOIC', value: `${moic.toFixed(1)}x`, highlight: true },
+          { label: 'IRR', value: pct(irr), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Equity in', money(equity)], ['Debt', money(debt)], ['Exit EBITDA', money(exitEBITDA)], ['Exit value', money(exitValue)], ['Equity out', money(equityOut)]],
+        note: `Search funds let an operator buy an established, profitable business using mostly debt plus investor equity — returns come from growth, debt paydown, and multiple expansion. It's "entrepreneurship through acquisition." Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'fund-management-fee-simulator', name: 'Fund "2 and 20" Simulator', category: 'Fundraising',
+    tagline: 'How a fund manager makes money.',
+    description: 'Model AUM with a management fee and carried interest to see the GP’s annual economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'aum', label: 'Assets under management', default: 100000000, prefix: '$' },
+      { key: 'mgmtFee', label: 'Management fee', default: 2, suffix: '%' },
+      { key: 'carry', label: 'Carried interest', default: 20, suffix: '%' },
+      { key: 'grossReturn', label: 'Gross return', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const mgmtFee = v.aum * (v.mgmtFee / 100)
+      const grossProfit = v.aum * (v.grossReturn / 100)
+      const carry = grossProfit * (v.carry / 100)
+      const total = mgmtFee + carry
+      return {
+        metrics: [
+          { label: 'Management fee', value: money(mgmtFee), highlight: true },
+          { label: 'Carried interest', value: money(carry), highlight: true },
+          { label: 'Total GP revenue', value: money(total), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Management fee', money(mgmtFee)], ['Gross profit', money(grossProfit)], ['Carry', money(carry)], ['Total GP revenue', money(total)]],
+        note: `"2 and 20" — the management fee covers operations and pays regardless of performance, while the carry is the real upside. On a large fund, the fee alone is enormous, which is why raising a bigger fund is every manager's goal. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'web-hosting-simulator', name: 'Web Hosting Business Simulator', category: 'SaaS',
+    tagline: 'Project a hosting business’s recurring profit.',
+    description: 'Model customers and price against per-customer server cost and overhead to see monthly profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 5000 },
+      { key: 'price', label: 'Avg price / mo', default: 15, prefix: '$' },
+      { key: 'serverCost', label: 'Server cost / customer', default: 3, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.customers * v.price
+      const cost = v.customers * v.serverCost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(revenue > 0 ? (revenue - cost) / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Recurring revenue', money(revenue)], ['Server cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Hosting is recurring, high-margin, and consolidation-driven — churn and support cost are the enemies. Higher-value managed hosting and add-ons (domains, email, SSL) lift revenue per customer above commodity shared hosting. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'iv-hydration-simulator', name: 'IV Hydration Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project an IV therapy lounge’s profit.',
+    description: 'Model treatment volume and price against supplies and nurse cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'treatments', label: 'Treatments / day', default: 25 },
+      { key: 'price', label: 'Price per treatment', default: 150, prefix: '$' },
+      { key: 'supplies', label: 'Supplies / treatment', default: 40, prefix: '$' },
+      { key: 'nurse', label: 'Nurse cost / treatment', default: 30, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.treatments * v.price * 26
+      const variable = v.treatments * (v.supplies + v.nurse) * 26
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / treatment', value: money(v.price - v.supplies - v.nurse), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Supplies + nurse', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `IV hydration is trendy cash-pay wellness — good margins and mobile/event options extend reach beyond the storefront. Memberships and add-on injectables raise revenue per visit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'plastic-surgery-simulator', name: 'Plastic Surgery Practice Simulator', category: 'Healthcare',
+    tagline: 'Project a cosmetic surgery practice.',
+    description: 'Model procedure volume and price against supply, facility, and surgeon cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'procedures', label: 'Procedures / month', default: 40 },
+      { key: 'price', label: 'Average price', default: 8000, prefix: '$' },
+      { key: 'supplies', label: 'Supplies + facility %', default: 20, suffix: '%' },
+      { key: 'surgeon', label: 'Surgeon pay %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 100000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.procedures * v.price
+      const variable = revenue * ((v.supplies + v.surgeon) / 100)
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / procedure', value: money(v.price * (1 - (v.supplies + v.surgeon) / 100)), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Supplies + surgeon', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Cosmetic surgery is high-ticket, cash-pay, and high-margin — consultation-to-booking conversion and reputation drive volume. Non-surgical treatments (injectables, lasers) fill the schedule between surgeries. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'grocery-store-simulator', name: 'Grocery Store Simulator', category: 'Retail',
+    tagline: 'Why grocery is a razor-thin-margin game.',
+    description: 'Model weekly sales against thin gross margins and labor to see monthly profit — and how tight the model is.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Weekly sales', default: 200000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 25, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.sales * 4.33
+      const gross = revenue * (v.margin / 100)
+      const labor = revenue * (v.labor / 100)
+      const profit = gross - labor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(gross)], ['Labor', money(labor)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Grocery is famously thin — net margins of 1–3% are normal, so it's a volume and efficiency game. Prepared foods, deli, bakery, and private label carry far better margins than center-store staples. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'juice-bar-simulator', name: 'Juice / Smoothie Bar Simulator', category: 'Hospitality',
+    tagline: 'Project a juice bar’s monthly profit.',
+    description: 'Model daily cups and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cups', label: 'Cups / day', default: 250 },
+      { key: 'price', label: 'Average price', default: 7, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cups * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Fresh produce cost and waste are the challenge; volume at peak hours and grab-and-go add-ons (bowls, snacks) drive it. Subscriptions and cleanse packages lift average spend and reduce waste. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pizza-shop-simulator', name: 'Pizza Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a pizzeria’s monthly profit.',
+    description: 'Model daily orders and ticket against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 120 },
+      { key: 'ticket', label: 'Average ticket', default: 25, prefix: '$' },
+      { key: 'food', label: 'Food cost %', default: 28, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * 30
+      const profit = revenue * (1 - (v.food + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * ((v.food + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pizza has some of the best food-cost margins in food service — the swing factors are labor efficiency and delivery (third-party commissions vs. your own drivers). Volume at dinner rush carries the day. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tree-service-simulator', name: 'Tree Service Simulator', category: 'Home Services',
+    tagline: 'Project a tree care business’s profit.',
+    description: 'Model high-ticket jobs against crew and equipment cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / week', default: 15 },
+      { key: 'ticket', label: 'Average ticket', default: 900, prefix: '$' },
+      { key: 'crew', label: 'Crew + equipment %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 4.33
+      const profit = revenue * (1 - v.crew / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Crew + equipment', money(revenue * (v.crew / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Tree work is high-ticket but high-risk — insurance and skilled climbers are expensive, and safety is everything. Storm response and recurring commercial/municipal contracts drive volume and pricing power. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pressure-washing-simulator', name: 'Pressure Washing Simulator', category: 'Home Services',
+    tagline: 'Project a pressure-washing business’s income.',
+    description: 'Model daily jobs and ticket against variable and fixed costs to see monthly income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 5 },
+      { key: 'ticket', label: 'Average ticket', default: 300, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 5000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 24
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Income', money(profit)]],
+        note: `Low startup cost and strong margins make pressure washing a popular owner-operator business. Commercial contracts (fleets, storefronts, HOAs) and add-ons (soft-wash, sealing) turn it from side gig to real company. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'charter-fishing-simulator', name: 'Charter Fishing Simulator', category: 'Recreation',
+    tagline: 'Project a charter boat’s monthly profit.',
+    description: 'Model trip volume and price against fuel and crew cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'trips', label: 'Trips / month', default: 40 },
+      { key: 'price', label: 'Price per trip', default: 800, prefix: '$' },
+      { key: 'fuel', label: 'Fuel / trip', default: 150, prefix: '$' },
+      { key: 'mate', label: 'Mate pay / trip', default: 100, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.trips * v.price
+      const variable = v.trips * (v.fuel + v.mate)
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / trip', value: money(v.price - v.fuel - v.mate), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Fuel + mate', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Charters are seasonal and weather-dependent — peak months and repeat/corporate clients carry the year. Boat maintenance and fuel are the swing costs; a second boat or captain multiplies capacity. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pumpkin-patch-simulator', name: 'Agritourism (Pumpkin Patch) Simulator', category: 'Manufacturing',
+    tagline: 'Turn a few autumn weekends into the year’s income.',
+    description: 'Model seasonal visitors and per-visitor spend against variable and seasonal fixed costs to see season profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visitors', label: 'Visitors (season)', default: 30000 },
+      { key: 'spend', label: 'Spend / visitor', default: 25, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Seasonal fixed', default: 80000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visitors * v.spend
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Season profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Spend / visitor', value: money(v.spend) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Agritourism turns a handful of autumn weekends into a farm's biggest income. Admission plus add-ons (hayrides, corn maze, food, photos) drive spend per visitor far above the value of the pumpkins themselves. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
