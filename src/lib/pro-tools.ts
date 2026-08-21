@@ -7915,6 +7915,430 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'orthodontics-simulator', name: 'Orthodontics Practice Simulator', category: 'Dental',
+    tagline: 'Project an ortho practice’s profit.',
+    description: 'Model case starts and fees against lab and chair-time cost to see monthly profit and per-case margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'starts', label: 'Case starts / month', default: 25 },
+      { key: 'fee', label: 'Case fee', default: 5500, prefix: '$' },
+      { key: 'lab', label: 'Lab cost / case', default: 800, prefix: '$' },
+      { key: 'chairHours', label: 'Chair hours / case', default: 6 },
+      { key: 'overhead', label: 'Overhead / chair hour', default: 150, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.starts * v.fee
+      const caseCost = v.starts * (v.lab + v.chairHours * v.overhead)
+      const profit = revenue - caseCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / case', value: money(v.fee - v.lab - v.chairHours * v.overhead), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Lab + chair cost', money(caseCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Ortho is high-margin and referral-driven — case starts are the heartbeat. Clear aligners and efficient appointment models let you treat more cases per chair hour, which is where the leverage lives. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'home-health-agency-simulator', name: 'Home Health Agency Simulator', category: 'Healthcare',
+    tagline: 'Project a home health agency’s profit.',
+    description: 'Model visit volume and reimbursement against caregiver cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / week', default: 500 },
+      { key: 'reimbursement', label: 'Reimbursement / visit', default: 140, prefix: '$' },
+      { key: 'caregiver', label: 'Caregiver cost / visit', default: 75, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.reimbursement * 4.33
+      const caregiver = v.visits * v.caregiver * 4.33
+      const profit = revenue - caregiver - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / visit', value: money(v.reimbursement - v.caregiver), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Caregiver cost', money(caregiver)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Home health rides a demographic tailwind (aging population) but faces caregiver shortages and reimbursement pressure. Visit volume, caregiver retention, and payer mix decide profitability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'medical-billing-simulator', name: 'Medical Billing Company Simulator', category: 'Healthcare',
+    tagline: 'Project a billing company’s profit.',
+    description: 'Model collections processed at a percentage fee against labor and overhead to see monthly profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'collections', label: 'Monthly collections processed', default: 5000000, prefix: '$' },
+      { key: 'fee', label: 'Fee %', default: 6, suffix: '%' },
+      { key: 'labor', label: 'Labor cost / month', default: 180000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.collections * (v.fee / 100)
+      const profit = revenue - v.labor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue (fee)', money(revenue)], ['Labor', money(v.labor)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Billing companies earn a percentage of what they collect, so their incentives align with the practice's. Automation and clean-claim rates drive margin; the model scales as you add clients on the same team. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'imaging-center-simulator', name: 'Imaging Center Simulator', category: 'Healthcare',
+    tagline: 'Project a diagnostic imaging center’s profit.',
+    description: 'Model scan volume and reimbursement against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'scans', label: 'Scans / day', default: 40 },
+      { key: 'reimbursement', label: 'Reimbursement / scan', default: 400, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / scan', default: 80, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 150000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.scans * v.reimbursement * 22
+      const variable = v.scans * v.variable * 22
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / scan', value: money(v.reimbursement - v.variable), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Imaging centers carry expensive equipment (the fixed cost) — utilization is everything. Keeping the machines busy across modalities and referral sources is what turns the capital investment into profit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'student-housing-simulator', name: 'Student Housing Simulator', category: 'Real Estate',
+    tagline: 'Project a per-bed student housing asset.',
+    description: 'Model beds, rent, and occupancy against expenses to see NOI and value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'beds', label: 'Beds', default: 300 },
+      { key: 'rent', label: 'Rent / bed / mo', default: 800, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 95, suffix: '%' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 40, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 5.5, suffix: '%' },
+    ],
+    compute: v => {
+      const monthlyRev = v.beds * v.rent * (v.occupancy / 100)
+      const noi = monthlyRev * 12 * (1 - v.expenseRatio / 100)
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(monthlyRev), highlight: true },
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Monthly revenue', money(monthlyRev)], ['Annual NOI', money(noi)], ['Value', money(value)]],
+        note: `Per-bed leasing and parental guarantees make student housing rents resilient, and demand tracks enrollment near strong universities. The risk is summer vacancy and turnover cost every August. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'senior-living-simulator', name: 'Senior Living Facility Simulator', category: 'Real Estate',
+    tagline: 'Project a senior living community’s profit.',
+    description: 'Model units and monthly fees against care cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 100 },
+      { key: 'occupancy', label: 'Occupancy', default: 88, suffix: '%' },
+      { key: 'fee', label: 'Monthly fee / unit', default: 4500, prefix: '$' },
+      { key: 'care', label: 'Care cost / occupied unit', default: 2200, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 150000, prefix: '$' },
+    ],
+    compute: v => {
+      const occupied = v.units * (v.occupancy / 100)
+      const revenue = occupied * v.fee
+      const care = occupied * v.care
+      const profit = revenue - care - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / unit', value: money(v.fee - v.care), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Care cost', money(care)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Senior living blends real estate and healthcare — occupancy and care-level mix (higher acuity pays more) drive the numbers. The demographic wave is enormous, but labor cost is the persistent challenge. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'rv-park-simulator', name: 'RV Park / Campground Simulator', category: 'Real Estate',
+    tagline: 'Project a campground’s monthly profit.',
+    description: 'Model sites, nightly rate, and occupancy against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sites', label: 'Sites', default: 120 },
+      { key: 'rate', label: 'Nightly rate', default: 55, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 60, suffix: '%' },
+      { key: 'variable', label: 'Variable cost / night', default: 8, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const siteNights = v.sites * (v.occupancy / 100) * 30
+      const revenue = siteNights * v.rate
+      const variable = siteNights * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / site', value: money(v.sites > 0 ? revenue / v.sites : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Campgrounds and RV parks are a favorite for low-overhead cash flow, but they're seasonal — the peak months carry the year. Add-ons (cabins, camp store, activities) and long-term sites smooth revenue. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cold-storage-simulator', name: 'Cold Storage Simulator', category: 'Real Estate',
+    tagline: 'Project a cold-storage facility’s NOI.',
+    description: 'Model refrigerated warehouse rent against power and other opex to see NOI and value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sqft', label: 'Square feet', default: 80000 },
+      { key: 'rent', label: 'Rent / sq ft / year', default: 18, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 92, suffix: '%' },
+      { key: 'power', label: 'Power cost / sq ft / year', default: 4, prefix: '$' },
+      { key: 'opexRatio', label: 'Other opex ratio', default: 20, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 6, suffix: '%' },
+    ],
+    compute: v => {
+      const gross = v.sqft * v.rent * (v.occupancy / 100)
+      const power = v.sqft * v.power
+      const otherOpex = gross * (v.opexRatio / 100)
+      const noi = gross - power - otherOpex
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+          { label: 'Gross rent', value: money(gross) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross rent', money(gross)], ['Power cost', money(power)], ['Other opex', money(otherOpex)], ['NOI', money(noi)]],
+        note: `Cold storage commands premium rents for its specialized build and power draw, and grocery/pharma demand is strong. Energy cost and refrigeration reliability are the operational risks. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'landscaping-company-simulator', name: 'Landscaping Company Simulator', category: 'Home Services',
+    tagline: 'Project a multi-crew landscaping business.',
+    description: 'Model crews and per-crew revenue against labor, equipment, and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'crews', label: 'Crews', default: 4 },
+      { key: 'revenue', label: 'Revenue / crew / day', default: 1200, prefix: '$' },
+      { key: 'labor', label: 'Labor / crew / day', default: 500, prefix: '$' },
+      { key: 'equipment', label: 'Equipment + fuel / crew / day', default: 150, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 22 },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const rev = v.crews * v.revenue * v.days
+      const variable = v.crews * (v.labor + v.equipment) * v.days
+      const profit = rev - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / crew', value: money(v.crews > 0 ? profit / v.crews : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(rev)], ['Labor + equipment', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Scaling from solo to multiple crews adds management overhead — the key is per-crew productivity and recurring maintenance contracts that keep every crew booked. Route density cuts windshield time. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'junk-removal-simulator', name: 'Junk Removal Simulator', category: 'Home Services',
+    tagline: 'Project a junk removal business’s profit.',
+    description: 'Model job volume and ticket against disposal, labor/fuel, and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 8 },
+      { key: 'ticket', label: 'Average ticket', default: 350, prefix: '$' },
+      { key: 'disposal', label: 'Disposal cost / job', default: 60, prefix: '$' },
+      { key: 'laborFuel', label: 'Labor + fuel %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 26
+      const disposal = v.jobs * v.disposal * 26
+      const laborFuel = revenue * (v.laborFuel / 100)
+      const profit = revenue - disposal - laborFuel - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Disposal', money(disposal)], ['Labor + fuel', money(laborFuel)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Junk removal is low-barrier and franchise-friendly — the margin lives in routing efficiency, disposal/recycling costs, and average ticket. Recurring commercial and property-management accounts stabilize the volume. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'commercial-cleaning-simulator', name: 'Commercial Cleaning Simulator', category: 'Home Services',
+    tagline: 'Project a janitorial contract business.',
+    description: 'Model recurring cleaning contracts against labor and supply cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contracts', label: 'Contracts', default: 30 },
+      { key: 'avgContract', label: 'Avg contract / month', default: 2500, prefix: '$' },
+      { key: 'labor', label: 'Labor %', default: 55, suffix: '%' },
+      { key: 'supplies', label: 'Supplies %', default: 8, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.contracts * v.avgContract
+      const profit = revenue * (1 - (v.labor + v.supplies) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Recurring revenue', value: money(revenue), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * ((v.labor + v.supplies) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Nightly commercial contracts are predictable, recurring revenue — the business sells for a multiple of that base. Labor scheduling and turnover are the whole operational challenge. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tow-truck-simulator', name: 'Towing Company Simulator', category: 'Transportation',
+    tagline: 'Project a towing operation’s profit.',
+    description: 'Model call volume across trucks against fuel/maintenance and driver pay to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'trucks', label: 'Trucks', default: 3 },
+      { key: 'calls', label: 'Calls / truck / day', default: 6 },
+      { key: 'fee', label: 'Average fee', default: 120, prefix: '$' },
+      { key: 'fuelMaint', label: 'Fuel + maintenance / call', default: 25, prefix: '$' },
+      { key: 'driverPay', label: 'Driver pay %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalCalls = v.trucks * v.calls * 30
+      const revenue = totalCalls * v.fee
+      const fuelMaint = totalCalls * v.fuelMaint
+      const driverPay = revenue * (v.driverPay / 100)
+      const profit = revenue - fuelMaint - driverPay - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Fuel + maintenance', money(fuelMaint)], ['Driver pay', money(driverPay)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Steady volume comes from motor-club and police-rotation contracts, not just cash calls. Truck utilization and quick response times drive the numbers; a fleet sitting idle still costs payments and insurance. Educational only.`,
+      }
+    },
+  },
+  {
+    id: '1031-exchange-simulator', name: '1031 Exchange Tax Deferral Simulator', category: 'Finance',
+    tagline: 'The tax a like-kind exchange defers.',
+    description: 'Model a property sale to see the capital gains and depreciation-recapture tax a 1031 exchange lets you defer. Educational only, not tax advice.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sale', label: 'Sale price', default: 1000000, prefix: '$' },
+      { key: 'basis', label: 'Original cost basis', default: 400000, prefix: '$' },
+      { key: 'depreciation', label: 'Depreciation taken', default: 150000, prefix: '$' },
+      { key: 'capRate', label: 'Cap gains rate (fed + state)', default: 25, suffix: '%' },
+      { key: 'recaptureRate', label: 'Depreciation recapture rate', default: 25, suffix: '%' },
+    ],
+    compute: v => {
+      const capGain = v.sale - v.basis
+      const capTax = capGain * (v.capRate / 100)
+      const recaptureTax = v.depreciation * (v.recaptureRate / 100)
+      const total = capTax + recaptureTax
+      return {
+        metrics: [
+          { label: 'Total tax deferred', value: money(total), highlight: true },
+          { label: 'Capital gain', value: money(capGain) },
+          { label: 'Recapture tax deferred', value: money(recaptureTax), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Capital gain', money(capGain)], ['Cap gains tax', money(capTax)], ['Recapture tax', money(recaptureTax)], ['Total deferred', money(total)]],
+        note: `A 1031 exchange defers this entire tax by rolling proceeds into like-kind property — so the money that would've gone to taxes keeps working and compounding for you. "Swap till you drop" can defer it indefinitely. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'cost-segregation-simulator', name: 'Cost Segregation Simulator', category: 'Finance',
+    tagline: 'Front-load depreciation for a big early deduction.',
+    description: 'Estimate the accelerated first-year depreciation and tax benefit a cost-segregation study can unlock on a property. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Building cost (ex-land)', default: 2000000, prefix: '$' },
+      { key: 'reclassified', label: 'Reclassified to short-life %', default: 25, suffix: '%' },
+      { key: 'taxRate', label: 'Your tax rate', default: 35, suffix: '%' },
+    ],
+    compute: v => {
+      const reclassified = v.cost * (v.reclassified / 100)
+      const firstYearDeduction = reclassified // assume bonus depreciation captures it year 1
+      const benefit = firstYearDeduction * (v.taxRate / 100)
+      return {
+        metrics: [
+          { label: 'First-year deduction', value: money(firstYearDeduction), highlight: true },
+          { label: 'First-year tax benefit', value: money(benefit), highlight: true },
+          { label: 'Reclassified amount', value: money(reclassified) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Building cost', money(v.cost)], ['Reclassified (short-life)', money(reclassified)], ['First-year deduction', money(firstYearDeduction)], ['Tax benefit', money(benefit)]],
+        note: `Cost segregation reclassifies parts of a building into 5–15-year property, which (with bonus depreciation) can be written off far sooner — pulling a big deduction forward and boosting early cash flow. A study usually pays for itself many times over. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'sinking-fund-simulator', name: 'Sinking Fund Simulator', category: 'Finance',
+    tagline: 'Save steadily for a known future cost.',
+    description: 'Model a future obligation, timeline, and return to find the monthly contribution needed to fund it.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'obligation', label: 'Future obligation', default: 500000, prefix: '$' },
+      { key: 'years', label: 'Years until due', default: 10 },
+      { key: 'return', label: 'Annual return', default: 4, suffix: '%' },
+    ],
+    compute: v => {
+      const r = v.return / 1200, n = v.years * 12
+      const pmt = r === 0 ? v.obligation / n : (v.obligation * r) / (Math.pow(1 + r, n) - 1)
+      const contributed = pmt * n
+      return {
+        metrics: [
+          { label: 'Monthly contribution', value: money(pmt), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Growth earned', value: money(v.obligation - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Obligation', money(v.obligation)], ['Monthly contribution', money(pmt)], ['Total contributed', money(contributed)], ['Investment growth', money(v.obligation - contributed)]],
+        note: `A sinking fund quietly saves for a known future cost — a roof, a balloon payment, equipment replacement — so it's covered when it comes due. Far cheaper and safer than scrambling to borrow at the last minute. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
