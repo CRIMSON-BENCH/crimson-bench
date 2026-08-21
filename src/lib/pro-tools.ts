@@ -10433,6 +10433,411 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'str-arbitrage-simulator', name: 'STR Arbitrage Simulator', category: 'Real Estate',
+    tagline: 'Rent-to-Airbnb without buying property.',
+    description: 'Model leasing a property and short-term renting it to see monthly profit — the rental arbitrage play.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lease', label: 'Monthly lease cost', default: 2500, prefix: '$' },
+      { key: 'nightly', label: 'Nightly rate', default: 180, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 70, suffix: '%' },
+      { key: 'expenses', label: 'Monthly operating expenses', default: 800, prefix: '$' },
+    ],
+    compute: v => {
+      const strRevenue = v.nightly * (v.occupancy / 100) * 30
+      const net = strRevenue - v.lease - v.expenses
+      return {
+        metrics: [
+          { label: 'Net monthly', value: money(net), highlight: net < 0 },
+          { label: 'STR revenue', value: money(strRevenue) },
+          { label: 'Net annual', value: money(net * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['STR revenue', money(strRevenue)], ['Lease', money(v.lease)], ['Operating expenses', money(v.expenses)], ['Net', money(net)]],
+        note: `Rental arbitrage lets you run a short-term-rental business with no property purchase — just furnishings and a lease. The catch: you owe the rent whether or not it's booked, so occupancy risk sits on you. Get the landlord's written OK. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wholesaling-simulator', name: 'Real Estate Wholesaling Simulator', category: 'Real Estate',
+    tagline: 'Project a wholesaling business’s income.',
+    description: 'Model deals per month and assignment fees against marketing cost to see monthly income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'deals', label: 'Deals / month', default: 3 },
+      { key: 'fee', label: 'Avg assignment fee', default: 8000, prefix: '$' },
+      { key: 'marketing', label: 'Marketing cost / month', default: 4000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.deals * v.fee
+      const profit = revenue - v.marketing - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Assignment revenue', money(revenue)], ['Marketing', money(v.marketing)], ['Fixed', money(v.fixed)], ['Income', money(profit)]],
+        note: `Wholesaling needs little capital but heavy marketing and hustle — deal flow is everything, and one good assignment can make the month. Building a cash-buyer list and a lead machine is the real business. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tax-lien-simulator', name: 'Tax Lien Investing Simulator', category: 'Finance',
+    tagline: 'The return on a tax lien certificate.',
+    description: 'Model a tax lien investment at its statutory interest rate to see the return if the owner redeems. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'investment', label: 'Investment', default: 50000, prefix: '$' },
+      { key: 'rate', label: 'Statutory interest rate', default: 12, suffix: '%' },
+      { key: 'months', label: 'Months held', default: 12 },
+    ],
+    compute: v => {
+      const interest = v.investment * (v.rate / 100) * (v.months / 12)
+      const annualized = v.months > 0 ? (v.rate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Interest earned', value: money(interest), highlight: true },
+          { label: 'Total returned', value: money(v.investment + interest), highlight: true },
+          { label: 'Annualized rate', value: pct(annualized) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Investment', money(v.investment)], ['Interest earned', money(interest)], ['Total', money(v.investment + interest)]],
+        note: `Tax liens pay a statutory interest rate and are secured by the real estate itself — most owners redeem and you collect the interest. In the rare non-redemption, you may foreclose and acquire property well below value. Rules vary by state. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'note-investing-simulator', name: 'Mortgage Note Investing Simulator', category: 'Finance',
+    tagline: 'Buy paper at a discount, boost your yield.',
+    description: 'Model buying a performing note below face value to see the cash-on-cash return from collecting its payments. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'face', label: 'Note face value', default: 100000, prefix: '$' },
+      { key: 'discount', label: 'Purchase price (% of face)', default: 70, suffix: '%' },
+      { key: 'rate', label: 'Note interest rate', default: 8, suffix: '%' },
+      { key: 'years', label: 'Remaining term (years)', default: 15 },
+    ],
+    compute: v => {
+      const price = v.face * (v.discount / 100)
+      const r = v.rate / 1200, n = v.years * 12
+      const pmt = r === 0 ? v.face / n : (v.face * r) / (1 - Math.pow(1 + r, -n))
+      const coc = price > 0 ? (pmt * 12) / price : 0
+      return {
+        metrics: [
+          { label: 'Purchase price', value: money(price), highlight: true },
+          { label: 'Monthly payment collected', value: money(pmt), highlight: true },
+          { label: 'Cash-on-cash', value: pct(coc), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Face value', money(v.face)], ['Purchase price', money(price)], ['Monthly payment', money(pmt)], ['Annual collections', money(pmt * 12)]],
+        note: `Buying a performing note at a discount lifts your effective yield above the note's stated rate — you collect full payments on a discounted cost basis. The risk is borrower default; underwrite the borrower and the collateral. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'donor-advised-fund-simulator', name: 'Donor-Advised Fund Simulator', category: 'Finance',
+    tagline: 'Deduct now, grant later, grow tax-free.',
+    description: 'Model a DAF contribution to see the immediate tax deduction and the tax-free growth available for future giving. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'Contribution', default: 100000, prefix: '$' },
+      { key: 'taxRate', label: 'Tax rate', default: 37, suffix: '%' },
+      { key: 'growth', label: 'Annual growth', default: 6, suffix: '%' },
+      { key: 'years', label: 'Years before granting', default: 5 },
+    ],
+    compute: v => {
+      const deduction = v.contribution * (v.taxRate / 100)
+      const grown = v.contribution * Math.pow(1 + v.growth / 100, v.years)
+      return {
+        metrics: [
+          { label: 'Immediate tax deduction', value: money(deduction), highlight: true },
+          { label: 'Available to grant later', value: money(grown), highlight: true },
+          { label: 'Tax-free growth', value: money(grown - v.contribution) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Contribution', money(v.contribution)], ['Tax deduction', money(deduction)], ['Value after ' + v.years + ' yrs', money(grown)]],
+        note: `A donor-advised fund gives you the full deduction now, then invests tax-free until you direct grants to charities. "Bunching" several years of giving into one high-income year maximizes the deduction. Donating appreciated stock avoids capital gains too. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'backdoor-roth-simulator', name: 'Backdoor Roth Simulator', category: 'Finance',
+    tagline: 'Tax-free growth for high earners.',
+    description: 'Model annual backdoor Roth contributions compounding tax-free to retirement. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'Annual contribution', default: 7000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 8, suffix: '%' },
+      { key: 'years', label: 'Years', default: 25 },
+    ],
+    compute: v => {
+      let fv = 0
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.return / 100) + v.contribution
+      const contributed = v.contribution * yrs
+      return {
+        metrics: [
+          { label: 'Tax-free value', value: money(fv), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Tax-free growth', value: money(fv - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Annual contribution', money(v.contribution)], ['Total contributed', money(contributed)], ['Tax-free value', money(fv)]],
+        note: `High earners phased out of direct Roth contributions can use the "backdoor" — a nondeductible IRA contribution converted to Roth — so all this growth becomes tax-free. Watch the pro-rata rule if you hold other IRA balances. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'esign-saas-simulator', name: 'E-Signature SaaS Simulator', category: 'SaaS',
+    tagline: 'Project an e-sign product’s recurring profit.',
+    description: 'Model customers and price against per-customer cost to see monthly recurring profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 3000 },
+      { key: 'arpu', label: 'ARPU / mo', default: 30, prefix: '$' },
+      { key: 'cost', label: 'Cost / customer', default: 4, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.customers * v.arpu
+      const cost = v.customers * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(revenue > 0 ? (revenue - cost) / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Recurring revenue', money(revenue)], ['Cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `E-sign is high-margin, sticky, and workflow-embedded — once it's in a company's process, switching is painful. Usage-based tiers and API/embedded distribution expand revenue per customer. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'crm-saas-simulator', name: 'CRM SaaS Simulator', category: 'SaaS',
+    tagline: 'Project a seat-based CRM business.',
+    description: 'Model seats and price against per-seat cost to see monthly recurring profit and gross margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'seats', label: 'Seats', default: 8000 },
+      { key: 'price', label: 'Price / seat / mo', default: 45, prefix: '$' },
+      { key: 'cost', label: 'Cost / seat', default: 6, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 120000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.seats * v.price
+      const cost = v.seats * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(revenue > 0 ? (revenue - cost) / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Recurring revenue', money(revenue)], ['Cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `CRM is a seat-expansion machine — as a customer grows and adds users, revenue grows with zero new acquisition. Net revenue retention above 100% (seats + upsells outpacing churn) is what drives premium SaaS valuations. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'audiology-clinic-simulator', name: 'Audiology Clinic Simulator', category: 'Healthcare',
+    tagline: 'Where hearing-aid sales carry the practice.',
+    description: 'Model hearing-aid sales and exams to see monthly profit and where it comes from.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'aids', label: 'Hearing aids (pairs) / month', default: 40 },
+      { key: 'price', label: 'Price per pair', default: 4000, prefix: '$' },
+      { key: 'deviceCost', label: 'Device cost %', default: 45, suffix: '%' },
+      { key: 'exams', label: 'Exam revenue / month', default: 15000, prefix: '$' },
+      { key: 'examMargin', label: 'Exam margin', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const deviceProfit = v.aids * v.price * (1 - v.deviceCost / 100)
+      const examProfit = v.exams * (v.examMargin / 100)
+      const profit = deviceProfit + examProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Device profit', value: money(deviceProfit), highlight: true },
+          { label: 'Exam profit', value: money(examProfit) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [['Hearing aids', money(deviceProfit)], ['Exams', money(examProfit)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Hearing-aid sales carry the practice — exams bring patients in the door, devices and follow-up service drive the profit. Bundled service plans and an aging population make it a durable, growing niche. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'sleep-clinic-simulator', name: 'Sleep Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a sleep study center’s profit.',
+    description: 'Model study volume and reimbursement against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'studies', label: 'Studies / month', default: 120 },
+      { key: 'reimbursement', label: 'Reimbursement / study', default: 600, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / study', default: 150, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.studies * v.reimbursement
+      const variable = v.studies * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / study', value: money(v.reimbursement - v.variable), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Sleep medicine rides rising sleep-apnea diagnosis rates. Study volume and referral relationships drive it; home sleep testing is lower-cost and expanding the market. Payer mix shapes the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'donut-shop-simulator', name: 'Donut Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a donut shop’s monthly profit.',
+    description: 'Model daily dozens and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dozens', label: 'Dozens / day', default: 150 },
+      { key: 'price', label: 'Price per dozen', default: 12, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dozens * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Donuts have excellent food-cost margins but are a morning business with high waste risk on unsold product. Wholesale accounts, catering, and specialty/gourmet lines lift revenue and reduce end-of-day waste. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'sub-sandwich-simulator', name: 'Sandwich / Sub Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a sub shop’s monthly profit.',
+    description: 'Model daily orders and ticket against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 200 },
+      { key: 'ticket', label: 'Average ticket', default: 11, prefix: '$' },
+      { key: 'food', label: 'Food cost %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 14000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * 30
+      const profit = revenue * (1 - (v.food + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * ((v.food + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Sub shops profit on lunch-rush throughput and catering. Speed of service and average ticket (combos, chips, drinks) drive it; a good office-dense location and online ordering are big advantages. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'fencing-company-simulator', name: 'Fencing Company Simulator', category: 'Construction',
+    tagline: 'Project a fence installation business.',
+    description: 'Model job volume and value against material and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 25 },
+      { key: 'avgJob', label: 'Average job', default: 4500, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 40, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * ((v.material + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Fencing is seasonal, material-heavy, and estimate-sensitive — buying power and crew productivity drive margin. Commercial, agricultural, and HOA contracts provide larger, steadier jobs than one-off residential. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'kitchen-bath-remodel-simulator', name: 'Kitchen & Bath Remodel Simulator', category: 'Construction',
+    tagline: 'Project a remodeling business’s profit.',
+    description: 'Model project volume and value against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'projects', label: 'Projects / month', default: 6 },
+      { key: 'avgProject', label: 'Average project', default: 35000, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 65, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.projects * v.avgProject
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Remodels are high-ticket with real margin, but managing subs, timelines, and change orders is where projects (and profits) are won or lost. Design-build and clear contracts protect against scope creep. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'sightseeing-tour-simulator', name: 'Sightseeing Tour Simulator', category: 'Transportation',
+    tagline: 'Project a tour operator’s monthly profit.',
+    description: 'Model tour and guest volume against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tours', label: 'Tours / day', default: 6 },
+      { key: 'guests', label: 'Guests / tour', default: 20 },
+      { key: 'price', label: 'Price per guest', default: 40, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.tours * v.guests * v.price * 26
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Tours are seasonal and weather-dependent — peak season and high fill rates carry the year. Premium and private tours, plus add-ons (photos, food, upgrades), lift revenue per guest above the base ticket. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
