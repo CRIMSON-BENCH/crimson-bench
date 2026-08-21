@@ -2562,6 +2562,375 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'dividend-growth-simulator', name: 'Dividend Growth Simulator', category: 'Money',
+    tagline: 'Watch a dividend portfolio compound its income.',
+    description: 'Model a dividend portfolio with price growth and reinvested dividends to see how both value and annual income climb over the years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'portfolio', label: 'Portfolio value', default: 100000, prefix: '$' },
+      { key: 'yield', label: 'Dividend yield', default: 3.5, suffix: '%' },
+      { key: 'priceGrowth', label: 'Annual price growth', default: 5, suffix: '%' },
+      { key: 'years', label: 'Years', default: 20 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let value = v.portfolio, totalIncome = 0
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) {
+        const dividend = value * (v.yield / 100)
+        totalIncome += dividend
+        value = value * (1 + v.priceGrowth / 100) + dividend
+        if (y % 5 === 0 || y === yrs) rows.push([`Year ${y}`, money(value), money(dividend)])
+      }
+      return {
+        metrics: [
+          { label: 'Portfolio (end)', value: money(value), highlight: true },
+          { label: 'Annual income (end)', value: money(value * (v.yield / 100)), highlight: true },
+          { label: 'Total dividends', value: money(totalIncome) },
+        ],
+        columns: ['Year', 'Portfolio Value', 'Annual Dividend'],
+        rows,
+        note: `Reinvested dividends plus price growth compound together — yield-on-cost climbs far above the headline yield over time. This is why dividend growth investing is a favorite for building passive income.`,
+      }
+    },
+  },
+  {
+    id: '401k-match-simulator', name: '401(k) Employer Match Simulator', category: 'Money',
+    tagline: 'See the free money an employer match adds.',
+    description: 'Model your contributions plus an employer match compounding to retirement — and how much of the balance is the match alone.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'salary', label: 'Salary', default: 80000, prefix: '$' },
+      { key: 'contribution', label: 'Your contribution', default: 6, suffix: '%' },
+      { key: 'match', label: 'Employer match (of your %)', default: 50, suffix: '%' },
+      { key: 'cap', label: 'Match cap (% of salary)', default: 6, suffix: '%' },
+      { key: 'return', label: 'Annual return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 30 },
+    ],
+    compute: v => {
+      const yourAnnual = v.salary * (v.contribution / 100)
+      const employerAnnual = v.salary * (Math.min(v.contribution, v.cap) / 100) * (v.match / 100)
+      const rows: string[][] = []
+      let bal = 0, yourTotal = 0, empTotal = 0
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) {
+        bal = bal * (1 + v.return / 100) + yourAnnual + employerAnnual
+        yourTotal += yourAnnual; empTotal += employerAnnual
+        if (y % 5 === 0 || y === yrs) rows.push([`Year ${y}`, money(bal), money(yourTotal), money(empTotal)])
+      }
+      return {
+        metrics: [
+          { label: 'Balance (end)', value: money(bal), highlight: true },
+          { label: 'Employer contributed', value: money(empTotal), highlight: true },
+          { label: 'Your contributions', value: money(yourTotal) },
+        ],
+        columns: ['Year', 'Balance', 'You', 'Employer'],
+        rows,
+        note: `The match is an instant, guaranteed return on your money — and it compounds for decades. Contributing at least up to the cap is the single clearest win in personal finance.`,
+      }
+    },
+  },
+  {
+    id: 'roth-vs-traditional-simulator', name: 'Roth vs. Traditional Simulator', category: 'Money',
+    tagline: 'Which retirement account leaves you more?',
+    description: 'Compare after-tax retirement value of Roth vs. traditional contributions given your tax rates now and in retirement.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'Annual contribution', default: 6500, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 30 },
+      { key: 'nowRate', label: 'Tax rate now', default: 24, suffix: '%' },
+      { key: 'retireRate', label: 'Tax rate in retirement', default: 22, suffix: '%' },
+    ],
+    compute: v => {
+      let fv = 0
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.return / 100) + v.contribution
+      const trad = fv * (1 - v.retireRate / 100)
+      const roth = fv * (1 - v.nowRate / 100)
+      return {
+        metrics: [
+          { label: 'Traditional (after tax)', value: money(trad), highlight: v.retireRate <= v.nowRate },
+          { label: 'Roth (after tax)', value: money(roth), highlight: v.nowRate < v.retireRate },
+          { label: 'Difference', value: money(Math.abs(roth - trad)) },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Balance before tax', money(fv)],
+          ['Traditional — taxed in retirement', money(trad)],
+          ['Roth — taxed now', money(roth)],
+        ],
+        note: v.nowRate < v.retireRate ? `Roth wins: you pay tax at today's lower rate and withdraw tax-free later. When you expect higher future rates, pre-paying tax is the smart move.` : `Traditional wins here: deferring tax to a lower retirement rate leaves more. The whole decision hinges on now-vs-later tax rates — everything else is a wash.`,
+      }
+    },
+  },
+  {
+    id: 'college-529-simulator', name: '529 College Savings Simulator', category: 'Money',
+    tagline: 'Will you have enough saved for college?',
+    description: 'Model monthly contributions growing until college to see your projected balance against the projected cost.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'monthly', label: 'Monthly contribution', default: 300, prefix: '$' },
+      { key: 'current', label: 'Current savings', default: 5000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 6, suffix: '%' },
+      { key: 'years', label: 'Years to college', default: 15 },
+      { key: 'cost', label: 'Projected total cost', default: 150000, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.return / 1200
+      const rows: string[][] = []
+      let bal = v.current
+      const yrs = Math.min(Math.max(v.years, 1), 25)
+      for (let y = 1; y <= yrs; y++) {
+        for (let m = 0; m < 12; m++) bal = bal * (1 + r) + v.monthly
+        if (y % 3 === 0 || y === yrs) rows.push([`Year ${y}`, money(bal), pct(v.cost > 0 ? bal / v.cost : 0)])
+      }
+      return {
+        metrics: [
+          { label: 'Projected balance', value: money(bal), highlight: true },
+          { label: 'Funded', value: pct(v.cost > 0 ? bal / v.cost : 0), highlight: true },
+          { label: 'Gap', value: money(Math.max(0, v.cost - bal)) },
+        ],
+        columns: ['Year', 'Balance', 'Funded %'],
+        rows,
+        note: `529 growth is tax-free for education — a powerful edge over a taxable account. Starting early matters most; the first years of compounding do the heaviest lifting toward the goal.`,
+      }
+    },
+  },
+  {
+    id: 'hsa-triple-tax-simulator', name: 'HSA Triple-Tax Simulator', category: 'Money',
+    tagline: 'The most tax-advantaged account there is.',
+    description: 'Compare investing in an HSA (tax-free in, growth, and out) against a taxable account over the years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'annual', label: 'Annual contribution', default: 4000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 25 },
+      { key: 'taxRate', label: 'Your tax rate', default: 30, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let hsa = 0, taxable = 0
+      const taxableReturn = v.return * (1 - 0.15) // rough drag on gains
+      const afterTaxContribution = v.annual * (1 - v.taxRate / 100)
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) {
+        hsa = hsa * (1 + v.return / 100) + v.annual
+        taxable = taxable * (1 + taxableReturn / 100) + afterTaxContribution
+        if (y % 5 === 0 || y === yrs) rows.push([`Year ${y}`, money(hsa), money(taxable)])
+      }
+      return {
+        metrics: [
+          { label: 'HSA value', value: money(hsa), highlight: true },
+          { label: 'Taxable equivalent', value: money(taxable) },
+          { label: 'HSA advantage', value: money(hsa - taxable), highlight: true },
+        ],
+        columns: ['Year', 'HSA', 'Taxable Account'],
+        rows,
+        note: `The HSA is uniquely triple-tax-free — deductible in, growth untaxed, and tax-free out for medical costs. Paying medical bills out of pocket and letting the HSA invest turns it into a stealth retirement account.`,
+      }
+    },
+  },
+  {
+    id: 'covered-call-income-simulator', name: 'Covered Call Income Simulator', category: 'Money',
+    tagline: 'Income you can generate selling calls on a position.',
+    description: 'Model monthly option premium on a stock position to project annual income and yield — a common income strategy, with its trade-offs.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shares', label: 'Shares owned', default: 1000 },
+      { key: 'price', label: 'Stock price', default: 50, prefix: '$' },
+      { key: 'premium', label: 'Monthly premium', default: 1, suffix: '%' },
+    ],
+    compute: v => {
+      const position = v.shares * v.price
+      const monthly = position * (v.premium / 100)
+      const rows: string[][] = []
+      let cum = 0
+      for (let m = 1; m <= 12; m++) { cum += monthly; if (m % 2 === 0) rows.push([`Month ${m}`, money(monthly), money(cum)]) }
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(monthly), highlight: true },
+          { label: 'Annual income', value: money(monthly * 12), highlight: true },
+          { label: 'Annual yield', value: pct(position > 0 ? (monthly * 12) / position : 0) },
+        ],
+        columns: ['Month', 'Premium', 'Cumulative'],
+        rows,
+        note: `Covered calls generate steady income, but cap your upside — if the stock rockets past your strike, the shares get called away. It's an income strategy, not a growth one; know the trade you're making.`,
+      }
+    },
+  },
+  {
+    id: 'sba-acquisition-simulator', name: 'SBA Acquisition Simulator', category: 'Fundraising',
+    tagline: 'Can the business service the loan that buys it?',
+    description: 'Model buying a business with an SBA loan to see debt service, DSCR, and cash-on-cash return on your down payment.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'price', label: 'Purchase price', default: 1000000, prefix: '$' },
+      { key: 'down', label: 'Down payment', default: 10, suffix: '%' },
+      { key: 'rate', label: 'Loan rate', default: 11, suffix: '%' },
+      { key: 'term', label: 'Loan term (years)', default: 10 },
+      { key: 'cashFlow', label: 'Business cash flow (SDE)', default: 250000, prefix: '$' },
+    ],
+    compute: v => {
+      const loan = v.price * (1 - v.down / 100)
+      const r = v.rate / 1200, n = v.term * 12
+      const monthly = r === 0 ? loan / n : (loan * r) / (1 - Math.pow(1 + r, -n))
+      const annualDebt = monthly * 12
+      const dscr = annualDebt > 0 ? v.cashFlow / annualDebt : 0
+      const afterDebt = v.cashFlow - annualDebt
+      const cashInvested = v.price * (v.down / 100)
+      return {
+        metrics: [
+          { label: 'DSCR', value: `${dscr.toFixed(2)}x`, highlight: true },
+          { label: 'Cash flow after debt', value: money(afterDebt), highlight: afterDebt < 0 },
+          { label: 'Cash-on-cash', value: pct(cashInvested > 0 ? afterDebt / cashInvested : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Loan amount', money(loan)],
+          ['Annual debt service', money(annualDebt)],
+          ['Business cash flow', money(v.cashFlow)],
+          ['Owner cash after debt', money(afterDebt)],
+        ],
+        note: dscr < 1.25 ? `A DSCR of ${dscr.toFixed(2)} is thin — lenders want ~1.25+, and so should you. Little cushion means one soft year threatens the loan and your paycheck.` : `A ${dscr.toFixed(2)} DSCR with ${pct(cashInvested > 0 ? afterDebt / cashInvested : 0)} cash-on-cash — this is the appeal of acquisition: control a large cash flow with a small down payment. Buy on verified earnings, not projections.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'earnout-simulator', name: 'M&A Earnout Simulator', category: 'Fundraising',
+    tagline: 'What a deal with an earnout is really worth.',
+    description: 'Model an upfront payment plus a probability-weighted earnout to see the expected total deal value.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'upfront', label: 'Upfront payment', default: 2000000, prefix: '$' },
+      { key: 'earnout', label: 'Maximum earnout', default: 1500000, prefix: '$' },
+      { key: 'probability', label: 'Chance of full earnout', default: 60, suffix: '%' },
+    ],
+    compute: v => {
+      const expected = v.earnout * (v.probability / 100)
+      const total = v.upfront + expected
+      return {
+        metrics: [
+          { label: 'Expected total', value: money(total), highlight: true },
+          { label: 'Expected earnout', value: money(expected), highlight: true },
+          { label: 'Upfront share', value: pct(total > 0 ? v.upfront / total : 0) },
+        ],
+        columns: ['Component', 'Amount'],
+        rows: [
+          ['Upfront (guaranteed)', money(v.upfront)],
+          ['Maximum earnout', money(v.earnout)],
+          ['Expected earnout', money(expected)],
+          ['Expected total value', money(total)],
+        ],
+        note: `Earnouts bridge a price gap but shift risk to the seller — the "headline" price and the expected price differ by whatever you don't hit. Negotiate the milestones as hard as the number; achievable targets are worth more than a big maximum.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'rsu-vesting-simulator', name: 'RSU Vesting Value Simulator', category: 'Money',
+    tagline: 'What your equity vests into over four years.',
+    description: 'Model an RSU grant vesting over time with stock-price growth to see the value you actually realize each year.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shares', label: 'Total RSUs granted', default: 4000 },
+      { key: 'price', label: 'Current price', default: 40, prefix: '$' },
+      { key: 'years', label: 'Vesting years', default: 4 },
+      { key: 'growth', label: 'Annual stock growth', default: 12, suffix: '%' },
+    ],
+    compute: v => {
+      const perYear = v.shares / v.years
+      const rows: string[][] = []
+      let price = v.price, cum = 0
+      const yrs = Math.min(Math.max(v.years, 1), 10)
+      for (let y = 1; y <= yrs; y++) {
+        if (y > 1) price *= 1 + v.growth / 100
+        const value = perYear * price
+        cum += value
+        rows.push([`Year ${y}`, Math.round(perYear).toString(), money(price), money(value)])
+      }
+      return {
+        metrics: [
+          { label: 'Total value realized', value: money(cum), highlight: true },
+          { label: 'Value / year (avg)', value: money(cum / yrs) },
+          { label: 'Final price', value: money(price), highlight: true },
+        ],
+        columns: ['Year', 'Shares Vested', 'Price', 'Value'],
+        rows,
+        note: `RSUs are taxed as income when they vest — plan for the tax bill each year. And remember it's concentrated risk: a big unvested balance ties your net worth to one stock, so diversifying as it vests is usually wise.`,
+      }
+    },
+  },
+  {
+    id: 'dca-vs-lumpsum-simulator', name: 'DCA vs. Lump Sum Simulator', category: 'Money',
+    tagline: 'Invest it all now, or spread it out?',
+    description: 'Compare investing a sum all at once against dollar-cost averaging it over a year, in a steadily rising market.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'total', label: 'Amount to invest', default: 60000, prefix: '$' },
+      { key: 'months', label: 'DCA over months', default: 12 },
+      { key: 'return', label: 'Expected annual return', default: 8, suffix: '%' },
+    ],
+    compute: v => {
+      const r = v.return / 1200
+      const lump = v.total * Math.pow(1 + r, v.months)
+      const per = v.total / v.months
+      let dca = 0
+      for (let m = 1; m <= v.months; m++) dca += per * Math.pow(1 + r, v.months - m)
+      return {
+        metrics: [
+          { label: 'Lump sum value', value: money(lump), highlight: true },
+          { label: 'DCA value', value: money(dca), highlight: true },
+          { label: 'Lump sum edge', value: money(lump - dca) },
+        ],
+        columns: ['Strategy', 'End Value'],
+        rows: [
+          ['Lump sum (all now)', money(lump)],
+          [`DCA (over ${v.months} mo)`, money(dca)],
+        ],
+        note: `In a rising market lump sum wins — your money is invested longer. DCA's real value is behavioral: it removes the risk of buying right before a drop and the regret that follows. Math favors lump sum; nerves often favor DCA.`,
+      }
+    },
+  },
+  {
+    id: 'net-worth-glidepath-simulator', name: 'Net Worth Glidepath Simulator', category: 'Money',
+    tagline: 'Project your net worth across a career.',
+    description: 'Model rising income, a steady savings rate, and investment returns to see net worth compound over decades.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'income', label: 'Annual income', default: 90000, prefix: '$' },
+      { key: 'incomeGrowth', label: 'Income growth / yr', default: 3, suffix: '%' },
+      { key: 'savingsRate', label: 'Savings rate', default: 20, suffix: '%' },
+      { key: 'return', label: 'Investment return', default: 7, suffix: '%' },
+      { key: 'current', label: 'Current net worth', default: 20000, prefix: '$' },
+      { key: 'years', label: 'Years', default: 25 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let nw = v.current, inc = v.income, saved = 0
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      for (let y = 1; y <= yrs; y++) {
+        const annualSave = inc * (v.savingsRate / 100)
+        nw = nw * (1 + v.return / 100) + annualSave
+        saved += annualSave
+        inc *= 1 + v.incomeGrowth / 100
+        if (y % 5 === 0 || y === yrs) rows.push([`Year ${y}`, money(inc), money(nw)])
+      }
+      return {
+        metrics: [
+          { label: 'Net worth (end)', value: money(nw), highlight: true },
+          { label: 'Total saved', value: money(saved) },
+          { label: 'Growth earned', value: money(nw - saved - v.current), highlight: true },
+        ],
+        columns: ['Year', 'Income', 'Net Worth'],
+        rows,
+        note: `Savings rate — not income — is the strongest driver early on; compounding takes over later. Someone saving 20% of a modest income out-builds a high earner who saves nothing. The rate is the lever you control.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
