@@ -145,6 +145,46 @@ export default function EnterprisePage() {
         </div>
       </section>
 
+      {/* Bespoke tiers + add-ons */}
+      <section className="px-6 py-16 bg-slate-50 dark:bg-slate-900/40 border-y border-slate-200 dark:border-slate-800">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="font-serif text-3xl font-normal text-slate-900 dark:text-white mb-3">Bespoke engagements</h2>
+          <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mb-10">
+            When you want the model built entirely around your business — your accounts, your hiring plan, your fundraising — we build it with you. Three tiers, scoped to the depth you need.
+          </p>
+          <div className="grid md:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 mb-10">
+            {[
+              { name: 'Focused Model', price: 'from $2,500', blurb: 'One integrated model of your business, built around your real numbers, with a walkthrough.', pts: ['Your drivers & chart of accounts', 'Base / bull / bear scenarios', '1 working session'] },
+              { name: 'Operating System', price: 'from $10,000', blurb: 'A linked suite — operating model, fundraise, and board scenarios — plus hands-on iteration.', pts: ['Multi-model, fully linked', 'Fundraising & hiring waves', 'Multiple sessions + revisions'], featured: true },
+              { name: 'Embedded', price: 'from $25,000', blurb: 'We sit alongside your team, wire the model to live data, and keep it current as you scale.', pts: ['Live-data integration', 'Board-cycle updates', 'Ongoing operator access'] },
+            ].map(t => (
+              <div key={t.name} className={`p-6 flex flex-col ${t.featured ? 'bg-[#B01C24]/5 dark:bg-[#B01C24]/10' : 'bg-white dark:bg-slate-950'}`}>
+                {t.featured && <p className="font-mono text-[9px] tracking-widest uppercase text-[#B01C24] mb-2">Most Popular</p>}
+                <p className="font-serif text-xl text-slate-900 dark:text-white">{t.name}</p>
+                <p className="font-mono text-lg font-bold text-[#B01C24] mt-1 mb-3">{t.price}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">{t.blurb}</p>
+                <ul className="space-y-1.5 mb-5 flex-1">
+                  {t.pts.map(p => <li key={p} className="text-xs text-slate-600 dark:text-slate-400 flex gap-2"><span className="text-[#B01C24]">✓</span><span>{p}</span></li>)}
+                </ul>
+                <a href="/contact" className={`text-center py-2 px-4 text-sm ${t.featured ? 'btn-crimson' : 'btn-outline'}`}>Request a scope →</a>
+              </div>
+            ))}
+          </div>
+          <div className="grid sm:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
+            {[
+              ['Done-for-you setup', 'Bought a $250 model? We’ll plug in your real numbers and hand it back ready to present.'],
+              ['Workshops & office hours', 'Live sessions where our operators build and pressure-test your model with your team.'],
+              ['Team & gifting', 'Multi-seat access for finance teams, and gift a model or membership to a founder you back.'],
+            ].map(([t, d]) => (
+              <div key={t} className="bg-white dark:bg-slate-950 p-5">
+                <p className="font-semibold text-slate-900 dark:text-white text-sm mb-1">{t}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* What's included + FAQ */}
       <section className="px-6 pb-16">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-12">
