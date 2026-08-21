@@ -5767,6 +5767,410 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'mobile-home-park-simulator', name: 'Mobile Home Park Simulator', category: 'Real Estate',
+    tagline: 'Project NOI and value for a lot-rent park.',
+    description: 'Model pads, occupancy, and lot rent against a low expense ratio to see NOI and value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'pads', label: 'Pads', default: 80 },
+      { key: 'occupancy', label: 'Occupancy', default: 90, suffix: '%' },
+      { key: 'rent', label: 'Lot rent / mo', default: 400, prefix: '$' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 35, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 7, suffix: '%' },
+    ],
+    compute: v => {
+      const monthlyRev = v.pads * (v.occupancy / 100) * v.rent
+      const noi = monthlyRev * 12 * (1 - v.expenseRatio / 100)
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(monthlyRev), highlight: true },
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Monthly revenue', money(monthlyRev)],
+          ['Annual NOI', money(noi)],
+          ['Value', money(value)],
+        ],
+        note: `Tenants own the homes and the park owns the land — so turnover is low and the expense ratio is far below apartments. That stability, plus raising below-market lot rents, is the whole value-add thesis. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'billboard-simulator', name: 'Billboard Portfolio Simulator', category: 'Real Estate',
+    tagline: 'Project profit from outdoor advertising faces.',
+    description: 'Model billboard faces, occupancy, and monthly rates against maintenance and ground lease to see profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'faces', label: 'Ad faces', default: 20 },
+      { key: 'occupancy', label: 'Occupancy', default: 75, suffix: '%' },
+      { key: 'rate', label: 'Monthly rate / face', default: 1200, prefix: '$' },
+      { key: 'maintenance', label: 'Maintenance / face / mo', default: 100, prefix: '$' },
+      { key: 'ground', label: 'Ground lease / face / mo', default: 200, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.faces * (v.occupancy / 100) * v.rate
+      const cost = v.faces * (v.maintenance + v.ground)
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / face', value: money(v.faces > 0 ? revenue / v.faces : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Maintenance + ground lease', money(cost)],
+          ['Profit', money(profit)],
+        ],
+        note: `Billboards throw off high-margin, low-touch cash flow — the scarce, permitted locations are a moat. Digital faces multiply revenue per structure by rotating several advertisers on one board. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'marina-simulator', name: 'Marina Simulator', category: 'Real Estate',
+    tagline: 'Project a marina’s profit from slips and fuel.',
+    description: 'Model slip income plus fuel and F&B to see a marina’s monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'slips', label: 'Slips', default: 150 },
+      { key: 'occupancy', label: 'Occupancy', default: 85, suffix: '%' },
+      { key: 'rate', label: 'Slip rate / mo', default: 600, prefix: '$' },
+      { key: 'expenseRatio', label: 'Slip expense ratio', default: 40, suffix: '%' },
+      { key: 'fuelFb', label: 'Fuel + F&B / mo', default: 30000, prefix: '$' },
+      { key: 'fbMargin', label: 'Fuel + F&B margin', default: 25, suffix: '%' },
+    ],
+    compute: v => {
+      const slipRev = v.slips * (v.occupancy / 100) * v.rate
+      const slipNOI = slipRev * (1 - v.expenseRatio / 100)
+      const fbProfit = v.fuelFb * (v.fbMargin / 100)
+      const profit = slipNOI + fbProfit
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Slip income', value: money(slipRev) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Slip revenue', money(slipRev)],
+          ['Slip NOI', money(slipNOI)],
+          ['Fuel + F&B profit', money(fbProfit)],
+          ['Total profit', money(profit)],
+        ],
+        note: `Slip rentals are the stable base; fuel, service, and dockside F&B add margin and stickiness. Waterfront is irreplaceable, which is why marinas trade at premium valuations. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'car-dealership-simulator', name: 'Car Dealership Simulator', category: 'Retail',
+    tagline: 'Where a dealership really makes money.',
+    description: 'Model front-end gross, F&I, and service to see why dealerships profit more off financing and service than the car.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units sold / month', default: 120 },
+      { key: 'frontGross', label: 'Front-end gross / unit', default: 2500, prefix: '$' },
+      { key: 'fandi', label: 'F&I gross / unit', default: 1200, prefix: '$' },
+      { key: 'service', label: 'Service revenue / mo', default: 200000, prefix: '$' },
+      { key: 'serviceMargin', label: 'Service margin', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 250000, prefix: '$' },
+    ],
+    compute: v => {
+      const front = v.units * v.frontGross
+      const fi = v.units * v.fandi
+      const serviceGross = v.service * (v.serviceMargin / 100)
+      const profit = front + fi + serviceGross - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'F&I + service gross', value: money(fi + serviceGross), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Source', 'Gross Profit'],
+        rows: [
+          ['Front-end (the car)', money(front)],
+          ['F&I (financing)', money(fi)],
+          ['Service', money(serviceGross)],
+          ['Fixed', money(-v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `The car itself is often the thinnest margin — dealerships profit on financing (F&I) and the fixed-ops service department. That's why they push warranties and want you back for oil changes. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'gas-station-simulator', name: 'Gas Station Simulator', category: 'Retail',
+    tagline: 'The c-store is the business, not the fuel.',
+    description: 'Model razor-thin fuel margins against the convenience store to see where a gas station actually profits.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'gallons', label: 'Gallons / month', default: 150000 },
+      { key: 'fuelMargin', label: 'Margin / gallon', default: 0.25, prefix: '$' },
+      { key: 'store', label: 'C-store sales / mo', default: 120000, prefix: '$' },
+      { key: 'storeMargin', label: 'C-store margin', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const fuelProfit = v.gallons * v.fuelMargin
+      const storeProfit = v.store * (v.storeMargin / 100)
+      const profit = fuelProfit + storeProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'C-store profit', value: money(storeProfit), highlight: true },
+          { label: 'Fuel profit', value: money(fuelProfit) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [
+          ['Fuel', money(fuelProfit)],
+          ['C-store', money(storeProfit)],
+          ['Fixed', money(-v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Fuel is a razor-thin loss-leader that drives traffic; the convenience store's high-margin snacks, drinks, and tobacco are the real profit. Food service is the fastest-growing piece. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'coffee-shop-simulator', name: 'Coffee Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a café’s monthly profit.',
+    description: 'Model daily cups and ticket size against COGS, labor, and rent to see monthly profit and per-cup contribution.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cups', label: 'Cups / day', default: 400 },
+      { key: 'ticket', label: 'Average ticket', default: 5.5, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 25, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly rent + fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cups * v.ticket * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))],
+          ['Rent + fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Coffee has fantastic product margins but low ticket sizes — it lives on volume, throughput at peak, and add-ons (food, retail beans). Reaching enough daily cups to cover rent and labor is the whole battle. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wedding-venue-simulator', name: 'Wedding Venue Simulator', category: 'Hospitality',
+    tagline: 'Project an events venue’s profit.',
+    description: 'Model bookings and per-event revenue against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'events', label: 'Events / month', default: 8 },
+      { key: 'revenue', label: 'Revenue / event', default: 9000, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / event', default: 3000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const rev = v.events * v.revenue
+      const variable = v.events * v.variable
+      const profit = rev - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / event', value: money(v.events > 0 ? profit / v.events : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(rev)],
+          ['Variable cost', money(variable)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Venues are capacity-limited by prime dates (Saturdays, peak season) — so premium pricing on the best dates and packages (catering, bar, rentals) drive the numbers more than raw event count. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'golf-course-simulator', name: 'Golf Course Simulator', category: 'Recreation',
+    tagline: 'Project a course’s profit from rounds and F&B.',
+    description: 'Model rounds against green fees, cart, and food & beverage per round versus heavy maintenance overhead.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rounds', label: 'Rounds / month', default: 4000 },
+      { key: 'green', label: 'Green fee', default: 55, prefix: '$' },
+      { key: 'cart', label: 'Cart fee', default: 18, prefix: '$' },
+      { key: 'fb', label: 'F&B per round', default: 12, prefix: '$' },
+      { key: 'opex', label: 'Monthly opex (maintenance heavy)', default: 180000, prefix: '$' },
+    ],
+    compute: v => {
+      const perRound = v.green + v.cart + v.fb
+      const revenue = v.rounds * perRound
+      const profit = revenue - v.opex
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / round', value: money(perRound), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Opex', money(v.opex)],
+          ['Profit', money(profit)],
+        ],
+        note: `Course maintenance is a huge, weather-dependent fixed cost — so rounds played and F&B/pro-shop spend per round decide the year. Memberships and events smooth the seasonality. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'datacenter-colocation-simulator', name: 'Data Center Colocation Simulator', category: 'Tech',
+    tagline: 'Project a colo facility’s profit.',
+    description: 'Model rack occupancy and pricing against power cost and fixed overhead to see monthly profit and revenue per rack.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'racks', label: 'Racks', default: 200 },
+      { key: 'occupancy', label: 'Occupancy', default: 80, suffix: '%' },
+      { key: 'price', label: 'Price / rack / mo', default: 1500, prefix: '$' },
+      { key: 'power', label: 'Power cost / rack / mo', default: 400, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 200000, prefix: '$' },
+    ],
+    compute: v => {
+      const occupied = v.racks * (v.occupancy / 100)
+      const revenue = occupied * v.price
+      const powerCost = occupied * v.power
+      const profit = revenue - powerCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Revenue / rack', value: money(v.racks > 0 ? revenue / v.racks : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Power cost', money(powerCost)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Colo is a real-estate-plus-power business — heavy upfront build cost, then high-margin recurring rack revenue once leased. Power efficiency (PUE) and occupancy are the two dials that set profitability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'api-billing-simulator', name: 'Usage-Based API Billing Simulator', category: 'SaaS',
+    tagline: 'Project margin on a metered API product.',
+    description: 'Model call volume and per-call pricing against infrastructure cost to see revenue, infra cost, and gross margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 500 },
+      { key: 'calls', label: 'Calls / customer / mo', default: 100000 },
+      { key: 'price', label: 'Price / 1k calls', default: 2, prefix: '$' },
+      { key: 'infra', label: 'Infra cost / 1M calls', default: 300, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalCalls = v.customers * v.calls
+      const revenue = (totalCalls / 1000) * v.price
+      const infra = (totalCalls / 1000000) * v.infra
+      const profit = revenue - infra - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(revenue > 0 ? (revenue - infra) / revenue : 0), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total calls', Math.round(totalCalls).toLocaleString()],
+          ['Revenue', money(revenue)],
+          ['Infra cost', money(infra)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Usage pricing aligns revenue with customer value and scales beautifully — but watch the spread between your price and infra cost per call. Heavy users can crush margin if pricing doesn't tier. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'vineyard-simulator', name: 'Vineyard & Winery Simulator', category: 'Manufacturing',
+    tagline: 'Project a winery’s annual profit.',
+    description: 'Model acres and yield against bottle price and cost to see annual profit and per-acre economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acres', label: 'Planted acres', default: 20 },
+      { key: 'bottles', label: 'Bottles / acre', default: 3000 },
+      { key: 'price', label: 'Price per bottle', default: 25, prefix: '$' },
+      { key: 'cost', label: 'Cost per bottle', default: 8, prefix: '$' },
+      { key: 'fixed', label: 'Annual fixed', default: 150000, prefix: '$' },
+    ],
+    compute: v => {
+      const bottles = v.acres * v.bottles
+      const revenue = bottles * v.price
+      const cogs = bottles * v.cost
+      const profit = revenue - cogs - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / acre', value: money(v.acres > 0 ? profit / v.acres : 0), highlight: true },
+          { label: 'Bottles / year', value: Math.round(bottles).toLocaleString() },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Cost of goods', money(cogs)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Wineries take years before vines produce and capital sits idle — so patient money and a strong direct-to-consumer (tasting room, wine club) channel, which captures full retail margin, are what make the numbers work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'airline-route-simulator', name: 'Airline Route Simulator', category: 'Transportation',
+    tagline: 'Why a few points of load factor decide profit.',
+    description: 'Model seats, load factor, and fare against cost per seat to see route profit and the break-even load factor.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'seats', label: 'Seats', default: 180 },
+      { key: 'load', label: 'Load factor', default: 82, suffix: '%' },
+      { key: 'fare', label: 'Average fare', default: 220, prefix: '$' },
+      { key: 'costPerSeat', label: 'Cost per available seat', default: 150, prefix: '$' },
+      { key: 'flights', label: 'Flights / day', default: 4 },
+    ],
+    compute: v => {
+      const paxPerFlight = v.seats * (v.load / 100)
+      const revPerFlight = paxPerFlight * v.fare
+      const costPerFlight = v.seats * v.costPerSeat
+      const profitPerFlight = revPerFlight - costPerFlight
+      const monthly = profitPerFlight * v.flights * 30
+      const breakevenLoad = v.fare > 0 ? v.costPerSeat / v.fare : 0
+      return {
+        metrics: [
+          { label: 'Profit / flight', value: money(profitPerFlight), highlight: profitPerFlight < 0 },
+          { label: 'Monthly profit', value: money(monthly), highlight: true },
+          { label: 'Break-even load', value: pct(breakevenLoad), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue / flight', money(revPerFlight)],
+          ['Cost / flight', money(costPerFlight)],
+          ['Profit / flight', money(profitPerFlight)],
+        ],
+        note: `Airlines fly on razor margins — you need about a ${pct(breakevenLoad)} load factor just to break even here, and the last few seats are almost pure profit. Fuel and fare swings turn profit to loss fast; ancillary fees are the cushion. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
