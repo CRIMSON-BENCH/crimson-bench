@@ -7070,6 +7070,430 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'cap-table-model',
   },
+
+  {
+    id: 'urgent-care-simulator', name: 'Urgent Care Simulator', category: 'Healthcare',
+    tagline: 'Project an urgent care clinic’s profit.',
+    description: 'Model visit volume and reimbursement against provider, supply, and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 50 },
+      { key: 'reimbursement', label: 'Reimbursement / visit', default: 130, prefix: '$' },
+      { key: 'provider', label: 'Provider cost / visit', default: 35, prefix: '$' },
+      { key: 'supplies', label: 'Supplies / visit', default: 12, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.reimbursement * 30
+      const variable = v.visits * (v.provider + v.supplies) * 30
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Margin / visit', value: money(v.reimbursement - v.provider - v.supplies) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Provider + supplies', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Urgent care lives on visit volume against high fixed cost — slow days hurt because staff and rent run regardless. Occupational health contracts and ancillary services (labs, X-ray) lift revenue per visit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pt-clinic-simulator', name: 'Physical Therapy Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a PT clinic’s profit.',
+    description: 'Model visit volume and reimbursement against therapist cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 40 },
+      { key: 'reimbursement', label: 'Reimbursement / visit', default: 90, prefix: '$' },
+      { key: 'therapist', label: 'Therapist cost / visit', default: 30, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 35000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.reimbursement * 22
+      const therapist = v.visits * v.therapist * 22
+      const profit = revenue - therapist - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Therapist cost', money(therapist)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `PT profit hinges on therapist productivity (visits per day) and payer mix — cash-pay and wellness services beat squeezed insurance reimbursement. Group and tech-assisted models raise visits per therapist. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'chiropractic-simulator', name: 'Chiropractic Practice Simulator', category: 'Healthcare',
+    tagline: 'Project a chiropractic practice’s profit.',
+    description: 'Model high visit volume and average collection against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 45 },
+      { key: 'collection', label: 'Average collection / visit', default: 55, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / visit', default: 8, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.collection * 22
+      const variable = v.visits * v.variable * 22
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Chiropractic runs on volume and low variable cost — the model rewards throughput and retention. Care plans and cash wellness memberships smooth revenue and reduce insurance dependence. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'surgery-center-simulator', name: 'Ambulatory Surgery Center Simulator', category: 'Healthcare',
+    tagline: 'Project an ASC’s profit.',
+    description: 'Model case volume and reimbursement against supply and staff cost and heavy fixed overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cases', label: 'Cases / day', default: 12 },
+      { key: 'reimbursement', label: 'Reimbursement / case', default: 2500, prefix: '$' },
+      { key: 'supply', label: 'Supply cost / case', default: 600, prefix: '$' },
+      { key: 'staff', label: 'Staff cost / case', default: 400, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 200000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cases * v.reimbursement * 20
+      const variable = v.cases * (v.supply + v.staff) * 20
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Margin / case', value: money(v.reimbursement - v.supply - v.staff) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Supply + staff', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `ASCs are high-fixed-cost and case-mix-driven — the highest-reimbursed procedures carry the center. Physician ownership and steady case volume make them among the most profitable healthcare assets. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'fertility-clinic-simulator', name: 'Fertility (IVF) Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project an IVF clinic’s profit.',
+    description: 'Model cycle volume and price against per-cycle cost and fixed overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cycles', label: 'Cycles / month', default: 40 },
+      { key: 'price', label: 'Price per cycle', default: 18000, prefix: '$' },
+      { key: 'cost', label: 'Variable cost / cycle', default: 7000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 250000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cycles * v.price
+      const variable = v.cycles * v.cost
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Margin / cycle', value: money(v.price - v.cost) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable cost', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Fertility is high-ticket, largely cash-pay, and growing fast — which is why it draws private-equity roll-ups. Cycle volume and success rates (which drive referrals) are the levers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'office-building-simulator', name: 'Office Building Simulator', category: 'Real Estate',
+    tagline: 'Project an office asset’s NOI and value.',
+    description: 'Model square footage, rent, and occupancy against operating expenses to see NOI and value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sqft', label: 'Rentable sq ft', default: 50000 },
+      { key: 'rent', label: 'Rent / sq ft / year', default: 28, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 85, suffix: '%' },
+      { key: 'opex', label: 'Opex / sq ft / year', default: 10, prefix: '$' },
+      { key: 'capRate', label: 'Cap rate', default: 7.5, suffix: '%' },
+    ],
+    compute: v => {
+      const gross = v.sqft * v.rent * (v.occupancy / 100)
+      const opex = v.sqft * v.opex
+      const noi = gross - opex
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+          { label: 'Effective rent', value: money(gross) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Effective gross rent', money(gross)], ['Operating expenses', money(opex)], ['NOI', money(noi)], ['Value', money(value)]],
+        note: `Office is a challenged, occupancy-sensitive asset right now — vacancy hits NOI hard and cap rates have widened. Lease term, tenant credit, and TI/leasing costs (not shown) matter enormously. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'industrial-warehouse-simulator', name: 'Industrial Warehouse Simulator', category: 'Real Estate',
+    tagline: 'Project an industrial asset’s NOI and value.',
+    description: 'Model warehouse square footage and rent at a low (often NNN) expense ratio to see NOI and value.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sqft', label: 'Square feet', default: 100000 },
+      { key: 'rent', label: 'Rent / sq ft / year', default: 9, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 95, suffix: '%' },
+      { key: 'opexRatio', label: 'Expense ratio (NNN low)', default: 15, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 6.5, suffix: '%' },
+    ],
+    compute: v => {
+      const gross = v.sqft * v.rent * (v.occupancy / 100)
+      const noi = gross * (1 - v.opexRatio / 100)
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+          { label: 'Gross rent', value: money(gross) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross rent', money(gross)], ['NOI', money(noi)], ['Value', money(value)]],
+        note: `Industrial is the darling of real estate — low opex (often triple-net), long leases, and e-commerce/logistics demand. Location near transport and clear-height/loading specs drive rent premiums. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'retail-strip-center-simulator', name: 'Retail Strip Center Simulator', category: 'Real Estate',
+    tagline: 'Project a strip center’s NOI and value.',
+    description: 'Model tenant rents, occupancy, and CAM recovery against opex to see NOI and value.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 10 },
+      { key: 'rent', label: 'Avg rent / unit / mo', default: 3500, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 90, suffix: '%' },
+      { key: 'camRecovery', label: 'CAM recovery', default: 90, suffix: '%' },
+      { key: 'opex', label: 'Monthly opex', default: 8000, prefix: '$' },
+      { key: 'capRate', label: 'Cap rate', default: 7.5, suffix: '%' },
+    ],
+    compute: v => {
+      const rentRev = v.units * v.rent * (v.occupancy / 100)
+      const cam = v.opex * (v.camRecovery / 100)
+      const monthlyNOI = rentRev + cam - v.opex
+      const annualNOI = monthlyNOI * 12
+      const value = annualNOI / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Annual NOI', value: money(annualNOI), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+          { label: 'Monthly rent', value: money(rentRev) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Rent revenue', money(rentRev)], ['CAM recovered', money(cam)], ['Opex', money(v.opex)], ['Monthly NOI', money(monthlyNOI)]],
+        note: `Strip centers pass most expenses to tenants via CAM, so NOI is fairly protected. A strong anchor tenant and a service/necessity mix (not fashion) defend against e-commerce. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cell-tower-simulator', name: 'Cell Tower Simulator', category: 'Real Estate',
+    tagline: 'Why adding a tenant is nearly pure margin.',
+    description: 'Model tower tenants and rent against ground lease and maintenance to see the powerful economics of co-location.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tenants', label: 'Tenants', default: 3 },
+      { key: 'rent', label: 'Rent / tenant / mo', default: 2000, prefix: '$' },
+      { key: 'ground', label: 'Ground lease / mo', default: 800, prefix: '$' },
+      { key: 'maintenance', label: 'Maintenance / mo', default: 200, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.tenants * v.rent
+      const cost = v.ground + v.maintenance
+      const profit = revenue - cost
+      const withOneMore = (v.tenants + 1) * v.rent - cost
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Annual NOI', value: money(profit * 12), highlight: true },
+          { label: 'Profit if +1 tenant', value: money(withOneMore), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Rent revenue', money(revenue)], ['Ground lease', money(v.ground)], ['Maintenance', money(v.maintenance)], ['Profit', money(profit)]],
+        note: `The tower's cost is fixed, so each additional tenant's rent is almost pure profit — co-location is the magic of tower economics. That operating leverage is why tower REITs trade at premium multiples. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'hvac-company-simulator', name: 'HVAC Company Simulator', category: 'Construction',
+    tagline: 'Project an HVAC business across install and service.',
+    description: 'Model installs and service work at their different margins to see total monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'installs', label: 'Installs / month', default: 20 },
+      { key: 'installValue', label: 'Avg install', default: 8000, prefix: '$' },
+      { key: 'installMargin', label: 'Install margin', default: 35, suffix: '%' },
+      { key: 'serviceCalls', label: 'Service calls / month', default: 200 },
+      { key: 'serviceTicket', label: 'Avg service ticket', default: 350, prefix: '$' },
+      { key: 'serviceMargin', label: 'Service margin', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const installGross = v.installs * v.installValue * (v.installMargin / 100)
+      const serviceGross = v.serviceCalls * v.serviceTicket * (v.serviceMargin / 100)
+      const profit = installGross + serviceGross - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Service gross', value: money(serviceGross), highlight: true },
+          { label: 'Install gross', value: money(installGross) },
+        ],
+        columns: ['Source', 'Gross Profit'],
+        rows: [['Installs', money(installGross)], ['Service', money(serviceGross)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Installs bring the big tickets, but service and maintenance agreements are higher-margin, recurring, and feed replacement leads. The best HVAC companies build a service base that carries them through slow install seasons. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'plumbing-shop-simulator', name: 'Plumbing Shop Simulator', category: 'Construction',
+    tagline: 'Project a plumbing business’s profit.',
+    description: 'Model job volume and ticket against material/labor cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / week', default: 40 },
+      { key: 'ticket', label: 'Average ticket', default: 380, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 4.33
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Plumbing profits on dispatch efficiency and average ticket — flat-rate pricing and upsells (water heaters, filtration) beat hourly billing. Emergency and commercial contracts add steady, higher-margin work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pest-control-simulator', name: 'Pest Control Simulator', category: 'Home Services',
+    tagline: 'Project a recurring pest-control business.',
+    description: 'Model recurring accounts plus one-time jobs against costs to see the value of a recurring service base.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'accounts', label: 'Recurring accounts', default: 800 },
+      { key: 'fee', label: 'Monthly fee', default: 45, prefix: '$' },
+      { key: 'cost', label: 'Cost / account / mo', default: 15, prefix: '$' },
+      { key: 'oneTime', label: 'One-time jobs / mo', default: 15000, prefix: '$' },
+      { key: 'oneTimeMargin', label: 'One-time margin', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const recurringProfit = v.accounts * (v.fee - v.cost)
+      const oneTimeProfit = v.oneTime * (v.oneTimeMargin / 100)
+      const profit = recurringProfit + oneTimeProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Recurring revenue', value: money(v.accounts * v.fee), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [['Recurring contracts', money(recurringProfit)], ['One-time jobs', money(oneTimeProfit)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `The recurring account base is the prize — predictable revenue, easy routing, and it sells for a multiple of monthly recurring. Convert one-time customers to plans, and route density does the rest. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'comparable-valuation-simulator', name: 'Comparable Company Valuation', category: 'Finance',
+    tagline: 'Value a business against market multiples.',
+    description: 'Apply revenue and EBITDA multiples to see a valuation range — the "comps" method analysts use alongside DCF.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Revenue', default: 5000000, prefix: '$' },
+      { key: 'ebitda', label: 'EBITDA', default: 800000, prefix: '$' },
+      { key: 'revMultiple', label: 'Revenue multiple', default: 3 },
+      { key: 'ebitdaMultiple', label: 'EBITDA multiple', default: 10 },
+    ],
+    compute: v => {
+      const revValue = v.revenue * v.revMultiple
+      const ebitdaValue = v.ebitda * v.ebitdaMultiple
+      const low = Math.min(revValue, ebitdaValue)
+      const high = Math.max(revValue, ebitdaValue)
+      const mid = (revValue + ebitdaValue) / 2
+      return {
+        metrics: [
+          { label: 'Valuation range (low)', value: money(low) },
+          { label: 'Midpoint', value: money(mid), highlight: true },
+          { label: 'Valuation range (high)', value: money(high), highlight: true },
+        ],
+        columns: ['Method', 'Value'],
+        rows: [['Revenue multiple', money(revValue)], ['EBITDA multiple', money(ebitdaValue)], ['Blended midpoint', money(mid)]],
+        note: `Comps triangulate value from what similar businesses actually trade for. The gap between the revenue and EBITDA numbers reflects how the market weighs your growth versus your profitability. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'recap-dividend-simulator', name: 'Dividend Recapitalization Simulator', category: 'Fundraising',
+    tagline: 'Take cash out without selling the company.',
+    description: 'Model adding debt to fund a dividend to owners, and see the cash out and remaining equity value.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'value', label: 'Company value', default: 20000000, prefix: '$' },
+      { key: 'currentDebt', label: 'Current debt', default: 2000000, prefix: '$' },
+      { key: 'newDebt', label: 'New total debt', default: 8000000, prefix: '$' },
+    ],
+    compute: v => {
+      const dividend = Math.max(0, v.newDebt - v.currentDebt)
+      const equityAfter = v.value - v.newDebt
+      const total = dividend + equityAfter
+      return {
+        metrics: [
+          { label: 'Cash dividend to owner', value: money(dividend), highlight: true },
+          { label: 'Remaining equity value', value: money(equityAfter), highlight: true },
+          { label: 'Total owner value', value: money(total) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Company value', money(v.value)], ['New debt', money(v.newDebt)], ['Cash dividend', money(dividend)], ['Equity retained', money(equityAfter)]],
+        note: `A dividend recap lets owners take chips off the table while keeping control — the company borrows to pay them. The trade is added leverage and risk; a downturn is far more dangerous with the extra debt. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'rollover-equity-simulator', name: 'Rollover Equity (Second Bite) Simulator', category: 'Fundraising',
+    tagline: 'The value of a second bite at the apple.',
+    description: 'Model rolling part of your sale proceeds into the buyer’s equity to see cash at close plus the potential second exit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sale', label: 'Sale value (your equity)', default: 10000000, prefix: '$' },
+      { key: 'rollover', label: 'Rollover %', default: 20, suffix: '%' },
+      { key: 'secondMultiple', label: '2nd exit multiple on rollover', default: 2.5 },
+    ],
+    compute: v => {
+      const cashAtClose = v.sale * (1 - v.rollover / 100)
+      const rolled = v.sale * (v.rollover / 100)
+      const secondBite = rolled * v.secondMultiple
+      const total = cashAtClose + secondBite
+      return {
+        metrics: [
+          { label: 'Cash at close', value: money(cashAtClose), highlight: true },
+          { label: 'Second bite value', value: money(secondBite), highlight: true },
+          { label: 'Total proceeds', value: money(total), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Cash at close', money(cashAtClose)], ['Rolled equity', money(rolled)], ['Second exit value', money(secondBite)], ['Total', money(total)]],
+        note: `Rolling equity into the PE buyer gives sellers a "second bite" — and if the buyer grows and re-sells the company, that stake can be worth more than the first check. The risk: it's illiquid and rides on the buyer's success. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
