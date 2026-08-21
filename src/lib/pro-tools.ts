@@ -2172,6 +2172,396 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'breakeven-ramp-simulator', name: 'Break-Even Ramp Simulator', category: 'Finance',
+    tagline: 'Chart the path from launch to your first profitable month.',
+    description: 'Model revenue ramping against fixed and variable costs to find the month you turn profitable and the cash you burn getting there.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Month 1 revenue', default: 20000, prefix: '$' },
+      { key: 'growth', label: 'Growth / month', default: 15, suffix: '%' },
+      { key: 'variable', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed cost', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let rev = v.revenue, cum = 0, be = 0, trough = 0
+      for (let m = 1; m <= 18; m++) {
+        if (m > 1) rev *= 1 + v.growth / 100
+        const profit = rev * (1 - v.variable / 100) - v.fixed
+        cum += profit
+        if (cum < trough) trough = cum
+        if (be === 0 && profit >= 0) be = m
+        if (m % 3 === 0) rows.push([`Month ${m}`, money(rev), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Break-even month', value: be ? `Month ${be}` : '> 18mo', highlight: true },
+          { label: 'Max cash burned', value: money(-trough), highlight: true },
+          { label: 'Profit (mo 18)', value: money(rev * (1 - v.variable / 100) - v.fixed) },
+        ],
+        columns: ['Month', 'Revenue', 'Monthly Profit'],
+        rows,
+        note: `The deepest cumulative loss — about ${money(-trough)} — is the capital you must have to reach profitability. Most startups die in this trough, not from a bad model but from running out before month ${be || 18}.`,
+      }
+    },
+  },
+  {
+    id: 'capital-efficiency-simulator', name: 'Capital Efficiency Simulator', category: 'SaaS',
+    tagline: 'How many dollars you burn per dollar of ARR.',
+    description: 'Model monthly burn against net new ARR to track your burn multiple as you scale — the number investors use to judge efficiency.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'burn', label: 'Monthly net burn', default: 150000, prefix: '$' },
+      { key: 'newARR', label: 'Net new ARR / month', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cumBurn = 0, arr = 0
+      for (let m = 1; m <= 18; m++) {
+        cumBurn += v.burn; arr += v.newARR
+        if (m % 3 === 0) rows.push([`Month ${m}`, money(arr), money(cumBurn), `${(arr > 0 ? cumBurn / arr : 0).toFixed(2)}x`])
+      }
+      return {
+        metrics: [
+          { label: 'ARR added', value: money(arr), highlight: true },
+          { label: 'Total burned', value: money(cumBurn) },
+          { label: 'Burn multiple', value: `${(arr > 0 ? cumBurn / arr : 0).toFixed(2)}x`, highlight: true },
+        ],
+        columns: ['Month', 'ARR Added', 'Cumulative Burn', 'Burn Multiple'],
+        rows,
+        note: `Under 1x burn multiple is elite; over 2x, investors get nervous. This single number tells them whether your growth is efficient or just expensive — and it sets your valuation as much as growth does.`,
+      }
+    },
+    sells: 'runway-burn-tracker',
+  },
+  {
+    id: 'support-cost-simulator', name: 'Support Cost Scaling Simulator', category: 'SaaS',
+    tagline: 'How your support cost grows with the customer base.',
+    description: 'Model customers growing and generating tickets to see support cost scale — and why self-serve matters as you grow.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Starting customers', default: 2000 },
+      { key: 'growth', label: 'Growth / month', default: 8, suffix: '%' },
+      { key: 'tickets', label: 'Tickets / customer / mo', default: 0.4 },
+      { key: 'cost', label: 'Cost per ticket', default: 12, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let c = v.customers
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) c *= 1 + v.growth / 100
+        const t = c * v.tickets
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(c).toString(), Math.round(t).toString(), money(t * v.cost)])
+      }
+      return {
+        metrics: [
+          { label: 'Support cost (mo 12)', value: money(c * v.tickets * v.cost), highlight: true },
+          { label: 'Annualized', value: money(c * v.tickets * v.cost * 12), highlight: true },
+          { label: 'Cost / customer', value: money(v.tickets * v.cost) },
+        ],
+        columns: ['Month', 'Customers', 'Tickets', 'Support Cost'],
+        rows,
+        note: `Support cost scales with customers unless you break the link. Docs, in-app help, and self-serve lower tickets-per-customer — the only way support doesn't eat your gross margin at scale.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'content-compounding-simulator', name: 'Content Compounding Simulator', category: 'Marketing',
+    tagline: 'Watch a content library compound into traffic.',
+    description: 'Model publishing consistently as each piece keeps drawing traffic — the compounding engine that makes content marketing pay off.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'posts', label: 'Posts / month', default: 8 },
+      { key: 'trafficPer', label: 'Monthly traffic / post', default: 300 },
+      { key: 'conversion', label: 'Visitor → lead', default: 2, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let total = 0
+      for (let m = 1; m <= 12; m++) {
+        total += v.posts
+        const traffic = total * v.trafficPer
+        const leads = traffic * (v.conversion / 100)
+        if (m % 2 === 0) rows.push([`Month ${m}`, total.toString(), Math.round(traffic).toLocaleString(), Math.round(leads).toString()])
+      }
+      const trafficFinal = total * v.trafficPer
+      return {
+        metrics: [
+          { label: 'Monthly traffic (mo 12)', value: Math.round(trafficFinal).toLocaleString(), highlight: true },
+          { label: 'Monthly leads (mo 12)', value: Math.round(trafficFinal * (v.conversion / 100)).toString(), highlight: true },
+          { label: 'Total posts', value: total.toString() },
+        ],
+        columns: ['Month', 'Posts', 'Monthly Traffic', 'Leads'],
+        rows,
+        note: `Unlike ads, content compounds — every piece keeps working, so traffic accelerates even at a steady publishing pace. It's slow for months, then suddenly the library carries you.`,
+      }
+    },
+    sells: 'content-strategy-calendar',
+  },
+  {
+    id: 'viral-loop-simulator', name: 'Viral Loop (K-Factor) Simulator', category: 'Revenue',
+    tagline: 'Does your product grow itself?',
+    description: 'Model invites and their conversion to compute your viral coefficient (k) and watch users grow — or fade — cycle by cycle.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'users', label: 'Starting users', default: 1000 },
+      { key: 'invites', label: 'Invites per user', default: 3 },
+      { key: 'conversion', label: 'Invite conversion', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const k = v.invites * (v.conversion / 100)
+      const rows: string[][] = []
+      let users = v.users, newLast = v.users
+      for (let c = 1; c <= 8; c++) {
+        const newThis = newLast * k
+        users += newThis
+        newLast = newThis
+        rows.push([`Cycle ${c}`, Math.round(newThis).toLocaleString(), Math.round(users).toLocaleString()])
+      }
+      return {
+        metrics: [
+          { label: 'K-factor', value: k.toFixed(2), highlight: true },
+          { label: 'Users (cycle 8)', value: Math.round(users).toLocaleString(), highlight: true },
+          { label: 'Status', value: k >= 1 ? 'Viral' : 'Fades', highlight: k < 1 },
+        ],
+        columns: ['Cycle', 'New Users', 'Total Users'],
+        rows,
+        note: k >= 1 ? `A k-factor of ${k.toFixed(2)} means each cohort more than replaces itself — true viral growth. Rare and precious; protect whatever drives it.` : `A k-factor of ${k.toFixed(2)} — under 1, so virality tapers and each push fades. It still lowers CAC by amplifying paid acquisition; getting k even close to 1 is a huge tailwind.`,
+      }
+    },
+  },
+  {
+    id: 'newsletter-sponsorship-simulator', name: 'Newsletter Sponsorship Simulator', category: 'Creator',
+    tagline: 'Project ad revenue as your list grows.',
+    description: 'Model subscriber growth and sponsorship CPM to project monthly newsletter ad revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subscribers', label: 'Subscribers', default: 10000 },
+      { key: 'growth', label: 'Growth / month', default: 8, suffix: '%' },
+      { key: 'openRate', label: 'Open rate', default: 40, suffix: '%' },
+      { key: 'cpm', label: 'Sponsor CPM (per 1k opens)', default: 40, prefix: '$' },
+      { key: 'sends', label: 'Sponsored sends / month', default: 4 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let subs = v.subscribers
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) subs *= 1 + v.growth / 100
+        const opens = subs * (v.openRate / 100)
+        const revenue = (opens / 1000) * v.cpm * v.sends
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(subs).toLocaleString(), money(revenue)])
+      }
+      const opensFinal = subs * (v.openRate / 100)
+      return {
+        metrics: [
+          { label: 'Subscribers (mo 12)', value: Math.round(subs).toLocaleString(), highlight: true },
+          { label: 'Monthly revenue', value: money((opensFinal / 1000) * v.cpm * v.sends), highlight: true },
+          { label: 'Annualized', value: money((opensFinal / 1000) * v.cpm * v.sends * 12) },
+        ],
+        columns: ['Month', 'Subscribers', 'Monthly Revenue'],
+        rows,
+        note: `Sponsorship revenue scales with engaged opens, not raw subscribers — a smaller, higher-open list out-earns a big dead one. Protect open rate as you grow, or the CPM you can charge falls.`,
+      }
+    },
+    sells: 'email-marketing-kit',
+  },
+  {
+    id: 'multifamily-valueadd-simulator', name: 'Multifamily Value-Add Simulator', category: 'Real Estate',
+    tagline: 'How a rent bump creates outsized value.',
+    description: 'Model raising rents across units and see how the NOI increase multiplies into property value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 20 },
+      { key: 'rent', label: 'Current rent / unit', default: 1200, prefix: '$' },
+      { key: 'bump', label: 'Rent increase / unit', default: 150, prefix: '$' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 45, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 6, suffix: '%' },
+    ],
+    compute: v => {
+      const curNOI = v.units * v.rent * 12 * (1 - v.expenseRatio / 100)
+      const newNOI = v.units * (v.rent + v.bump) * 12 * (1 - v.expenseRatio / 100)
+      const curVal = curNOI / (v.capRate / 100)
+      const newVal = newNOI / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Value created', value: money(newVal - curVal), highlight: true },
+          { label: 'New value', value: money(newVal), highlight: true },
+          { label: 'NOI lift', value: money(newNOI - curNOI) },
+        ],
+        columns: ['Line', 'Current', 'After Value-Add'],
+        rows: [
+          ['NOI', money(curNOI), money(newNOI)],
+          ['Value', money(curVal), money(newVal)],
+        ],
+        note: `At a ${v.capRate}% cap, every $1 of added NOI creates about $${(100 / v.capRate).toFixed(0)} of value — so a $${v.bump}/unit rent bump adds about ${money(newVal - curVal)}. That multiplier is the entire thesis of value-add real estate.`,
+      }
+    },
+  },
+  {
+    id: 'solar-payback-simulator', name: 'Solar Payback Simulator', category: 'Money',
+    tagline: 'When does a solar install pay for itself?',
+    description: 'Model install cost against rising utility savings to find the payback year and lifetime net savings.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Install cost (net)', default: 25000, prefix: '$' },
+      { key: 'savings', label: 'Monthly savings (year 1)', default: 180, prefix: '$' },
+      { key: 'escalation', label: 'Utility rate rise / yr', default: 3, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cum = 0, savings = v.savings, payback = 0
+      for (let y = 1; y <= 25; y++) {
+        cum += savings * 12
+        if (payback === 0 && cum >= v.cost) payback = y
+        if (y % 5 === 0) rows.push([`Year ${y}`, money(savings * 12), money(cum - v.cost)])
+        savings *= 1 + v.escalation / 100
+      }
+      return {
+        metrics: [
+          { label: 'Payback year', value: payback ? `Year ${payback}` : '> 25yr', highlight: true },
+          { label: '25-yr net savings', value: money(cum - v.cost), highlight: true },
+          { label: 'ROI', value: pct(v.cost > 0 ? (cum - v.cost) / v.cost : 0) },
+        ],
+        columns: ['Year', 'Annual Savings', 'Net vs. Cost'],
+        rows,
+        note: `Solar pays back around year ${payback || 25}, then produces free power — and rising utility rates make it look better every year. The financing rate versus your savings is what really decides if it's worth it.`,
+      }
+    },
+  },
+  {
+    id: 'ev-tco-simulator', name: 'EV vs. Gas TCO Simulator', category: 'Money',
+    tagline: 'Which car actually costs less to own?',
+    description: 'Compare the total cost of ownership of an EV and a gas car over the years, including running and maintenance costs.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'evPrice', label: 'EV price', default: 45000, prefix: '$' },
+      { key: 'gasPrice', label: 'Gas car price', default: 32000, prefix: '$' },
+      { key: 'miles', label: 'Miles / year', default: 12000 },
+      { key: 'evPerMile', label: 'EV cost / mile', default: 0.05, prefix: '$' },
+      { key: 'gasPerMile', label: 'Gas cost / mile', default: 0.15, prefix: '$' },
+      { key: 'maintDiff', label: 'EV maintenance savings / yr', default: 600, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let ev = v.evPrice, gas = v.gasPrice, crossover = 0
+      for (let y = 1; y <= 8; y++) {
+        ev += v.miles * v.evPerMile
+        gas += v.miles * v.gasPerMile + v.maintDiff
+        if (crossover === 0 && ev <= gas) crossover = y
+        rows.push([`Year ${y}`, money(ev), money(gas)])
+      }
+      return {
+        metrics: [
+          { label: 'EV cheaper by year', value: crossover ? `Year ${crossover}` : 'Not in 8yr', highlight: true },
+          { label: '8-yr EV TCO', value: money(ev) },
+          { label: '8-yr savings', value: money(gas - ev), highlight: true },
+        ],
+        columns: ['Year', 'EV TCO', 'Gas TCO'],
+        rows,
+        note: `The EV's higher sticker is repaid by lower running and maintenance costs — crossing over around year ${crossover || 8}. The more you drive, the faster the EV wins; low-mileage drivers may never cross over.`,
+      }
+    },
+  },
+  {
+    id: 'manufacturing-shift-simulator', name: 'Add-a-Shift Simulator', category: 'Manufacturing',
+    tagline: 'Is adding a production shift worth it?',
+    description: 'Model the incremental output, cost, and profit of adding a shift — high-leverage if you can sell the extra units.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'addUnits', label: 'Added units / month', default: 20000 },
+      { key: 'price', label: 'Price per unit', default: 40, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / unit', default: 25, prefix: '$' },
+      { key: 'shiftCost', label: 'Added shift cost / mo', default: 80000, prefix: '$' },
+    ],
+    compute: v => {
+      const addedContribution = v.addUnits * (v.price - v.variable)
+      const incremental = addedContribution - v.shiftCost
+      return {
+        metrics: [
+          { label: 'Incremental profit / mo', value: money(incremental), highlight: true },
+          { label: 'Annualized', value: money(incremental * 12), highlight: true },
+          { label: 'Verdict', value: incremental > 0 ? 'Worth it' : 'Not yet', highlight: incremental <= 0 },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Added units / mo', v.addUnits.toLocaleString()],
+          ['Added contribution', money(addedContribution)],
+          ['Added shift cost', money(v.shiftCost)],
+          ['Incremental profit', money(incremental)],
+        ],
+        note: incremental > 0 ? `The extra shift adds about ${money(incremental)}/month — but only if you can sell every unit. Idle output turns this high-leverage move into a loss. Confirm the demand first.` : `At these numbers the shift loses money — the extra cost outweighs the contribution. You need more units, higher price, or lower variable cost to justify it.`,
+      }
+    },
+    sells: 'annual-operating-budget-model',
+  },
+  {
+    id: 'gym-pt-upsell-simulator', name: 'Gym PT Upsell Simulator', category: 'Fitness',
+    tagline: 'Project revenue as personal-training attach grows.',
+    description: 'Model a rising personal-training attach rate across your members to see the high-margin revenue it adds.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 800 },
+      { key: 'startAttach', label: 'Starting PT attach %', default: 10, suffix: '%' },
+      { key: 'attachGain', label: 'Attach gain / month (pts)', default: 1 },
+      { key: 'sessions', label: 'PT sessions / member / mo', default: 4 },
+      { key: 'price', label: 'PT session price', default: 70, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let attach = v.startAttach
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) attach += v.attachGain
+        const ptMembers = v.members * (attach / 100)
+        const revenue = ptMembers * v.sessions * v.price
+        if (m % 2 === 0) rows.push([`Month ${m}`, `${attach.toFixed(0)}%`, money(revenue)])
+      }
+      const attachFinal = v.startAttach + 11 * v.attachGain
+      return {
+        metrics: [
+          { label: 'PT revenue (mo 12)', value: money(v.members * (attachFinal / 100) * v.sessions * v.price), highlight: true },
+          { label: 'Annualized', value: money(v.members * (attachFinal / 100) * v.sessions * v.price * 12), highlight: true },
+          { label: 'PT attach (mo 12)', value: `${attachFinal.toFixed(0)}%` },
+        ],
+        columns: ['Month', 'PT Attach', 'PT Revenue'],
+        rows,
+        note: `Personal training is high-margin and boosts retention — every point of attach rate stacks profitable revenue on the same member base. It's usually a bigger lever than adding new members.`,
+      }
+    },
+  },
+  {
+    id: 'restaurant-expansion-simulator', name: 'Restaurant Group Expansion Simulator', category: 'Hospitality',
+    tagline: 'Project a restaurant group as you open locations.',
+    description: 'Model opening locations over several years to see system revenue and profit scale.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'locations', label: 'Starting locations', default: 1 },
+      { key: 'add', label: 'New locations / year', default: 1 },
+      { key: 'revPer', label: 'Revenue / location', default: 1200000, prefix: '$' },
+      { key: 'margin', label: 'Location margin', default: 10, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let loc = v.locations
+      for (let y = 1; y <= 5; y++) {
+        if (y > 1) loc += v.add
+        const rev = loc * v.revPer
+        rows.push([`Year ${y}`, loc.toString(), money(rev), money(rev * (v.margin / 100))])
+      }
+      return {
+        metrics: [
+          { label: 'Locations (yr 5)', value: loc.toString(), highlight: true },
+          { label: 'System revenue', value: money(loc * v.revPer), highlight: true },
+          { label: 'Profit (yr 5)', value: money(loc * v.revPer * (v.margin / 100)) },
+        ],
+        columns: ['Year', 'Locations', 'Revenue', 'Profit'],
+        rows,
+        note: `Restaurant expansion is where thin margins meet real risk — each location needs its own management and can dilute quality. Prove repeatable, profitable unit economics before you scale the group.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
