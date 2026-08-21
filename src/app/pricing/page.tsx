@@ -97,6 +97,35 @@ export default function PricingPage() {
         </div>
       </section>
 
+      {/* Self-serve ladder */}
+      <section className="max-w-6xl mx-auto px-6 py-16 border-b border-slate-200 dark:border-slate-800">
+        <p className="section-eyebrow mb-3">Self-Serve · Do It Yourself</p>
+        <h2 className="font-serif text-3xl font-normal text-slate-900 dark:text-white mb-3">The Toolkit ladder</h2>
+        <p className="text-slate-600 dark:text-slate-400 max-w-2xl mb-10 leading-relaxed">
+          Not ready for a retainer? Start with the models. The same operator-grade thinking, self-serve — from free calculators up to a custom model of your whole business.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
+          {[
+            { name: 'Free Tools', price: '$0', unit: '', blurb: '298 instant calculators. No signup.', href: '/tools', cta: 'Use free tools' },
+            { name: 'Simulator 3-Pack', price: '$20', unit: 'one-time', blurb: 'Unlock any 3 Pro simulators — full projections + exports.', href: '/pro-tools', cta: 'Browse simulators' },
+            { name: 'Toolkit Pro', price: '$180', unit: '/mo', blurb: 'All 500 simulators + 515 Excel toolkits + AI analysis. Or $1,728/yr.', href: '/digital-products/the-crimson-bench-vault', cta: 'Get Toolkit Pro', featured: true },
+            { name: 'Company Models', price: '$250', unit: 'each', blurb: 'End-to-end integrated model of a whole business type.', href: '/enterprise', cta: 'See company models' },
+            { name: 'Bespoke Build', price: 'Custom', unit: '', blurb: 'Your entire business, modeled end to end, wired to your numbers.', href: '/enterprise', cta: 'Request a build' },
+          ].map(tier => (
+            <div key={tier.name} className={`p-6 flex flex-col ${tier.featured ? 'bg-[#B01C24]/5 dark:bg-[#B01C24]/10' : 'bg-white dark:bg-slate-950'}`}>
+              {tier.featured && <p className="font-mono text-[9px] tracking-widest uppercase text-[#B01C24] mb-2">Best Value</p>}
+              <p className="font-serif text-lg text-slate-900 dark:text-white">{tier.name}</p>
+              <p className="font-mono text-2xl font-bold text-[#B01C24] mt-1 mb-3 tabular-nums">{tier.price}<span className="text-xs font-normal text-slate-500">{tier.unit}</span></p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug flex-1 mb-4">{tier.blurb}</p>
+              <a href={tier.href} className={`text-center py-2 px-3 text-xs font-mono uppercase tracking-wider ${tier.featured ? 'btn-crimson' : 'btn-outline'}`}>{tier.cta} →</a>
+            </div>
+          ))}
+        </div>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-8">
+          Prefer a human in the room? The flat-rate consulting engagements below deploy an actual Ivy League operator into your company. ↓
+        </p>
+      </section>
+
       {/* Product sections */}
       <div className="max-w-6xl mx-auto px-6 py-16 space-y-16">
         {sections.map(section => (
