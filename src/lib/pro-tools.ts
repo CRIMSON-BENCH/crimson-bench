@@ -4560,6 +4560,403 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'pe-carry-waterfall-simulator', name: 'PE Carry Waterfall Simulator', category: 'Fundraising',
+    tagline: 'How fund profits split between LPs and the GP.',
+    description: 'Model a fund’s return through a preferred return and carried interest to see what LPs keep and what the GP earns.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'fund', label: 'Fund size', default: 100000000, prefix: '$' },
+      { key: 'moic', label: 'Gross return (MOIC)', default: 2.5 },
+      { key: 'hurdle', label: 'Preferred return / yr', default: 8, suffix: '%' },
+      { key: 'carry', label: 'Carried interest', default: 20, suffix: '%' },
+      { key: 'years', label: 'Fund life (years)', default: 5 },
+    ],
+    compute: v => {
+      const totalValue = v.fund * v.moic
+      const profit = totalValue - v.fund
+      const pref = v.fund * (Math.pow(1 + v.hurdle / 100, v.years) - 1)
+      const remaining = Math.max(0, profit - pref)
+      const gpCarry = remaining * (v.carry / 100)
+      const lpTotal = v.fund + pref + remaining * (1 - v.carry / 100)
+      return {
+        metrics: [
+          { label: 'LP net MOIC', value: `${(v.fund > 0 ? lpTotal / v.fund : 0).toFixed(2)}x`, highlight: true },
+          { label: 'GP carry', value: money(gpCarry), highlight: true },
+          { label: 'LP total', value: money(lpTotal) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total value', money(totalValue)],
+          ['Return of capital (LP)', money(v.fund)],
+          ['Preferred return (LP)', money(pref)],
+          ['GP carried interest', money(gpCarry)],
+          ['LP total', money(lpTotal)],
+        ],
+        note: `LPs get their capital plus a preferred return before the GP earns carry — that hurdle protects investors. The carry only kicks in on profits above it, aligning the GP to actually outperform. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'vc-portfolio-simulator', name: 'VC Portfolio Returns Simulator', category: 'Fundraising',
+    tagline: 'The power law behind venture returns.',
+    description: 'Model a portfolio of investments with a mix of outcomes to see the fund’s overall return — and why a few winners carry everything.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'investments', label: 'Investments', default: 20 },
+      { key: 'check', label: 'Check size', default: 500000, prefix: '$' },
+      { key: 'zero', label: '% that return 0x', default: 50, suffix: '%' },
+      { key: 'one', label: '% that return ~1x', default: 30, suffix: '%' },
+      { key: 'ten', label: '% that return 10x', default: 15, suffix: '%' },
+      { key: 'fifty', label: '% that return 50x', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const invested = v.investments * v.check
+      const value = v.investments * v.check * ((v.one / 100) * 1 + (v.ten / 100) * 10 + (v.fifty / 100) * 50)
+      return {
+        metrics: [
+          { label: 'Invested', value: money(invested) },
+          { label: 'Portfolio value', value: money(value), highlight: true },
+          { label: 'Fund MOIC', value: `${(invested > 0 ? value / invested : 0).toFixed(1)}x`, highlight: true },
+        ],
+        columns: ['Outcome', 'Deals', 'Value'],
+        rows: [
+          ['0x (write-offs)', Math.round(v.investments * v.zero / 100).toString(), money(0)],
+          ['~1x', Math.round(v.investments * v.one / 100).toString(), money(v.investments * v.one / 100 * v.check)],
+          ['10x', Math.round(v.investments * v.ten / 100).toString(), money(v.investments * v.ten / 100 * v.check * 10)],
+          ['50x', Math.round(v.investments * v.fifty / 100).toString(), money(v.investments * v.fifty / 100 * v.check * 50)],
+        ],
+        note: `Half the portfolio can go to zero and the fund still wins — because the 50x winner returns more than everything else combined. Venture is a power-law game: you're hunting outliers, not batting average. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'bond-pricing-simulator', name: 'Bond Pricing Simulator', category: 'Finance',
+    tagline: 'Why bond prices move opposite to yields.',
+    description: 'Enter coupon, yield-to-maturity, and term to price a bond and see whether it trades at a premium or discount.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'face', label: 'Face value', default: 1000, prefix: '$' },
+      { key: 'coupon', label: 'Coupon rate', default: 5, suffix: '%' },
+      { key: 'ytm', label: 'Yield to maturity', default: 6, suffix: '%' },
+      { key: 'years', label: 'Years to maturity', default: 10 },
+    ],
+    compute: v => {
+      const c = v.face * (v.coupon / 100)
+      const y = v.ytm / 100
+      let price = 0
+      for (let t = 1; t <= v.years; t++) price += c / Math.pow(1 + y, t)
+      price += v.face / Math.pow(1 + y, v.years)
+      return {
+        metrics: [
+          { label: 'Bond price', value: money(price), highlight: true },
+          { label: 'Current yield', value: pct(price > 0 ? c / price : 0), highlight: true },
+          { label: 'Trades at', value: price > v.face ? 'Premium' : price < v.face ? 'Discount' : 'Par' },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Annual coupon', money(c)],
+          ['Price', money(price)],
+          ['vs. face', money(price - v.face)],
+        ],
+        note: `Because the coupon is fixed, when market yields rise above it the bond must fall below face to compete — and vice versa. That inverse relationship is the core of fixed-income risk. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'annuity-income-simulator', name: 'Annuity Income Simulator', category: 'Money',
+    tagline: 'Trade a lump sum for guaranteed income.',
+    description: 'Enter a premium and payout rate to see the guaranteed annual and monthly income an annuity provides.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'premium', label: 'Premium (lump sum)', default: 250000, prefix: '$' },
+      { key: 'payout', label: 'Annual payout rate', default: 6, suffix: '%' },
+      { key: 'years', label: 'Payout years', default: 20 },
+    ],
+    compute: v => {
+      const annual = v.premium * (v.payout / 100)
+      return {
+        metrics: [
+          { label: 'Annual income', value: money(annual), highlight: true },
+          { label: 'Monthly income', value: money(annual / 12), highlight: true },
+          { label: 'Total over period', value: money(annual * v.years) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Premium', money(v.premium)],
+          ['Annual income', money(annual)],
+          ['Total received', money(annual * v.years)],
+        ],
+        note: `Annuities convert savings into guaranteed income you can't outlive — the trade is liquidity and upside for certainty. Weigh the payout rate against what a diversified portfolio might yield, and watch the fees. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pension-lump-vs-annuity-simulator', name: 'Pension: Lump Sum vs. Annuity', category: 'Money',
+    tagline: 'Take the lump sum, or the monthly check?',
+    description: 'Compare a pension lump sum to lifetime monthly payments to see the payout rate and simple break-even.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lump', label: 'Lump sum offer', default: 500000, prefix: '$' },
+      { key: 'monthly', label: 'Monthly pension', default: 2800, prefix: '$' },
+    ],
+    compute: v => {
+      const annual = v.monthly * 12
+      const rate = v.lump > 0 ? annual / v.lump : 0
+      const payback = annual > 0 ? v.lump / annual : 0
+      return {
+        metrics: [
+          { label: 'Pension payout rate', value: pct(rate), highlight: true },
+          { label: 'Simple break-even', value: `${payback.toFixed(1)} yr`, highlight: true },
+          { label: 'Annual pension', value: money(annual) },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Lump sum', money(v.lump)],
+          ['Annual pension', money(annual)],
+          ['Payout rate', pct(rate)],
+          ['Years to recover lump', `${payback.toFixed(1)}`],
+        ],
+        note: `The pension effectively pays ${pct(rate)} a year for life. Take the annuity if you value longevity insurance and can't reliably beat that rate; take the lump if you want flexibility, can invest well, or want to leave an estate. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'reverse-mortgage-simulator', name: 'Reverse Mortgage Estimator', category: 'Money',
+    tagline: 'Roughly how much equity you could access.',
+    description: 'Estimate the funds a reverse mortgage might make available based on home value and age. A rough educational estimate only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'value', label: 'Home value', default: 500000, prefix: '$' },
+      { key: 'age', label: 'Borrower age', default: 70 },
+      { key: 'mortgage', label: 'Existing mortgage', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const plf = Math.max(0.2, Math.min(0.6, 0.30 + (v.age - 62) * 0.01))
+      const gross = v.value * plf
+      const net = Math.max(0, gross - v.mortgage)
+      return {
+        metrics: [
+          { label: 'Available (net)', value: money(net), highlight: true },
+          { label: 'Principal limit', value: money(gross) },
+          { label: 'Limit factor', value: pct(plf) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Home value', money(v.value)],
+          ['Principal limit', money(gross)],
+          ['Existing mortgage payoff', money(v.mortgage)],
+          ['Net available', money(net)],
+        ],
+        note: `Older borrowers can access a larger share of equity. This is a rough estimate — actual amounts depend on interest rates, program limits, and fees, which can be significant. Reverse mortgages reduce the estate you leave. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'development-proforma-simulator', name: 'Real Estate Development Pro Forma', category: 'Real Estate',
+    tagline: 'Does the build pencil out?',
+    description: 'Model land plus construction cost against stabilized rent and an exit cap rate to see development profit and return on cost.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'land', label: 'Land cost', default: 2000000, prefix: '$' },
+      { key: 'construction', label: 'Construction cost', default: 8000000, prefix: '$' },
+      { key: 'units', label: 'Units', default: 40 },
+      { key: 'rent', label: 'Rent / unit / mo', default: 1800, prefix: '$' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 35, suffix: '%' },
+      { key: 'exitCap', label: 'Exit cap rate', default: 5.5, suffix: '%' },
+    ],
+    compute: v => {
+      const cost = v.land + v.construction
+      const noi = v.units * v.rent * 12 * (1 - v.expenseRatio / 100)
+      const exitValue = noi / (v.exitCap / 100)
+      const profit = exitValue - cost
+      const yieldOnCost = cost > 0 ? noi / cost : 0
+      return {
+        metrics: [
+          { label: 'Development profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Return on cost', value: pct(cost > 0 ? profit / cost : 0), highlight: true },
+          { label: 'Yield on cost', value: pct(yieldOnCost), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total cost', money(cost)],
+          ['Stabilized NOI', money(noi)],
+          ['Exit value', money(exitValue)],
+          ['Profit', money(profit)],
+        ],
+        note: `The "development spread" — yield on cost (${pct(yieldOnCost)}) minus the market exit cap (${v.exitCap}%) — is the developer's margin for risk. A thin spread leaves no room for cost overruns or a softening market. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'syndication-return-simulator', name: 'RE Syndication LP Return Simulator', category: 'Real Estate',
+    tagline: 'What a passive investor earns in a syndication.',
+    description: 'Model cash flow plus a sale to estimate an LP’s equity multiple and approximate annualized return.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'investment', label: 'LP investment', default: 100000, prefix: '$' },
+      { key: 'cashFlow', label: 'Annual cash-on-cash', default: 6, suffix: '%' },
+      { key: 'hold', label: 'Hold (years)', default: 5 },
+      { key: 'saleMultiple', label: 'Equity multiple at sale', default: 1.6 },
+    ],
+    compute: v => {
+      const annualCash = v.investment * (v.cashFlow / 100)
+      const totalCash = annualCash * v.hold
+      const saleReturn = v.investment * v.saleMultiple
+      const total = totalCash + saleReturn
+      const em = v.investment > 0 ? total / v.investment : 0
+      const irr = v.hold > 0 && em > 0 ? Math.pow(em, 1 / v.hold) - 1 : 0
+      return {
+        metrics: [
+          { label: 'Equity multiple', value: `${em.toFixed(2)}x`, highlight: true },
+          { label: 'Approx. annual return', value: pct(irr), highlight: true },
+          { label: 'Total received', value: money(total) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Cash flow (total)', money(totalCash)],
+          ['Sale proceeds', money(saleReturn)],
+          ['Total', money(total)],
+          ['Equity multiple', `${em.toFixed(2)}x`],
+        ],
+        note: `Passive real-estate returns come in two parts: steady cash flow plus a lump at sale. Equity multiple and IRR tell different stories — a quick flip can show a high IRR but a low multiple. Educational only; deals carry real risk.`,
+      }
+    },
+  },
+  {
+    id: 'nnn-lease-simulator', name: 'NNN Lease Yield Simulator', category: 'Real Estate',
+    tagline: 'Project yield on a triple-net investment.',
+    description: 'Model a net-lease property’s cap rate and rent escalations to see yield-on-cost climb over the hold.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rent', label: 'Annual rent', default: 120000, prefix: '$' },
+      { key: 'price', label: 'Purchase price', default: 2000000, prefix: '$' },
+      { key: 'escalation', label: 'Annual rent escalation', default: 2, suffix: '%' },
+      { key: 'years', label: 'Hold (years)', default: 10 },
+    ],
+    compute: v => {
+      const cap = v.price > 0 ? v.rent / v.price : 0
+      const rows: string[][] = []
+      let rent = v.rent
+      const yrs = Math.min(Math.max(v.years, 1), 25)
+      for (let y = 1; y <= yrs; y++) {
+        if (y > 1) rent *= 1 + v.escalation / 100
+        if (y % 2 === 0 || y === yrs) rows.push([`Year ${y}`, money(rent), pct(v.price > 0 ? rent / v.price : 0)])
+      }
+      return {
+        metrics: [
+          { label: 'Going-in cap rate', value: pct(cap), highlight: true },
+          { label: `Yield on cost (yr ${yrs})`, value: pct(v.price > 0 ? rent / v.price : 0), highlight: true },
+          { label: `Rent (yr ${yrs})`, value: money(rent) },
+        ],
+        columns: ['Year', 'Rent', 'Yield on Cost'],
+        rows,
+        note: `Triple-net is about as passive as real estate gets — the tenant pays taxes, insurance, and maintenance. Your return rides on the tenant's credit and the rent escalations; a strong tenant on a long lease is the whole thesis. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wholesale-vs-dtc-simulator', name: 'Wholesale vs. DTC Simulator', category: 'Retail',
+    tagline: 'Higher margin, or more volume?',
+    description: 'Compare selling direct-to-consumer against wholesale to see which channel makes more profit at your volumes.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Unit cost', default: 10, prefix: '$' },
+      { key: 'dtcPrice', label: 'DTC price', default: 40, prefix: '$' },
+      { key: 'dtcVolume', label: 'DTC units / mo', default: 1000 },
+      { key: 'wholesalePrice', label: 'Wholesale price', default: 20, prefix: '$' },
+      { key: 'wholesaleVolume', label: 'Wholesale units / mo', default: 4000 },
+    ],
+    compute: v => {
+      const dtc = (v.dtcPrice - v.cost) * v.dtcVolume
+      const wholesale = (v.wholesalePrice - v.cost) * v.wholesaleVolume
+      return {
+        metrics: [
+          { label: 'DTC profit / mo', value: money(dtc), highlight: dtc >= wholesale },
+          { label: 'Wholesale profit / mo', value: money(wholesale), highlight: wholesale > dtc },
+          { label: 'Winner', value: dtc >= wholesale ? 'DTC' : 'Wholesale' },
+        ],
+        columns: ['Channel', 'Margin / Unit', 'Monthly Profit'],
+        rows: [
+          ['DTC', money(v.dtcPrice - v.cost), money(dtc)],
+          ['Wholesale', money(v.wholesalePrice - v.cost), money(wholesale)],
+        ],
+        note: `DTC keeps the full margin and the customer relationship; wholesale trades margin for volume and shelf space you couldn't reach alone. Most durable brands run both — DTC for margin and data, wholesale for scale. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'retention-curve-ltv-simulator', name: 'Retention Curve LTV Simulator', category: 'SaaS',
+    tagline: 'A realistic LTV — churn that improves with age.',
+    description: 'Model a cohort whose churn declines as it matures (as real ones do) to get an LTV that flat-churn models miss.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'start', label: 'Cohort size', default: 1000 },
+      { key: 'firstChurn', label: 'Month-1 churn', default: 10, suffix: '%' },
+      { key: 'decline', label: 'Churn decline / mo (pts)', default: 0.5 },
+      { key: 'arpu', label: 'ARPU / mo', default: 50, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 80, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let active = v.start, cumMargin = 0, churn = v.firstChurn
+      for (let m = 1; m <= 24; m++) {
+        active = active * (1 - churn / 100)
+        cumMargin += active * v.arpu * (v.margin / 100)
+        churn = Math.max(2, churn - v.decline)
+        if (m % 3 === 0) rows.push([`Month ${m}`, Math.round(active).toString(), money(cumMargin)])
+      }
+      return {
+        metrics: [
+          { label: 'LTV / customer', value: money(v.start > 0 ? cumMargin / v.start : 0), highlight: true },
+          { label: 'Retained (mo 24)', value: pct(v.start > 0 ? active / v.start : 0), highlight: true },
+          { label: '24-mo margin', value: money(cumMargin) },
+        ],
+        columns: ['Month', 'Active', 'Cumulative Margin'],
+        rows,
+        note: `Real retention curves flatten — the customers who survive the early months tend to stay for years. Flat-churn LTV models understate the value of those loyal survivors, and with it how much you can spend to acquire. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'franchisor-revenue-simulator', name: 'Franchisor Revenue Simulator', category: 'Franchise',
+    tagline: 'How a franchisor makes money as it sells units.',
+    description: 'Model selling franchises over several years to see franchise-fee and royalty revenue build for the franchisor.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Starting units', default: 10 },
+      { key: 'newPerYear', label: 'New units / year', default: 8 },
+      { key: 'fee', label: 'Franchise fee', default: 40000, prefix: '$' },
+      { key: 'unitRevenue', label: 'Avg. unit revenue', default: 900000, prefix: '$' },
+      { key: 'royalty', label: 'Royalty rate', default: 6, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let units = v.units
+      for (let y = 1; y <= 5; y++) {
+        const newUnits = y === 1 ? 0 : v.newPerYear
+        units += newUnits
+        const feeRev = (y === 1 ? v.units : v.newPerYear) * v.fee
+        const royaltyRev = units * v.unitRevenue * (v.royalty / 100)
+        rows.push([`Year ${y}`, units.toString(), money(feeRev), money(royaltyRev)])
+      }
+      const royaltyFinal = units * v.unitRevenue * (v.royalty / 100)
+      return {
+        metrics: [
+          { label: 'Units (yr 5)', value: units.toString(), highlight: true },
+          { label: 'Royalty revenue (yr 5)', value: money(royaltyFinal), highlight: true },
+          { label: 'Fee revenue (yr 5)', value: money(v.newPerYear * v.fee) },
+        ],
+        columns: ['Year', 'Units', 'Fee Revenue', 'Royalty Revenue'],
+        rows,
+        note: `Franchisors earn two ways: lumpy upfront fees from selling units, and recurring royalties on every unit's sales. The royalty stream is the real asset — it compounds as the system grows and is what makes franchising so scalable. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
