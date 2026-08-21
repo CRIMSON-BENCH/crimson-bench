@@ -6,6 +6,7 @@ import {
   getDigitalProductsByCategory,
   getIndustryVariants,
   formatDigitalPrice,
+  TOOLKIT_PRO,
 } from '@/lib/digital-products'
 import Breadcrumb from '@/components/Breadcrumb'
 import CTABlock from '@/components/CTABlock'
@@ -101,7 +102,9 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
               {...(buyExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="btn-crimson py-3 px-6"
             >
-              Buy &amp; Download — {formatDigitalPrice(product)} →
+              {product.isSubscription
+                ? `Start Toolkit Pro — ${formatDigitalPrice(product)} →`
+                : `Buy & Download — ${formatDigitalPrice(product)} →`}
             </a>
             <a href="/digital-products" className="btn-outline py-3 px-6">Browse All {DIGITAL_PRODUCTS.length}+ Products</a>
           </div>
@@ -118,7 +121,33 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             <p className="text-slate-600 dark:text-slate-400 leading-relaxed">{product.description}</p>
           </div>
 
-          {/* What's included */}
+          {/* What's inside — the actual model files */}
+          {product.deliverables && product.deliverables.length > 0 && (
+            <div>
+              <h2 className="font-serif text-2xl font-normal text-slate-900 dark:text-white mb-2">
+                What&apos;s Inside — {product.fileCount} Excel Models
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                Every model is formula-driven: the pale-gold cells are your inputs, everything else calculates automatically. Works in Microsoft Excel and Google Sheets.
+              </p>
+              <div className="grid gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
+                {product.deliverables.map((d, i) => (
+                  <div key={d.title} className="bg-white dark:bg-slate-950 p-5 flex gap-4">
+                    <span className="font-mono text-xs text-[#B01C24] font-bold flex-shrink-0 mt-1 tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                        {d.title}
+                        <span className="ml-2 font-mono text-[10px] uppercase tracking-widest text-slate-400">.xlsx</span>
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">{d.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* What's included (perks) */}
           <div>
             <h2 className="font-serif text-2xl font-normal text-slate-900 dark:text-white mb-6">
               What&apos;s Included
@@ -133,14 +162,36 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             </ul>
           </div>
 
-          {/* Vault upsell (not on the vault itself) */}
+          {/* Cross-promo: matching simulators */}
+          {product.pairsWith && product.pairsWith.length > 0 && (
+            <div className="border border-[#B01C24]/30 bg-[#B01C24]/5 dark:bg-[#B01C24]/10 p-6">
+              <p className="font-mono text-xs tracking-widest uppercase text-[#B01C24] mb-2">Pairs With These Simulators</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Pressure-test the assumptions behind this toolkit with our live simulators.
+              </p>
+              <ul className="space-y-2 mb-4">
+                {product.pairsWith.map(s => (
+                  <li key={s.slug}>
+                    <a href={`/pro-tools/${s.slug}`} className="text-sm text-slate-800 dark:text-slate-200 hover:text-[#B01C24] transition-colors">
+                      → {s.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Unlock any 3 simulators for <span className="font-semibold text-[#B01C24]">${TOOLKIT_PRO.tripack}</span>, or go unlimited with Toolkit Pro (${TOOLKIT_PRO.monthly}/mo · ${TOOLKIT_PRO.annual.toLocaleString()}/yr).
+              </p>
+            </div>
+          )}
+
+          {/* Toolkit Pro all-access upsell (not on the vault itself) */}
           {vault && product.id !== vault.id && (
-            <div className="border border-slate-200 dark:border-slate-800 p-6">
-              <p className="font-mono text-xs tracking-widest uppercase text-slate-400 mb-2">Best Value</p>
-              <h3 className="font-serif text-xl font-normal text-slate-900 dark:text-white mb-1">{vault.name}</h3>
-              <p className="font-mono text-lg text-[#B01C24] font-bold mb-3">{formatDigitalPrice(vault)}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Get this and every other digital product we make — 100+ files, all categories, plus every future release.</p>
-              <a href={`/digital-products/${vault.id}`} className="btn-outline py-2 px-4 text-sm">Get the Vault →</a>
+            <div className="border border-[#B01C24]/30 bg-[#B01C24]/5 dark:bg-[#B01C24]/10 p-6">
+              <p className="font-mono text-xs tracking-widest uppercase text-[#B01C24] mb-2">Best Value · All-Access</p>
+              <h3 className="font-serif text-xl font-normal text-slate-900 dark:text-white mb-1">Toolkit Pro</h3>
+              <p className="font-mono text-lg text-[#B01C24] font-bold mb-3">${TOOLKIT_PRO.monthly}/mo <span className="text-sm font-normal text-slate-500">· or ${TOOLKIT_PRO.annual.toLocaleString()}/yr (save 20%)</span></p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Skip buying one at a time. Get all 515 Excel toolkits (2,500+ models) <em>and</em> all 500 premium simulators — with exports and AI analysis — for one membership.</p>
+              <a href={`/digital-products/${vault.id}`} className="btn-crimson py-2 px-4 text-sm">Get Toolkit Pro →</a>
             </div>
           )}
 
@@ -210,9 +261,11 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
               {...(buyExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
               className="btn-crimson w-full text-center block mb-3"
             >
-              Buy &amp; Download →
+              {product.isSubscription ? 'Start Toolkit Pro →' : 'Buy & Download →'}
             </a>
-            <p className="text-xs text-slate-400 text-center font-mono">Instant download · Lifetime updates</p>
+            <p className="text-xs text-slate-400 text-center font-mono">
+              {product.isSubscription ? 'Cancel anytime · new files added continuously' : 'Instant download · Lifetime updates'}
+            </p>
           </div>
 
           {related.length > 0 && (

@@ -149,6 +149,55 @@ const INDUSTRIES = [
   ['Hospitality & Restaurants', 'hospitality', 'hospitality and restaurant'],
 ]
 
+// ---- The real 5-model Excel toolkit that ships inside every package ----
+// Matches CATEGORY_BUNDLES in crimson-bench-deliverables/gen_packages.py
+const M = {
+  pnl: ['12-Month P&L Projection', 'Driver-based profit & loss with EBITDA and margins, month by month.'],
+  captable: ['Cap Table & Dilution', 'Model ownership and post-round dilution before you sign a term sheet.'],
+  budget: ['Budget vs. Actual Tracker', 'Plan the budget, log actuals, and see variance by category at a glance.'],
+  hiring: ['Hiring Plan & Payroll Model', 'Roles, fully-loaded salaries, and cumulative payroll by start month.'],
+  kpi: ['KPI Dashboard', 'Track your metrics against targets with red/amber/green status.'],
+  cashflow: ['12-Month Cash Flow Forecast', 'A rolling forecast with automatic ending-balance rollforward.'],
+  runway: ['Runway & Burn Tracker', 'Always know how many months of runway you have at current burn.'],
+  unitecon: ['Unit Economics Calculator', 'Gross margin, CAC, LTV, LTV:CAC, and payback — the survival math.'],
+  pipeline: ['Sales Pipeline & Forecast', 'Stage-weighted pipeline that forecasts bookings you can defend.'],
+  cac: ['CAC by Channel', 'Compare acquisition cost and efficiency across every channel.'],
+  campaign: ['Campaign ROI Tracker', 'Log spend and revenue per campaign to see ROI and ROAS.'],
+  pricing: ['Pricing & Margin Calculator', 'Good/better/best pricing from cost-plus and target-margin logic.'],
+  breakeven: ['Break-Even Analysis', 'The units and revenue you need just to cover your costs.'],
+  scenario: ['Scenario & Sensitivity Model', 'Stress-test profit under bear, base, and bull assumptions.'],
+}
+const CATEGORY_TOOLKIT = {
+  'Board & Fundraising': ['pnl', 'captable', 'budget', 'hiring', 'kpi'],
+  'Finance & Cash': ['cashflow', 'runway', 'pnl', 'budget', 'unitecon'],
+  'Strategy & Turnaround': ['scenario', 'pnl', 'breakeven', 'kpi', 'budget'],
+  'Revenue & GTM': ['pipeline', 'cac', 'pricing', 'unitecon', 'kpi'],
+  'Marketing & Brand': ['campaign', 'cac', 'budget', 'kpi', 'pricing'],
+  'Operations & Scaling': ['hiring', 'kpi', 'budget', 'breakeven', 'scenario'],
+  'Leadership & People': ['hiring', 'budget', 'kpi', 'scenario', 'pnl'],
+  'Bundles & Vaults': ['pnl', 'cashflow', 'captable', 'pipeline', 'kpi'],
+}
+const CATEGORY_SIMS = {
+  'Board & Fundraising': [['Real Estate Syndication LP Simulator', 'syndication-lp-simulator'], ['Private Credit Fund Simulator', 'private-credit-fund-simulator'], ['Opportunity Zone Fund Simulator', 'opportunity-zone-fund-simulator']],
+  'Finance & Cash': [['Dividend Growth Simulator', 'dividend-growth-simulator'], ['Annuity Income Simulator', 'annuity-income-simulator'], ['HSA Growth Simulator', 'hsa-simulator']],
+  'Strategy & Turnaround': [['Shopify DTC Brand Simulator', 'shopify-dtc-simulator'], ['Amazon FBA Simulator', 'amazon-fba-simulator'], ['CRM SaaS Simulator', 'crm-saas-simulator']],
+  'Revenue & GTM': [['CRM SaaS Simulator', 'crm-saas-simulator'], ['E-Signature SaaS Simulator', 'esign-saas-simulator'], ['Shopify DTC Brand Simulator', 'shopify-dtc-simulator']],
+  'Marketing & Brand': [['Dropshipping Simulator', 'dropshipping-simulator'], ['UGC Creator Agency Simulator', 'ugc-creator-agency-simulator'], ['Supplement Brand Simulator', 'supplement-brand-simulator']],
+  'Operations & Scaling': [['Freight Brokerage Simulator', 'freight-brokerage-simulator'], ['Staffing Agency Simulator', 'staffing-agency-simulator'], ['Commercial Cleaning Simulator', 'commercial-cleaning-simulator']],
+  'Leadership & People': [['Staffing Agency Simulator', 'staffing-agency-simulator'], ['Bookkeeping Firm Simulator', 'bookkeeping-firm-simulator'], ['Insurance Agency Simulator', 'insurance-agency-simulator']],
+  'Bundles & Vaults': [['CRM SaaS Simulator', 'crm-saas-simulator'], ['Real Estate Syndication LP Simulator', 'syndication-lp-simulator'], ['Amazon FBA Simulator', 'amazon-fba-simulator']],
+}
+const toolkitFor = cat => (CATEGORY_TOOLKIT[cat] || CATEGORY_TOOLKIT['Finance & Cash']).map(k => ({ title: M[k][0], desc: M[k][1] }))
+const simsFor = cat => (CATEGORY_SIMS[cat] || CATEGORY_SIMS['Finance & Cash']).map(([name, s]) => ({ name, slug: s }))
+const toolkitIncludes = deliverables => [
+  ...deliverables.map(d => `${d.title} — ${d.desc}`),
+  'Works in Microsoft Excel & Google Sheets — fully editable',
+  'Instant download · free lifetime updates',
+]
+
+// Toolkit Pro — the all-access membership (replaces the old flat $499 Vault).
+const TOOLKIT_PRO = { monthly: 180, annual: 1728, tripack: 20 }
+
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 const short = name => name.replace(/^The /, '').replace(/ Template| Kit| Model| Playbook| Toolkit| Starter| Pack| System| Builder| \(You\)/g, '').trim()
 
@@ -157,14 +206,19 @@ let num = 1
 const popular = new Set(['13-Week Cash Flow Model', 'Seed Pitch Deck Template', '100-Day CEO Plan', 'Go-to-Market Playbook', 'The Crimson Bench Vault'])
 const fresh = new Set(products.length ? [] : [])
 
+const PKG_FORMAT = 'Excel Toolkit · 5 models'
 const coreProducts = []
 for (const [category, catDesc, items] of CATEGORIES) {
-  for (const [name, format, price, tagline, incA, incB] of items) {
+  for (const [name, , price, tagline, incA, incB] of items) {
+    const deliverables = toolkitFor(category)
+    const pairsWith = simsFor(category)
     const p = {
-      id: slug(name), num: num++, name, shortName: short(name), category, format, price,
+      id: slug(name), num: num++, name, shortName: short(name), category, format: PKG_FORMAT, price,
       tagline,
-      description: `${tagline} A downloadable ${format.toLowerCase()} from The Crimson Bench, built by Ivy League-educated operators. Buy once, download instantly, and use it forever — no calls, no retainers.`,
-      includes: [incA, incB, `Instant digital download (${format})`, 'Fully editable — make it yours', 'Built by Ivy League-educated operators', 'Free lifetime updates'],
+      description: `${tagline} A ready-to-use toolkit from The Crimson Bench, built by Ivy League-educated operators — ${deliverables.length} formula-driven Excel models you open, plug your numbers into, and use forever. Buy once, download instantly. No calls, no retainers.`,
+      includes: toolkitIncludes(deliverables),
+      deliverables, fileCount: deliverables.length, pairsWith,
+      focus: [incA, incB],
       stripeMode: 'payment',
       isBestValue: popular.has(name),
     }
@@ -177,27 +231,44 @@ for (const [category, catDesc, items] of CATEGORIES) {
 for (const base of coreProducts) {
   if (!SPECIALIZABLE.has(base.category)) continue
   for (const [label, islug, descr] of INDUSTRIES) {
+    const deliverables = base.deliverables
     products.push({
       id: `${base.id}-${islug}`, num: num++,
       name: `${base.name} — ${label}`,
       shortName: `${base.shortName} (${label})`,
-      category: base.category, format: base.format, price: base.price,
+      category: base.category, format: PKG_FORMAT, price: base.price,
       industry: label, baseId: base.id,
       tagline: `${base.tagline} Tuned for ${descr} companies.`,
-      description: `${base.tagline} This ${base.format.toLowerCase()} is specialized for ${descr} companies — with the benchmarks, assumptions, and language that fit your industry. Built by Ivy League-educated operators. Buy once, download instantly, keep forever.`,
-      includes: [`${label}-specific benchmarks and assumptions`, base.includes[0], base.includes[1], `Instant digital download (${base.format})`, 'Fully editable — make it yours', 'Free lifetime updates'],
+      description: `${base.tagline} A ${deliverables.length}-model Excel toolkit specialized for ${descr} companies — with the benchmarks, assumptions, and language that fit your industry. Built by Ivy League-educated operators. Buy once, download instantly, keep forever.`,
+      includes: [`${label}-specific benchmarks and assumptions baked into every model`, ...toolkitIncludes(deliverables)],
+      deliverables, fileCount: deliverables.length, pairsWith: base.pairsWith,
+      focus: base.focus,
       stripeMode: 'payment',
     })
   }
 }
-for (const [name, format, price, tagline, incA, incB] of BUNDLES) {
+for (const [name, , price, tagline, incA, incB] of BUNDLES) {
+  const isVault = name === 'The Crimson Bench Vault'
+  const deliverables = toolkitFor('Bundles & Vaults')
   products.push({
-    id: slug(name), num: num++, name, shortName: short(name), category: 'Bundles & Vaults', format, price,
-    tagline,
-    description: `${tagline} A bundle from The Crimson Bench — buy once, download instantly, keep forever. The single best value for founders and operators who want the whole system, not one piece.`,
-    includes: [incA, incB, 'Instant digital download', 'Every file fully editable', 'Built by Ivy League-educated operators', 'Free lifetime updates'],
-    stripeMode: 'payment',
-    isBestValue: name === 'The Crimson Bench Vault',
+    id: slug(name), num: num++, name, shortName: short(name), category: 'Bundles & Vaults',
+    format: isVault ? 'All-Access Membership' : 'Bundle · every toolkit in the category',
+    price,
+    tagline: isVault ? 'Every toolkit and every simulator — one membership.' : tagline,
+    description: isVault
+      ? 'The all-access membership: every one of our 515 Excel toolkits (2,500+ models) plus all 500 premium simulators, with exports and AI analysis. Included with Toolkit Pro — $180/mo, or $1,728/yr (20% off). Cancel anytime; keep every file you download.'
+      : `${tagline} A bundle from The Crimson Bench — every Excel toolkit in the category, buy once, download instantly, keep forever. The best value for operators who want the whole system, not one piece.`,
+    includes: isVault
+      ? ['All 515 Excel toolkits — 2,500+ formula-driven models', 'All 500 premium simulators + Excel/PDF exports + AI analysis', 'Everything works in Excel & Google Sheets', 'New toolkits and simulators added continuously', '$180/mo or $1,728/yr (save 20%) · cancel anytime']
+      : [`Every toolkit in this category — each ${deliverables.length} formula-driven Excel models`, incA, incB, 'Works in Excel & Google Sheets', 'Instant download · free lifetime updates'],
+    deliverables: isVault ? [] : deliverables,
+    fileCount: isVault ? 2575 : deliverables.length,
+    pairsWith: simsFor('Bundles & Vaults'),
+    stripeMode: isVault ? 'subscription' : 'payment',
+    isSubscription: isVault,
+    monthlyPrice: isVault ? TOOLKIT_PRO.monthly : undefined,
+    annualPrice: isVault ? TOOLKIT_PRO.annual : undefined,
+    isBestValue: isVault,
     isBundle: true,
   })
 }
@@ -220,7 +291,19 @@ export interface DigitalProduct {
   tagline: string
   description: string
   includes: string[]
-  stripeMode: 'payment'
+  /** The actual Excel model files that ship in this package (title + one-liner). */
+  deliverables?: { title: string; desc: string }[]
+  /** Number of files in the package. */
+  fileCount?: number
+  /** Cross-promo: matching Crimson Bench simulators. */
+  pairsWith?: { name: string; slug: string }[]
+  /** The two headline capabilities of the original product concept. */
+  focus?: string[]
+  stripeMode: 'payment' | 'subscription'
+  /** Membership tiers on the all-access Vault. */
+  isSubscription?: boolean
+  monthlyPrice?: number
+  annualPrice?: number
   /** Stripe Payment Link URL — filled in by scripts/create-stripe-products.mjs output. */
   paymentLink?: string
   isBestValue?: boolean
@@ -231,6 +314,9 @@ export interface DigitalProduct {
   /** Set on variants — the id of the core product they specialize. */
   baseId?: string
 }
+
+/** All-access membership pricing (replaces the old flat $499 Vault). */
+export const TOOLKIT_PRO = { monthly: ${TOOLKIT_PRO.monthly}, annual: ${TOOLKIT_PRO.annual}, tripack: ${TOOLKIT_PRO.tripack} }
 
 export function getCoreDigitalProducts(): DigitalProduct[] {
   return DIGITAL_PRODUCTS.filter(p => !p.industry)
@@ -255,6 +341,7 @@ export function getDigitalProductsByCategory(category: string): DigitalProduct[]
 }
 
 export function formatDigitalPrice(p: DigitalProduct): string {
+  if (p.isSubscription && p.monthlyPrice) return \`$\${p.monthlyPrice.toLocaleString()}/mo\`
   return \`$\${p.price.toLocaleString()}\`
 }
 `
