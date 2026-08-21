@@ -908,7 +908,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `An evergreen funnel turns audience growth into compounding revenue. Doubling conversion (better sales page, testimonials) is usually cheaper than doubling traffic — optimize the funnel first.`,
       }
     },
-    sells: 'digital-product-launch-kit',
+    sells: 'launch-playbook',
   },
   {
     id: 'law-firm-revenue-simulator', name: 'Law Firm Revenue Simulator', category: 'Legal',
@@ -1257,7 +1257,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `Cohort models create urgency and community that evergreen courses lack — and let you raise price as demand grows. Filling each cohort fuller is the cleanest lever on this revenue.`,
       }
     },
-    sells: 'digital-product-launch-kit',
+    sells: 'launch-playbook',
   },
   {
     id: 'brrrr-portfolio-simulator', name: 'BRRRR Portfolio Simulator', category: 'Real Estate',
@@ -12788,7 +12788,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `FBA margins get squeezed from three sides — product cost, Amazon's fees, and PPC to stay visible. Winning means differentiated products, review velocity, and tight ACoS (ad efficiency). Inventory cash flow and the risk of a single platform are the structural challenges. Educational only.`,
       }
     },
-    sells: 'ecommerce-unit-economics-model',
+    sells: 'unit-economics-calculator-ecommerce',
   },
   {
     id: 'shopify-dtc-simulator', name: 'Shopify DTC Brand Simulator', category: 'Ecommerce',
@@ -12817,7 +12817,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `DTC lives and dies on the CAC-to-AOV relationship — if it costs $18 to acquire a $60 order, the first purchase barely breaks even after COGS, so repeat purchase and lifetime value are the whole game. Email/SMS retention, subscriptions, and bundles are how brands actually profit. Educational only.`,
       }
     },
-    sells: 'ecommerce-unit-economics-model',
+    sells: 'unit-economics-calculator-ecommerce',
   },
   {
     id: 'staffing-agency-simulator', name: 'Staffing Agency Simulator', category: 'Professional',
@@ -13140,7 +13140,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `Dropshipping is a paid-ads arbitrage — you profit on the gap between price and (product + shipping + ad cost). Margins are razor-thin and ad platforms capture most of the upside; winning products, faster fulfillment, and retention are the only durable edges. Educational only.`,
       }
     },
-    sells: 'ecommerce-unit-economics-model',
+    sells: 'unit-economics-calculator-ecommerce',
   },
   {
     id: 'print-on-demand-simulator', name: 'Print-on-Demand Simulator', category: 'Ecommerce',
@@ -13222,7 +13222,7 @@ export const PRO_TOOLS: ProTool[] = [
         note: `Supplements have great gross margins (low COGS) but marketing eats the difference — the model works when subscription reorders drive lifetime value well past the first-order acquisition cost. Compliant claims, quality sourcing, and a subscribe-and-save base are the keys. Educational only.`,
       }
     },
-    sells: 'ecommerce-unit-economics-model',
+    sells: 'unit-economics-calculator-ecommerce',
   },
   {
     id: 'boat-rv-storage-simulator', name: 'Boat & RV Storage Simulator', category: 'Real Assets',

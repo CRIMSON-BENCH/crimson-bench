@@ -833,7 +833,7 @@ export const TOOLS: Tool[] = [
     outputs: [{ key: 'revenue', label: 'Est. revenue', format: 'money' }, { key: 'roi', label: 'ROI', format: 'percent', highlight: true }],
     compute: v => { const customers = v.reach * (v.eng / 100) * (v.cvr / 100); const rev = customers * v.aov; return { revenue: rev, roi: safe((rev - v.fee) / v.fee) } },
     insight: (_v, o) => o.roi <= 0 ? `As modeled it loses money. Negotiate the fee, add a discount code to lift conversion, or pick a more engaged creator.` : `A ${(o.roi * 100).toFixed(0)}% ROI. Engagement rate matters far more than raw follower count — a small, hot audience beats a big, cold one.`,
-    sells: 'influencer-creator-strategy',
+    sells: 'social-media-playbook',
   },
   {
     id: 'abandoned-cart-recovery', name: 'Abandoned Cart Recovery Value', category: 'Marketing',
