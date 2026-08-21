@@ -13278,6 +13278,405 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'nail-salon-simulator', name: 'Nail Salon Simulator', category: 'Beauty',
+    tagline: 'Project a nail salon’s monthly profit.',
+    description: 'Model daily services and ticket against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'services', label: 'Services / day', default: 40 },
+      { key: 'ticket', label: 'Average ticket', default: 45, prefix: '$' },
+      { key: 'cost', label: 'Labor + supplies %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 14000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.services * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Nail salons profit on chair utilization and add-ons — gel, designs, and pedicure upgrades lift a basic manicure ticket. Booth-rent vs. commission staffing changes the cost structure entirely; memberships and rebooking drive repeat visits. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'barbershop-chain-simulator', name: 'Barbershop Chain Simulator', category: 'Beauty',
+    tagline: 'Project a multi-chair barbershop.',
+    description: 'Model chairs and daily cuts against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'chairs', label: 'Chairs', default: 10 },
+      { key: 'cuts', label: 'Cuts / chair / day', default: 12 },
+      { key: 'ticket', label: 'Average ticket', default: 30, prefix: '$' },
+      { key: 'cost', label: 'Labor + supplies %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.chairs * v.cuts * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Barbershops run on chair productivity and rebooking cadence — men return every 2-4 weeks, so a loyal book is a predictable revenue stream. Memberships, product sales, and premium services (hot towel, beard work) lift the ticket; booth rent flips the model to fixed income. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tattoo-studio-simulator', name: 'Tattoo Studio Simulator', category: 'Beauty',
+    tagline: 'Project a commission-based tattoo studio.',
+    description: 'Model artists and sessions against the shop’s commission split to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'artists', label: 'Artists', default: 6 },
+      { key: 'sessions', label: 'Sessions / artist / day', default: 3 },
+      { key: 'ticket', label: 'Average session', default: 250, prefix: '$' },
+      { key: 'shopCut', label: 'Shop commission', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 24 },
+    ],
+    compute: v => {
+      const studioRevenue = v.artists * v.sessions * v.ticket * v.days
+      const shopRevenue = studioRevenue * (v.shopCut / 100)
+      const profit = shopRevenue - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Studio revenue', value: money(studioRevenue) },
+          { label: 'Shop cut', value: money(shopRevenue), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Studio revenue', money(studioRevenue)], ['Shop commission', money(shopRevenue)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Most studios keep a commission split (often 30-50%) of each artist's take — the shop provides the space, brand, and front desk. Filling the artist roster with booked talent is the lever; supplies and reception are the main fixed cost. Some shops switch to booth rent for steadier income. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'waxing-studio-simulator', name: 'Waxing Studio Simulator', category: 'Beauty',
+    tagline: 'Project a waxing / hair-removal studio.',
+    description: 'Model daily services and ticket against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'services', label: 'Services / day', default: 35 },
+      { key: 'ticket', label: 'Average ticket', default: 40, prefix: '$' },
+      { key: 'cost', label: 'Labor + supplies %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.services * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Waxing is inherently recurring — hair grows back on a 4-6 week cycle, so a converted client rebooks predictably. Memberships and prepaid packages lock in that cadence; speed per service and retail (numbing, aftercare) drive revenue per room. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pilates-studio-simulator', name: 'Pilates Studio Simulator', category: 'Fitness',
+    tagline: 'Project a reformer Pilates studio.',
+    description: 'Model membership base and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 200 },
+      { key: 'fee', label: 'Monthly fee', default: 180, prefix: '$' },
+      { key: 'cost', label: 'Instructor + variable %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Instructor + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Reformer Pilates commands premium pricing but caps class size at the equipment count, so revenue-per-class and utilization are everything. Memberships plus private sessions drive the mix; instructor pay is the biggest variable, and retention beats constant new-member churn. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'yoga-studio-simulator', name: 'Yoga Studio Simulator', category: 'Fitness',
+    tagline: 'Project a yoga studio’s monthly profit.',
+    description: 'Model membership base and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 350 },
+      { key: 'fee', label: 'Monthly fee', default: 120, prefix: '$' },
+      { key: 'cost', label: 'Instructor + variable %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 22000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Instructor + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Yoga studios blend memberships, class packs, and drop-ins — memberships stabilize cash flow while workshops and teacher trainings add high-margin spikes. Instructor cost and rent are the swing factors; retail and retreats extend revenue beyond the mat. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'crossfit-box-simulator', name: 'CrossFit Box Simulator', category: 'Fitness',
+    tagline: 'Project a CrossFit / functional gym.',
+    description: 'Model membership base and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 180 },
+      { key: 'fee', label: 'Monthly fee', default: 160, prefix: '$' },
+      { key: 'cost', label: 'Coach + variable %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Coach + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A box's economics hinge on member count against a fixed rent-and-coach base — the community and coaching justify premium pricing over a commodity gym. Nutrition coaching, on-ramp programs, and specialty classes lift revenue per member and slow the notorious churn. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'martial-arts-school-simulator', name: 'Martial Arts School Simulator', category: 'Fitness',
+    tagline: 'Project a martial arts / BJJ academy.',
+    description: 'Model student base and tuition against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Students', default: 220 },
+      { key: 'tuition', label: 'Monthly tuition', default: 150, prefix: '$' },
+      { key: 'cost', label: 'Instructor + variable %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.students * v.tuition
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Instructor + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Martial arts schools thrive on long-term retention — belt progression and kids' programs keep families enrolled for years. Testing fees, pro-shop gear, private lessons, and after-school/camp programs are the high-margin add-ons that push a school from surviving to thriving. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'climbing-gym-simulator', name: 'Climbing Gym Simulator', category: 'Fitness',
+    tagline: 'Project an indoor climbing gym.',
+    description: 'Model memberships plus day passes against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 800 },
+      { key: 'fee', label: 'Monthly fee', default: 85, prefix: '$' },
+      { key: 'dayPass', label: 'Day-pass revenue / month', default: 15000, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 45000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee + v.dayPass
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Membership', money(v.members * v.fee)], ['Day passes', money(v.dayPass)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Climbing gyms carry heavy build-out and rent, so membership density against that fixed base is the whole model. Day passes, gear rental, classes, and a fitness/yoga add-on diversify revenue; route-setting quality and community keep members from churning. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'daycare-center-simulator', name: 'Daycare Center Simulator', category: 'Education',
+    tagline: 'Project a childcare center’s profit.',
+    description: 'Model enrolled children and weekly tuition against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'children', label: 'Enrolled children', default: 90 },
+      { key: 'tuition', label: 'Weekly tuition / child', default: 280, prefix: '$' },
+      { key: 'cost', label: 'Staff + variable %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.children * v.tuition * 4.33
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Daycare margins are governed by state child-to-staff ratios — labor is the dominant cost and enrollment against licensed capacity is the ceiling. Waitlists in most markets mean the constraint is space and staff, not demand; infant care commands the highest tuition. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'preschool-simulator', name: 'Preschool Simulator', category: 'Education',
+    tagline: 'Project a private preschool’s profit.',
+    description: 'Model enrollment and monthly tuition against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Students', default: 120 },
+      { key: 'tuition', label: 'Monthly tuition', default: 1200, prefix: '$' },
+      { key: 'cost', label: 'Staff + variable %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.students * v.tuition
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Preschools sell outcomes and peace of mind to parents, supporting premium tuition — curriculum brand (Montessori, Reggio), reputation, and location drive enrollment. Multi-year enrollment and sibling discounts build a stable base; summer camps fill the calendar gap. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'music-school-simulator', name: 'Music School Simulator', category: 'Education',
+    tagline: 'Project a music lessons business.',
+    description: 'Model student base and tuition against instructor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Students', default: 300 },
+      { key: 'tuition', label: 'Monthly tuition', default: 160, prefix: '$' },
+      { key: 'cost', label: 'Instructor pay %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.students * v.tuition
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Instructor pay', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Music schools scale by adding teachers and rooms — the owner's margin is the spread between tuition and instructor pay across a full schedule. Recitals, instrument rental/sales, and group classes add revenue; retention runs on great teachers and student progress. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pest-control-simulator', name: 'Pest Control Simulator', category: 'Home Services',
+    tagline: 'Project a recurring pest control route.',
+    description: 'Model recurring accounts and monthly fee against service cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'accounts', label: 'Recurring accounts', default: 1500 },
+      { key: 'fee', label: 'Monthly fee', default: 45, prefix: '$' },
+      { key: 'cost', label: 'Service cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.accounts * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Service cost', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pest control is a subscription in disguise — quarterly/bi-monthly contracts create recurring revenue and route density that compounds margin. Termite, mosquito, and wildlife add high-ticket lines; the account base itself is the asset that sells for a strong multiple. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pool-service-simulator', name: 'Pool Service Simulator', category: 'Home Services',
+    tagline: 'Project a pool maintenance route.',
+    description: 'Model pools serviced and monthly fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'pools', label: 'Pools serviced', default: 400 },
+      { key: 'fee', label: 'Monthly fee', default: 150, prefix: '$' },
+      { key: 'cost', label: 'Chemicals + labor %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.pools * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Chemicals + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pool routes are recurring and route-dense — the money is in packing pools tightly so a tech services many per day. Repairs, equipment upgrades, and green-to-clean jobs are the high-margin extras on top of the monthly clean; the route list is a sellable asset. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'lawn-care-simulator', name: 'Lawn Care Simulator', category: 'Home Services',
+    tagline: 'Project a lawn care / landscaping route.',
+    description: 'Model recurring accounts and monthly fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'accounts', label: 'Recurring accounts', default: 600 },
+      { key: 'fee', label: 'Monthly fee', default: 160, prefix: '$' },
+      { key: 'cost', label: 'Labor + fuel %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.accounts * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Labor + fuel', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Lawn care is seasonal in most markets but recurring within the season — route density and crew productivity (yards per day) drive margin. Fertilization programs, cleanups, and snow removal extend revenue across the year; the recurring account base is what a buyer pays a premium for. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
