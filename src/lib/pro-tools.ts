@@ -13677,6 +13677,382 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'tree-service-simulator', name: 'Tree Service Simulator', category: 'Home Services',
+    tagline: 'Project a tree removal & trimming business.',
+    description: 'Model daily jobs and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 4 },
+      { key: 'avgJob', label: 'Average job', default: 850, prefix: '$' },
+      { key: 'cost', label: 'Labor + equipment %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + equipment', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Tree work is high-ticket and skill-gated — the danger and equipment keep competition thin and prices firm. Storm cleanup produces demand spikes; stump grinding, chipping, and recurring pruning contracts smooth the revenue. Insurance and crew safety are the real cost drivers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'window-cleaning-simulator', name: 'Window Cleaning Simulator', category: 'Home Services',
+    tagline: 'Project a window cleaning route.',
+    description: 'Model daily jobs and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 8 },
+      { key: 'avgJob', label: 'Average job', default: 220, prefix: '$' },
+      { key: 'cost', label: 'Labor + supplies %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 7000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Window cleaning is low-startup and high-margin, with recurring commercial storefront routes providing steady weekly/monthly revenue. Add-ons (gutter cleaning, pressure washing, solar-panel cleaning) raise the ticket; route density is what makes the day profitable. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'junk-removal-simulator', name: 'Junk Removal Simulator', category: 'Home Services',
+    tagline: 'Project a junk hauling business.',
+    description: 'Model daily jobs and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 6 },
+      { key: 'avgJob', label: 'Average job', default: 350, prefix: '$' },
+      { key: 'cost', label: 'Labor + dump fees %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + dump fees', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Junk removal scales with trucks and crews — pricing by volume (truckload fraction) keeps it simple. Dump fees are the main variable cost; reselling and recycling salvageable items recovers some of it. Commercial cleanouts and property-manager accounts provide repeat volume. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'carpet-cleaning-simulator', name: 'Carpet Cleaning Simulator', category: 'Home Services',
+    tagline: 'Project a carpet & upholstery cleaning route.',
+    description: 'Model daily jobs and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 6 },
+      { key: 'avgJob', label: 'Average job', default: 200, prefix: '$' },
+      { key: 'cost', label: 'Labor + supplies %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + supplies', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Carpet cleaning is high-margin with low material cost — the van and equipment are the main investment. Tile/grout, upholstery, and water-damage restoration add higher-ticket lines; property managers and realtors (turnover cleans) provide recurring commercial work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'event-venue-simulator', name: 'Event Venue Simulator', category: 'Events',
+    tagline: 'Project a rental event space.',
+    description: 'Model monthly events and rental fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'events', label: 'Events / month', default: 18 },
+      { key: 'rental', label: 'Average rental', default: 4500, prefix: '$' },
+      { key: 'cost', label: 'Staff + variable %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 45000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.events * v.rental
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Venues profit on high-fixed-cost leverage — every event above the rent-and-staff break-even is strong margin. Weekend/peak dates and preferred-vendor kickbacks (catering, bar, AV) drive the numbers; weekday corporate bookings fill the calendar's soft spots. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wedding-planning-simulator', name: 'Wedding Planning Simulator', category: 'Events',
+    tagline: 'Project a wedding & event planning business.',
+    description: 'Model monthly weddings and fee against delivery cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'weddings', label: 'Weddings / month', default: 6 },
+      { key: 'fee', label: 'Average planning fee', default: 6000, prefix: '$' },
+      { key: 'cost', label: 'Delivery cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.weddings * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Delivery cost', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Wedding planning is relationship- and referral-driven, with fees scaling from day-of coordination to full-service. Vendor commissions and design/rental markups add revenue beyond the planning fee; the constraint is planner capacity, so a team and clear packages are how it scales. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'photography-studio-simulator', name: 'Photography Studio Simulator', category: 'Events',
+    tagline: 'Project a portrait/event photography business.',
+    description: 'Model monthly shoots and package price against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shoots', label: 'Shoots / month', default: 40 },
+      { key: 'package', label: 'Average package', default: 450, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 9000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.shoots * v.package
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Photography income is a package-and-upsell business — the session fee is the door, prints, albums, and digital collections carry the margin. Weddings and commercial work command premiums over portraits; editing time is the hidden cost that caps how many shoots one photographer can serve. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pizza-shop-simulator', name: 'Pizza Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a pizzeria’s monthly profit.',
+    description: 'Model daily orders and ticket against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 180 },
+      { key: 'ticket', label: 'Average ticket', default: 22, prefix: '$' },
+      { key: 'cost', label: 'Food + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 16000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pizza has some of the best food-cost margins in restaurants — dough and cheese are cheap, the ticket is not. Delivery and carryout volume drive it; managing third-party app commissions vs. direct online ordering is the margin battle. Slice/lunch business fills the daypart. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'taco-shop-simulator', name: 'Taco Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a taqueria’s monthly profit.',
+    description: 'Model daily orders and ticket against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 220 },
+      { key: 'ticket', label: 'Average ticket', default: 14, prefix: '$' },
+      { key: 'cost', label: 'Food + labor %', default: 52, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 14000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Taquerias win on volume and low food cost — proteins stretch far and the ticket adds up with sides and drinks. Speed of service at lunch and late-night hours drive the day; catering and salsa/retail lines add margin. A tight menu keeps the kitchen fast. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'smoothie-bar-simulator', name: 'Smoothie Bar Simulator', category: 'Hospitality',
+    tagline: 'Project a smoothie & juice bar.',
+    description: 'Model daily cups and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cups', label: 'Cups / day', default: 200 },
+      { key: 'price', label: 'Price per cup', default: 7.5, prefix: '$' },
+      { key: 'cost', label: 'COGS + labor %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.cups * v.price * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Smoothie bars ride the health-and-wellness trend with strong ticket sizes, but produce spoilage and labor can erode margin. Add-ons (protein, supplements, acai bowls) lift the average sale; gym and wellness-center locations bring a built-in, repeat customer base. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'coffee-roaster-simulator', name: 'Coffee Roaster Simulator', category: 'Hospitality',
+    tagline: 'Project a wholesale coffee roasting business.',
+    description: 'Model monthly roasted volume and price against COGS to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lbs', label: 'Lbs roasted / month', default: 6000 },
+      { key: 'price', label: 'Revenue per lb', default: 16, prefix: '$' },
+      { key: 'cogs', label: 'Green coffee + roast %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.lbs * v.price
+      const profit = revenue * (1 - v.cogs / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Green + roast', money(revenue * (v.cogs / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Roasting is a wholesale margin business — the value-add is turning cheap green beans into branded, fresh-roasted product for cafes, offices, and DTC subscriptions. Volume against the fixed roaster/labor base drives it; recurring wholesale accounts and a subscription line smooth demand. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'hsa-simulator', name: 'HSA Growth Simulator', category: 'Finance',
+    tagline: 'The triple-tax-advantaged retirement account.',
+    description: 'Model HSA contributions invested and compounding tax-free for future medical or retirement use. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'Annual contribution', default: 4300, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 25 },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 50)
+      let fv = 0
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.return / 100) + v.contribution
+      const contributed = v.contribution * yrs
+      return {
+        metrics: [
+          { label: 'Tax-free value', value: money(fv), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Tax-free growth', value: money(fv - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Annual contribution', money(v.contribution)], ['Total contributed', money(contributed)], ['Tax-free value', money(fv)]],
+        note: `The HSA is the only triple-tax-advantaged account — deductible going in, tax-free growth, and tax-free out for medical costs. Pay medical bills out of pocket, let the HSA invest and compound, and it becomes a stealth retirement account (after 65, non-medical withdrawals just work like an IRA). Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: '529-plan-simulator', name: '529 College Savings Simulator', category: 'Finance',
+    tagline: 'Project a tax-free college fund.',
+    description: 'Model monthly 529 contributions compounding tax-free to college. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'monthly', label: 'Monthly contribution', default: 400, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 6, suffix: '%' },
+      { key: 'years', label: 'Years to college', default: 18 },
+    ],
+    compute: v => {
+      const months = Math.min(Math.max(v.years, 1), 30) * 12
+      const r = v.return / 1200
+      let fv = 0
+      for (let m = 0; m < months; m++) fv = fv * (1 + r) + v.monthly
+      const contributed = v.monthly * months
+      return {
+        metrics: [
+          { label: 'Tax-free college fund', value: money(fv), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Tax-free growth', value: money(fv - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Monthly contribution', money(v.monthly)], ['Total contributed', money(contributed)], ['Fund value', money(fv)]],
+        note: `A 529 grows tax-free and comes out tax-free for qualified education — plus many states give a deduction on contributions. Starting early is everything; the last few years of compounding do the heavy lifting. Leftover funds can now roll to a Roth IRA (limits apply). Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'owner-operator-trucking-simulator', name: 'Owner-Operator Trucking Simulator', category: 'Logistics',
+    tagline: 'Project an owner-operator’s take-home.',
+    description: 'Model weekly miles and rate against per-mile and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'miles', label: 'Miles / week', default: 2500 },
+      { key: 'rate', label: 'Rate per mile', default: 2.2, prefix: '$' },
+      { key: 'costPerMile', label: 'Cost per mile', default: 1.5, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed (truck, insurance)', default: 3000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.miles * v.rate * 4.33
+      const variableCost = v.miles * v.costPerMile * 4.33
+      const profit = revenue - variableCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly take-home', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net per mile', value: money(v.rate - v.costPerMile), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Per-mile cost', money(variableCost)], ['Fixed', money(v.fixed)], ['Take-home', money(profit)]],
+        note: `Owner-operator economics come down to net-per-mile and deadhead — the gap between your rate and true cost per mile (fuel, maintenance, tires, tolls) is thinner than gross revenue suggests. Direct shipper relationships and avoiding empty miles beat chasing the highest load board rate. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
