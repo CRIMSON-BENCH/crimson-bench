@@ -18,22 +18,22 @@ const COMPANY_MODELS: { name: string; blurb: string; live?: boolean; slug?: stri
   { name: 'E-Commerce / DTC Brand', blurb: 'Orders, AOV, CAC, contribution, cash, and margin.', live: true, slug: 'ecommerce-brand-operating-model' },
   { name: 'Two-Sided Marketplace', blurb: 'GMV liquidity, take rate, net revenue, and unit economics.', live: true, slug: 'marketplace-operating-model' },
   { name: 'Manufacturing Company', blurb: 'Volume, factory margin, overhead, cash, and valuation.', live: true, slug: 'manufacturing-operating-model' },
-  { name: 'Multi-Unit Restaurant Group', blurb: 'Per-unit P&L, new-unit rollout, and portfolio cash flow.' },
+  { name: 'Multi-Unit Restaurant Group', blurb: 'Per-unit P&L, new-unit rollout, build cost, and cash.', live: true, slug: 'restaurant-group-operating-model' },
   { name: 'Professional Services / Agency', blurb: 'Utilization, billings, bench, and pipeline-to-cash.', live: true, slug: 'agency-operating-model' },
-  { name: 'Healthcare Clinic Group', blurb: 'Visit volume, payer mix, provider capacity, and expansion.' },
-  { name: 'Real Estate Portfolio', blurb: 'NOI, leverage, refinancing, and portfolio-level returns.' },
-  { name: 'Retail Chain', blurb: 'Same-store sales, new stores, inventory turns, and margin.' },
-  { name: 'Fintech / Lending Book', blurb: 'Origination, NIM, credit losses, and funding cost.' },
-  { name: 'Subscription Box', blurb: 'Acquisition, cohort retention, fulfillment, and LTV.' },
-  { name: 'Franchise System', blurb: 'Franchisee unit economics, royalties, and system growth.' },
-  { name: 'Construction / Contractor', blurb: 'Backlog, WIP, billings, retention, and crew utilization.' },
-  { name: 'Logistics / Fleet', blurb: 'Utilization, cost-per-mile, capex cycles, and contract mix.' },
-  { name: 'Hospitality / Hotel', blurb: 'Occupancy, ADR, RevPAR, seasonality, and financing.' },
-  { name: 'Media / Creator Business', blurb: 'Audience, RPM, sponsorships, product, and diversification.' },
-  { name: 'Biotech / R&D-Stage', blurb: 'Burn by program, milestones, dilution, and runway to data.' },
-  { name: 'Consumer Hardware', blurb: 'BOM, tooling, unit margin, inventory, and cash conversion.' },
-  { name: 'Fitness / Membership Chain', blurb: 'Member growth, churn, per-club P&L, and rollout.' },
-  { name: 'Nonprofit / Social Enterprise', blurb: 'Grants, earned revenue, program cost, and reserves.' },
+  { name: 'Healthcare Clinic Group', blurb: 'Visit volume, clinic margin, de-novo rollout, and cash.', live: true, slug: 'clinic-group-operating-model' },
+  { name: 'Real Estate Portfolio', blurb: 'Rent, NOI, debt service, acquisitions, and value at cap.', live: true, slug: 'real-estate-portfolio-operating-model' },
+  { name: 'Retail Chain', blurb: 'Store sales, contribution, new stores, cash, and margin.', live: true, slug: 'retail-chain-operating-model' },
+  { name: 'Fintech / Lending Book', blurb: 'Originations, book, net interest margin, and losses.', live: true, slug: 'fintech-lending-operating-model' },
+  { name: 'Subscription Box', blurb: 'Acquisition, churn, contribution, cash, and valuation.', live: true, slug: 'subscription-box-operating-model' },
+  { name: 'Franchise System', blurb: 'System sales, royalties + fees, and franchisor EBITDA.', live: true, slug: 'franchise-system-operating-model' },
+  { name: 'Construction / Contractor', blurb: 'Billings, gross profit, retention drag, and cash.', live: true, slug: 'construction-operating-model' },
+  { name: 'Logistics / Fleet', blurb: 'Miles, cost-per-mile, fleet growth, cash, and valuation.', live: true, slug: 'logistics-fleet-operating-model' },
+  { name: 'Hospitality / Hotel', blurb: 'Occupancy, ADR, RevPAR, NOI, debt, and value at cap.', live: true, slug: 'hotel-operating-model' },
+  { name: 'Media / Creator Business', blurb: 'Reach, ad + sponsor + product revenue, and valuation.', live: true, slug: 'creator-business-operating-model' },
+  { name: 'Biotech / R&D-Stage', blurb: 'Program burn, milestone inflow, runway, and cash at data.', live: true, slug: 'biotech-operating-model' },
+  { name: 'Consumer Hardware', blurb: 'Units, thin unit margin, tooling, cash, and valuation.', live: true, slug: 'hardware-operating-model' },
+  { name: 'Fitness / Membership Chain', blurb: 'Members × dues, club margin, rollout, and valuation.', live: true, slug: 'fitness-chain-operating-model' },
+  { name: 'Nonprofit / Social Enterprise', blurb: 'Grants, earned revenue, program cost, and reserves.', live: true, slug: 'nonprofit-operating-model' },
 ]
 
 const GIANT_SIMS = [
@@ -108,7 +108,7 @@ export default function EnterprisePage() {
         <div className="max-w-5xl mx-auto">
           <h2 className="font-serif text-3xl font-normal text-slate-900 dark:text-white mb-3">20 End-to-End Company Models — $250 each</h2>
           <p className="text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl mb-10">
-            Whatever kind of business you run, there&apos;s an integrated model for it — every driver linked, board-ready, interactive and Excel, for <strong className="text-slate-900 dark:text-white">$250</strong>. The ones marked live are ready now; the rest are rolling out. Want any of them wired to your real numbers? That&apos;s a bespoke build.
+            Whatever kind of business you run, there&apos;s an integrated model for it — every driver linked, board-ready, interactive and Excel, for <strong className="text-slate-900 dark:text-white">$250</strong>. All 20 are live now. Want any of them wired to your real numbers? That&apos;s a bespoke build.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
             {COMPANY_MODELS.map(m => (
