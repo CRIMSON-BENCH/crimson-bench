@@ -9181,6 +9181,428 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'glp1-weight-loss-simulator', name: 'GLP-1 Weight Loss Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a cash-pay weight-loss program.',
+    description: 'Model membership volume and monthly fees against medication and provider cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'patients', label: 'Program patients', default: 300 },
+      { key: 'fee', label: 'Monthly program fee', default: 350, prefix: '$' },
+      { key: 'drug', label: 'Medication cost / patient', default: 200, prefix: '$' },
+      { key: 'providerPct', label: 'Provider cost %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.patients * v.fee
+      const drug = v.patients * v.drug
+      const provider = revenue * (v.providerPct / 100)
+      const profit = revenue - drug - provider - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / patient', value: money(v.fee - v.drug - v.fee * (v.providerPct / 100)), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Medication cost', money(drug)], ['Provider cost', money(provider)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `GLP-1 weight-loss programs ride enormous cash-pay demand — recurring monthly fees plus medication management. Retention past the first months and sourcing meds efficiently are the levers; the space is competitive and fast-moving. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'concierge-medicine-simulator', name: 'Concierge Medicine Simulator', category: 'Healthcare',
+    tagline: 'Project a membership-based practice.',
+    description: 'Model members and annual fees against a small panel and staff cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 400 },
+      { key: 'fee', label: 'Annual membership fee', default: 2000, prefix: '$' },
+      { key: 'panel', label: 'Panel capacity', default: 600 },
+      { key: 'staff', label: 'Staff cost / month', default: 30000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const monthlyRevenue = (v.members * v.fee) / 12
+      const profit = monthlyRevenue - v.staff - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Panel utilization', value: pct(v.panel > 0 ? v.members / v.panel : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Monthly membership revenue', money(monthlyRevenue)], ['Staff', money(v.staff)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Concierge medicine trades a large insurance panel for a small, high-touch membership base — predictable recurring revenue and a better physician lifestyle. Filling the panel to capacity is the whole growth story. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dialysis-center-simulator', name: 'Dialysis Center Simulator', category: 'Healthcare',
+    tagline: 'Project a dialysis clinic’s profit.',
+    description: 'Model station and treatment volume against reimbursement and variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stations', label: 'Stations', default: 20 },
+      { key: 'treatments', label: 'Treatments / station / week', default: 18 },
+      { key: 'reimbursement', label: 'Reimbursement / treatment', default: 250, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / treatment', default: 90, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 150000, prefix: '$' },
+    ],
+    compute: v => {
+      const treatments = v.stations * v.treatments * 4.33
+      const revenue = treatments * v.reimbursement
+      const variable = treatments * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / treatment', value: money(v.reimbursement - v.variable), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Dialysis is recurring, chronic-care revenue with high station utilization — patients treat several times a week for years. Payer mix (commercial vs. Medicare) heavily influences the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'it-msp-simulator', name: 'IT Managed Services (MSP) Simulator', category: 'SaaS',
+    tagline: 'Project a per-seat managed IT business.',
+    description: 'Model clients and seats at a monthly per-seat price against delivery cost to see recurring profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Clients', default: 40 },
+      { key: 'seats', label: 'Seats / client', default: 25 },
+      { key: 'price', label: 'Price / seat / mo', default: 120, prefix: '$' },
+      { key: 'cost', label: 'Delivery cost / seat', default: 40, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalSeats = v.clients * v.seats
+      const revenue = totalSeats * v.price
+      const cost = totalSeats * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(revenue > 0 ? (revenue - cost) / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Recurring revenue', money(revenue)], ['Delivery cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `MSPs earn predictable per-seat MRR and sell for a multiple of it — the model is prized for recurring revenue and stickiness. Automation and tooling that lower cost-per-seat expand the margin as you scale. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'cybersecurity-mssp-simulator', name: 'Cybersecurity (MSSP) Simulator', category: 'SaaS',
+    tagline: 'Project a managed security services business.',
+    description: 'Model clients at a monthly retainer against delivery cost to see recurring profit and per-client margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Clients', default: 30 },
+      { key: 'monthly', label: 'Monthly retainer / client', default: 4000, prefix: '$' },
+      { key: 'cost', label: 'Delivery cost / client', default: 1500, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.monthly
+      const cost = v.clients * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / client', value: money(v.monthly - v.cost) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Recurring revenue', money(revenue)], ['Delivery cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Managed security rides relentless demand and compliance requirements — high-retainer, sticky, and recurring. Analyst efficiency (clients per analyst) and tooling leverage drive the margin. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'bookkeeping-firm-simulator', name: 'Bookkeeping Firm Simulator', category: 'Professional',
+    tagline: 'Project a recurring bookkeeping practice.',
+    description: 'Model clients on monthly plans against staff cost to see monthly profit and per-client economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Clients', default: 120 },
+      { key: 'fee', label: 'Monthly fee', default: 500, prefix: '$' },
+      { key: 'staff', label: 'Staff', default: 6 },
+      { key: 'staffCost', label: 'Cost per staff / month', default: 5000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.fee
+      const staffCost = v.staff * v.staffCost
+      const profit = revenue - staffCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly recurring', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Clients / staff', value: (v.staff > 0 ? v.clients / v.staff : 0).toFixed(0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff', money(staffCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Bookkeeping is beautifully recurring and automatable — the margin scales with clients-per-bookkeeper as software does more of the work. Advisory upsells (CFO services) raise revenue per client. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'va-agency-simulator', name: 'Virtual Assistant Agency Simulator', category: 'Professional',
+    tagline: 'Project a VA staffing agency’s profit.',
+    description: 'Model placed VAs and the spread between client and VA rate to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'vas', label: 'Placed VAs', default: 50 },
+      { key: 'clientRate', label: 'Client rate / hour', default: 25, prefix: '$' },
+      { key: 'vaPay', label: 'VA pay / hour', default: 12, prefix: '$' },
+      { key: 'hours', label: 'Hours / VA / month', default: 160 },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const margin = v.vas * (v.clientRate - v.vaPay) * v.hours
+      const profit = margin - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(v.clientRate > 0 ? (v.clientRate - v.vaPay) / v.clientRate : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross margin', money(margin)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `VA agencies profit on the spread between client and VA rates, scaled across placements — with low overhead since the work is remote. Client retention and VA quality/retention are the whole game. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mini-golf-simulator', name: 'Mini Golf Simulator', category: 'Entertainment',
+    tagline: 'Project a mini-golf attraction’s profit.',
+    description: 'Model rounds and price against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rounds', label: 'Rounds / day', default: 200 },
+      { key: 'price', label: 'Price per round', default: 12, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 10, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.rounds * v.price * 30
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Mini golf is low-variable-cost and seasonal — a great day is nearly pure margin. Snack bar, arcade, and party packages multiply revenue per visitor and extend the season. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'laser-tag-simulator', name: 'Laser Tag Arena Simulator', category: 'Entertainment',
+    tagline: 'Project a laser tag venue’s profit.',
+    description: 'Model game and player volume against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'games', label: 'Games / day', default: 40 },
+      { key: 'players', label: 'Players / game', default: 12 },
+      { key: 'price', label: 'Price per player', default: 15, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.games * v.players * v.price * 26
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Like most experience venues, laser tag is high-fixed, low-variable — capacity utilization at peak times drives it. Parties, memberships, and an arcade/concession mix are the profit multipliers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'butcher-shop-simulator', name: 'Butcher Shop Simulator', category: 'Retail',
+    tagline: 'Project a butcher shop’s profit.',
+    description: 'Model daily sales and margin against labor and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Sales / day', default: 6000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 35, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 15, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.sales * 26
+      const gross = revenue * (v.margin / 100)
+      const labor = revenue * (v.labor / 100)
+      const profit = gross - labor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(gross)], ['Labor', money(labor)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Butchers fight product spoilage and skilled-labor cost, but win on freshness and expertise the grocery can't match. Prepared foods, catering, and whole-animal programs lift margin and reduce waste. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mattress-store-simulator', name: 'Mattress Store Simulator', category: 'Retail',
+    tagline: 'Project a mattress retailer’s profit.',
+    description: 'Model unit volume and price at high margins against fixed showroom cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units / month', default: 150 },
+      { key: 'price', label: 'Average price', default: 900, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.units * v.price
+      const gross = revenue * (v.margin / 100)
+      const profit = gross - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross profit', value: money(gross), highlight: true },
+          { label: 'Margin / unit', value: money(v.price * (v.margin / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(gross)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Mattresses carry famously high margins but slow foot traffic — the model lives on conversion and average ticket. Financing, adjustable bases, pillows, and protection plans meaningfully lift the sale. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'handyman-simulator', name: 'Handyman Business Simulator', category: 'Home Services',
+    tagline: 'Project a handyman’s monthly income.',
+    description: 'Model daily jobs and ticket against material and fixed costs to see monthly income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 4 },
+      { key: 'ticket', label: 'Average ticket', default: 250, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 5000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 24
+      const profit = revenue * (1 - v.material / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Materials', money(revenue * (v.material / 100))], ['Fixed', money(v.fixed)], ['Income', money(profit)]],
+        note: `Handyman work is low-overhead and high-demand — the constraint is one person's hours. Systematizing quoting/scheduling and eventually adding a second tech is how it grows past a solo income. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'garage-door-simulator', name: 'Garage Door Company Simulator', category: 'Construction',
+    tagline: 'Project a garage door install + service business.',
+    description: 'Model installs and service calls against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'installs', label: 'Installs / month', default: 30 },
+      { key: 'installValue', label: 'Avg install', default: 1200, prefix: '$' },
+      { key: 'serviceCalls', label: 'Service calls / month', default: 100 },
+      { key: 'serviceTicket', label: 'Avg service', default: 250, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.installs * v.installValue + v.serviceCalls * v.serviceTicket
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Install revenue', money(v.installs * v.installValue)], ['Service revenue', money(v.serviceCalls * v.serviceTicket)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Service and spring/opener repairs are frequent, higher-margin, and lead to install replacements. Fast dispatch and a strong local reputation drive the call volume that carries the business. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'nemt-simulator', name: 'Non-Emergency Medical Transport Simulator', category: 'Transportation',
+    tagline: 'Project a NEMT business’s profit.',
+    description: 'Model vehicles and trip volume against reimbursement, driver pay, and vehicle cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'vehicles', label: 'Vehicles', default: 8 },
+      { key: 'trips', label: 'Trips / vehicle / day', default: 10 },
+      { key: 'reimbursement', label: 'Reimbursement / trip', default: 35, prefix: '$' },
+      { key: 'driverPay', label: 'Driver pay %', default: 45, suffix: '%' },
+      { key: 'vehicleCost', label: 'Fuel + maintenance / trip', default: 6, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalTrips = v.vehicles * v.trips * 22
+      const revenue = totalTrips * v.reimbursement
+      const driverPay = revenue * (v.driverPay / 100)
+      const vehicleCost = totalTrips * v.vehicleCost
+      const profit = revenue - driverPay - vehicleCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Driver pay', money(driverPay)], ['Fuel + maintenance', money(vehicleCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `NEMT rides Medicaid and aging-population demand — broker contracts provide steady, recurring trips. Scheduling density (trips per vehicle) and low no-show rates drive the margin on thin per-trip reimbursement. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'syndication-promote-simulator', name: 'Syndication GP Promote Simulator', category: 'Fundraising',
+    tagline: 'How a syndicator earns the "promote."',
+    description: 'Model a deal’s profit through a preferred return and promote split to see what the GP earns versus LPs.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'profit', label: 'Total deal profit', default: 4000000, prefix: '$' },
+      { key: 'lpCapital', label: 'LP capital', default: 10000000, prefix: '$' },
+      { key: 'pref', label: 'Preferred return / yr', default: 8, suffix: '%' },
+      { key: 'years', label: 'Hold (years)', default: 5 },
+      { key: 'promote', label: 'GP promote', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const prefTotal = v.lpCapital * (v.pref / 100) * v.years
+      const afterPref = Math.max(0, v.profit - prefTotal)
+      const gpPromote = afterPref * (v.promote / 100)
+      const lpTotal = Math.min(v.profit, prefTotal) + afterPref * (1 - v.promote / 100)
+      return {
+        metrics: [
+          { label: 'GP promote', value: money(gpPromote), highlight: true },
+          { label: 'LP profit', value: money(lpTotal), highlight: true },
+          { label: 'GP share of profit', value: pct(v.profit > 0 ? gpPromote / v.profit : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Total profit', money(v.profit)], ['Preferred return (LP)', money(Math.min(v.profit, prefTotal))], ['GP promote', money(gpPromote)], ['LP total profit', money(lpTotal)]],
+        note: `The "promote" is how syndicators earn outsized returns on investors' capital — after LPs get their preferred return, the GP takes a disproportionate share of the upside. Align the split so the GP only wins big when LPs do well. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
