@@ -10838,6 +10838,412 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'beekeeping-simulator', name: 'Beekeeping / Apiary Simulator', category: 'Agriculture',
+    tagline: 'Project a honey operation’s annual profit.',
+    description: 'Model hive count and honey yield against per-hive costs to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'hives', label: 'Number of hives', default: 100 },
+      { key: 'honey', label: 'Honey per hive (lbs/yr)', default: 60 },
+      { key: 'price', label: 'Price per lb', default: 12, prefix: '$' },
+      { key: 'cost', label: 'Cost per hive / yr', default: 200, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.hives * v.honey * v.price
+      const cost = v.hives * v.cost
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / hive', value: money(v.hives > 0 ? profit / v.hives : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Honey revenue', money(revenue)], ['Hive costs', money(cost)], ['Profit', money(profit)]],
+        note: `Honey is the headline, but pollination contracts, wax, nucs, and queen sales often out-earn the jars. Overwinter loss and forage quality drive yields; direct-to-consumer and value-added products carry the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mushroom-farm-simulator', name: 'Mushroom Farm Simulator', category: 'Agriculture',
+    tagline: 'Project a gourmet mushroom grow’s profit.',
+    description: 'Model weekly yield and price against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lbs', label: 'Lbs / week', default: 400 },
+      { key: 'price', label: 'Price per lb', default: 8, prefix: '$' },
+      { key: 'variable', label: 'Substrate + variable %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.lbs * v.price * 4.33
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Gourmet mushrooms (oyster, lion's mane, shiitake) grow fast in small indoor footprints with strong margins to restaurants and farmers markets. Contamination control and consistent weekly supply are the whole game. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'hemp-cbd-farm-simulator', name: 'Hemp / CBD Farm Simulator', category: 'Agriculture',
+    tagline: 'Project a hemp acreage’s annual profit.',
+    description: 'Model acreage and per-acre yield against per-acre costs to see annual profit. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acres', label: 'Acres', default: 50 },
+      { key: 'yield', label: 'Yield per acre (lbs)', default: 1000 },
+      { key: 'price', label: 'Price per lb', default: 3, prefix: '$' },
+      { key: 'cost', label: 'Cost per acre', default: 1500, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.acres * v.yield * v.price
+      const cost = v.acres * v.cost
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / acre', value: money(v.acres > 0 ? profit / v.acres : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Growing costs', money(cost)], ['Profit', money(profit)]],
+        note: `Hemp prices swing hard with oversupply, and licensing plus compliant testing add cost and risk. Contracted buyers, a processing relationship, and choosing the right end market (fiber, grain, or CBD) determine whether an acre pays. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'gutter-installation-simulator', name: 'Gutter Installation Simulator', category: 'Construction',
+    tagline: 'Project a seamless-gutter business.',
+    description: 'Model job volume and value against material and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 40 },
+      { key: 'avgJob', label: 'Average job', default: 1200, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 35, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 9000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * ((v.material + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Seamless gutters are quick, repeatable, and low-overhead — a single crew with a roll-forming machine can knock out several jobs a day. Gutter guards and add-on cleaning/maintenance plans lift the ticket and add recurring revenue. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'deck-building-simulator', name: 'Deck Building Simulator', category: 'Construction',
+    tagline: 'Project a deck & patio builder’s profit.',
+    description: 'Model project volume and value against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'projects', label: 'Projects / month', default: 8 },
+      { key: 'avgProject', label: 'Average project', default: 9000, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 62, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.projects * v.avgProject
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Decks are seasonal and weather-driven, with composite upsells (Trex, railings, lighting) lifting both ticket and margin over pressure-treated builds. Booking the spring/summer pipeline early and managing lumber cost volatility are the keys. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'appliance-repair-simulator', name: 'Appliance Repair Simulator', category: 'Home Services',
+    tagline: 'Project an appliance repair business.',
+    description: 'Model daily service calls and ticket against parts cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'calls', label: 'Calls / day', default: 12 },
+      { key: 'ticket', label: 'Average ticket', default: 220, prefix: '$' },
+      { key: 'parts', label: 'Parts cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.calls * v.ticket * v.days
+      const profit = revenue * (1 - v.parts / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Parts', money(revenue * (v.parts / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Appliance repair runs on call volume and route density — the trip charge plus labor is the margin, parts pass through near cost. Warranty-network contracts and a same-day reputation keep the calendar full. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'locksmith-simulator', name: 'Locksmith Simulator', category: 'Home Services',
+    tagline: 'Project a mobile locksmith business.',
+    description: 'Model daily calls and ticket against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'calls', label: 'Calls / day', default: 10 },
+      { key: 'ticket', label: 'Average ticket', default: 150, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.calls * v.ticket * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Locksmithing is high-margin and mobile — lockouts, rekeys, and automotive keys carry great markups on low material cost. Emergency/after-hours premiums and commercial master-key contracts are the profit centers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'aquarium-attraction-simulator', name: 'Aquarium Attraction Simulator', category: 'Entertainment',
+    tagline: 'Project a public aquarium’s monthly profit.',
+    description: 'Model daily visitors and ticket against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visitors', label: 'Visitors / day', default: 800 },
+      { key: 'ticket', label: 'Average ticket', default: 25, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 250000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visitors * v.ticket * 30
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Admissions', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Aquariums carry heavy fixed costs (life support, staff, animal care) so attendance and per-cap spend are everything. Memberships, cafe/gift shop, events, and school programs smooth the seasonality that admissions alone can't. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'museum-simulator', name: 'Museum Simulator', category: 'Entertainment',
+    tagline: 'Project a museum’s monthly economics.',
+    description: 'Model admissions and memberships against operating cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visitors', label: 'Visitors / day', default: 500 },
+      { key: 'ticket', label: 'Average ticket', default: 18, prefix: '$' },
+      { key: 'membership', label: 'Membership revenue / month', default: 40000, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 180000, prefix: '$' },
+    ],
+    compute: v => {
+      const admissions = v.visitors * v.ticket * 30
+      const revenue = admissions + v.membership
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Total revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Admissions', money(admissions)], ['Memberships', money(v.membership)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Museums rarely survive on admissions alone — memberships, grants, endowment, galas, and facility rentals fill the gap between ticket revenue and the real cost of collections and staff. Blockbuster exhibits drive the attendance spikes. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'water-park-simulator', name: 'Water Park Simulator', category: 'Entertainment',
+    tagline: 'Project a seasonal water park’s economics.',
+    description: 'Model peak-season daily attendance against annual fixed cost to see season profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visitors', label: 'Visitors / day', default: 2500 },
+      { key: 'ticket', label: 'Average ticket', default: 45, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'days', label: 'Operating days / season', default: 120 },
+      { key: 'fixed', label: 'Annual fixed cost', default: 3000000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.visitors * v.ticket * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Season profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Season revenue', value: money(revenue) },
+          { label: 'Revenue / day', value: money(v.visitors * v.ticket), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Season revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Annual fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Water parks earn a full year's money in a short season, so every operating day and rain-out matters. Season passes lock in early cash, and food, cabanas, and lockers drive per-cap spend well above the gate ticket. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'engineering-firm-simulator', name: 'Engineering Firm Simulator', category: 'Professional',
+    tagline: 'Project a billable-hour engineering practice.',
+    description: 'Model engineer count and billable hours against per-engineer cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'engineers', label: 'Billable engineers', default: 15 },
+      { key: 'hours', label: 'Billable hours / mo each', default: 130 },
+      { key: 'rate', label: 'Billing rate / hour', default: 165, prefix: '$' },
+      { key: 'cost', label: 'Cost / engineer / mo', default: 9000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.engineers * v.hours * v.rate
+      const cost = v.engineers * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / engineer', value: money(v.engineers > 0 ? profit / v.engineers : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Engineer cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A services firm lives on utilization (billable %) and realization (billed vs. collected rate). Every idle hour is margin lost; a strong backlog and multi-year contracts keep engineers billable and the practice profitable. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pr-agency-simulator', name: 'PR Agency Simulator', category: 'Professional',
+    tagline: 'Project a retainer-based PR shop.',
+    description: 'Model retainer clients and fee against delivery cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Retainer clients', default: 20 },
+      { key: 'retainer', label: 'Monthly retainer', default: 6000, prefix: '$' },
+      { key: 'delivery', label: 'Delivery cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.retainer
+      const profit = revenue * (1 - v.delivery / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Retainers', money(revenue)], ['Delivery cost', money(revenue * (v.delivery / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Recurring retainers make PR predictable, but delivery is labor — account leads' capacity caps how many clients you can serve well. Client tenure and results-driven referrals beat chasing new logos every month. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'court-reporting-simulator', name: 'Court Reporting Simulator', category: 'Professional',
+    tagline: 'Project a court reporting / transcription firm.',
+    description: 'Model monthly page volume and per-page rate against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'pages', label: 'Pages / month', default: 8000 },
+      { key: 'rate', label: 'Rate per page', default: 4, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.pages * v.rate
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Court reporting bills per transcript page plus appearance fees, and a reporter shortage keeps rates firm. Expedited and realtime work commands premiums; scaling means a bench of reporters and scopists, not just you. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'oral-surgery-simulator', name: 'Oral Surgery Practice Simulator', category: 'Healthcare',
+    tagline: 'Project an oral & maxillofacial surgery practice.',
+    description: 'Model surgical case volume and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cases', label: 'Cases / month', default: 90 },
+      { key: 'fee', label: 'Average case fee', default: 2500, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cases * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Oral surgery is high-ticket and referral-fed — implants, extractions, and wisdom teeth carry strong margins, and dental implants often bundle surgical plus restorative fees. Referral relationships with general dentists are the growth engine. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'podcast-network-simulator', name: 'Podcast Network Simulator', category: 'Media',
+    tagline: 'Project ad revenue across a show portfolio.',
+    description: 'Model shows, downloads, and CPM against a host revenue share to see the network’s monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shows', label: 'Number of shows', default: 25 },
+      { key: 'downloads', label: 'Avg downloads / episode', default: 15000 },
+      { key: 'episodes', label: 'Episodes / show / month', default: 4 },
+      { key: 'ads', label: 'Ad slots / episode', default: 3 },
+      { key: 'cpm', label: 'CPM', default: 25, prefix: '$' },
+      { key: 'share', label: 'Host revenue share', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const impressions = v.shows * v.downloads * v.episodes * v.ads
+      const grossRevenue = (impressions / 1000) * v.cpm
+      const profit = grossRevenue * (1 - v.share / 100) - v.fixed
+      const downloadsPerMonth = v.shows * v.downloads * v.episodes
+      return {
+        metrics: [
+          { label: 'Network profit / mo', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross ad revenue', value: money(grossRevenue) },
+          { label: 'Monthly downloads', value: downloadsPerMonth.toLocaleString('en-US'), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross ad revenue', money(grossRevenue)], ['Host share', money(grossRevenue * (v.share / 100))], ['Fixed', money(v.fixed)], ['Network profit', money(profit)]],
+        note: `Podcast networks aggregate audiences to sell ads at scale — total monthly impressions × CPM is the top line, and the host revenue split is the main cost. Premium/host-read inventory, dynamic ad insertion, and a few breakout shows drive the economics. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
