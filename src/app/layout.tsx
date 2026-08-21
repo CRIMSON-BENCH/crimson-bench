@@ -30,17 +30,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <a href="/" className="font-serif text-lg tracking-tight text-slate-900 dark:text-white">
               The Crimson Bench
             </a>
-            <nav className="hidden md:flex items-center gap-8">
-              <a href="/bench" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">The Bench</a>
-              <a href="/pricing" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Pricing</a>
-              <a href="/tools" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Tools</a>
-              <a href="/pro-tools" className="font-mono text-xs tracking-wider uppercase text-[#B0801A] dark:text-[#F0B34A] hover:text-[#B01C24] transition-colors">Pro</a>
-              <a href="/digital-products" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Store</a>
-              <a href="/enterprise" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Enterprise</a>
+            <nav className="hidden md:flex items-center gap-6 lg:gap-7">
+              <a href="/tools" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Free Tools</a>
+              <a href="/pro-tools" className="font-mono text-xs tracking-wider uppercase text-[#B0801A] dark:text-[#F0B34A] hover:text-[#B01C24] transition-colors">Simulators</a>
+              <a href="/digital-products" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Toolkits</a>
+              <a href="/enterprise" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Company&nbsp;Models</a>
+              <a href="/bench" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">The&nbsp;Bench</a>
               <a href="/blog" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Insights</a>
-              <a href="/glossary" className="font-mono text-xs tracking-wider uppercase text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">Glossary</a>
+              <a href="/search" aria-label="Search" className="text-slate-500 dark:text-slate-400 hover:text-[#B01C24] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+              </a>
               <a href="/contact" className="btn-crimson py-2">Deploy Now</a>
             </nav>
+            <a href="/search" aria-label="Search" className="md:hidden text-slate-500 dark:text-slate-400 hover:text-[#B01C24] transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+            </a>
           </div>
         </header>
 
