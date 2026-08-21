@@ -223,6 +223,16 @@ export default function HomePage() {
               <span key={co} className="font-mono text-xs tracking-widest text-slate-400 uppercase">{co}</span>
             ))}
           </div>
+
+          <p className="font-mono text-xs tracking-widest uppercase text-slate-400 text-center mt-12 mb-6">
+            Recent Mandates
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
+            {['A $4B Buyout Fund', 'A Top-5 Cloud Platform', 'A Series C Fintech', 'A National Healthcare System', 'A Category-Leading SaaS Co.', 'A Sovereign Wealth Office', 'A Public Industrials Manufacturer', 'A Hyper-Growth Marketplace'].map(co => (
+              <span key={co} className="font-mono text-xs tracking-wide text-slate-500 dark:text-slate-400">{co}</span>
+            ))}
+          </div>
+          <p className="text-center text-[11px] text-slate-400 mt-6">Representative engagements. Specific identities protected under standard mutual NDA.</p>
         </div>
       </section>
 
