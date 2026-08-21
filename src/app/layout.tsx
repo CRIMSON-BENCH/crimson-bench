@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { AuthProvider } from '@/lib/auth'
+import AuthButton from '@/components/AuthButton'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.crimsonbench.com'),
@@ -25,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <AuthProvider>
         <header className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <a href="/" className="font-serif text-lg tracking-tight text-slate-900 dark:text-white">
@@ -40,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/search" aria-label="Search" className="text-slate-500 dark:text-slate-400 hover:text-[#B01C24] transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
               </a>
+              <AuthButton />
               <a href="/contact" className="btn-crimson py-2">Deploy Now</a>
             </nav>
             <a href="/search" aria-label="Search" className="md:hidden text-slate-500 dark:text-slate-400 hover:text-[#B01C24] transition-colors">
@@ -119,6 +123,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </div>
         </footer>
+        </AuthProvider>
       </body>
     </html>
   )
