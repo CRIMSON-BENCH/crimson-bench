@@ -14453,6 +14453,382 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'opportunity-zone-fund-simulator', name: 'Opportunity Zone Fund Simulator', category: 'Finance',
+    tagline: 'Defer gains, then grow them tax-free.',
+    description: 'Model a QOF investment held 10 years to see tax-free appreciation and gains tax saved. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'investment', label: 'Investment (rolled gain)', default: 500000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 9, suffix: '%' },
+      { key: 'years', label: 'Hold years', default: 10 },
+      { key: 'capGains', label: 'Capital gains rate', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 30)
+      const fv = v.investment * Math.pow(1 + v.return / 100, yrs)
+      const gain = fv - v.investment
+      const taxSaved = gain * (v.capGains / 100)
+      return {
+        metrics: [
+          { label: `Value at ${Math.round(v.years)} yrs`, value: money(fv), highlight: true },
+          { label: 'Tax-free gain', value: money(gain), highlight: true },
+          { label: 'Cap gains tax saved', value: money(taxSaved) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Investment', money(v.investment)], ['Value at hold', money(fv)], ['Tax-free gain', money(gain)], ['Tax saved on exit', money(taxSaved)]],
+        note: `Opportunity Zone funds offer two breaks: defer tax on the gain you roll in, and — if you hold 10+ years — pay zero tax on the QOF's own appreciation. The catch is illiquidity and real project risk; the tax tail shouldn't wag the investment dog. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'private-credit-fund-simulator', name: 'Private Credit Fund Simulator', category: 'Finance',
+    tagline: 'Project income from direct lending.',
+    description: 'Model deployed capital and yield net of fees to see annual income. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'capital', label: 'Deployed capital', default: 1000000, prefix: '$' },
+      { key: 'yield', label: 'Gross yield', default: 11, suffix: '%' },
+      { key: 'fee', label: 'Management fee', default: 1.5, suffix: '%' },
+    ],
+    compute: v => {
+      const gross = v.capital * (v.yield / 100)
+      const net = v.capital * ((v.yield - v.fee) / 100)
+      const netYield = v.capital > 0 ? net / v.capital : 0
+      return {
+        metrics: [
+          { label: 'Gross income', value: money(gross) },
+          { label: 'Net income', value: money(net), highlight: true },
+          { label: 'Net yield', value: pct(netYield), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Deployed capital', money(v.capital)], ['Gross income', money(gross)], ['Management fee', money(v.capital * (v.fee / 100))], ['Net income', money(net)]],
+        note: `Private credit fills the gap banks left — direct loans to mid-market companies at floating rates well above public bonds. The yield premium pays for illiquidity and default risk, so underwriting quality and diversification across borrowers are everything. Educational only, not financial advice.`,
+      }
+    },
+  },
+  {
+    id: 'hard-money-lending-simulator', name: 'Hard Money Lending Simulator', category: 'Finance',
+    tagline: 'Project returns on a fix-and-flip loan.',
+    description: 'Model a short-term real-estate loan with points to see effective annual yield. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'loan', label: 'Loan amount', default: 200000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate', default: 12, suffix: '%' },
+      { key: 'points', label: 'Origination points', default: 2, suffix: '%' },
+      { key: 'months', label: 'Loan term (months)', default: 12 },
+    ],
+    compute: v => {
+      const interest = v.loan * (v.rate / 100) * (v.months / 12)
+      const pointsIncome = v.loan * (v.points / 100)
+      const total = interest + pointsIncome
+      const annualized = v.loan > 0 && v.months > 0 ? (total / v.loan) / (v.months / 12) : 0
+      return {
+        metrics: [
+          { label: 'Interest income', value: money(interest) },
+          { label: 'Points income', value: money(pointsIncome) },
+          { label: 'Effective annual yield', value: pct(annualized), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Loan amount', money(v.loan)], ['Interest', money(interest)], ['Points', money(pointsIncome)], ['Total return', money(total)]],
+        note: `Hard money lends against the property (low LTV) at high rates plus upfront points — short terms and asset collateral drive strong annualized yields. The risk is borrower default and having to foreclose/finish the project. Conservative LTV and vetting the flipper protect the principal. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'syndication-lp-simulator', name: 'Real Estate Syndication LP Simulator', category: 'Finance',
+    tagline: 'Project a passive LP’s deal returns.',
+    description: 'Model a limited-partner investment’s cash flow and equity multiple over the hold. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'investment', label: 'LP investment', default: 100000, prefix: '$' },
+      { key: 'cashOnCash', label: 'Annual cash-on-cash', default: 7, suffix: '%' },
+      { key: 'years', label: 'Hold years', default: 5 },
+      { key: 'multiple', label: 'Equity multiple', default: 1.8 },
+    ],
+    compute: v => {
+      const annualCashFlow = v.investment * (v.cashOnCash / 100)
+      const totalDistributions = v.investment * v.multiple
+      const totalProfit = totalDistributions - v.investment
+      return {
+        metrics: [
+          { label: 'Annual cash flow', value: money(annualCashFlow), highlight: true },
+          { label: 'Total profit', value: money(totalProfit), highlight: true },
+          { label: 'Total returned', value: money(totalDistributions) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Investment', money(v.investment)], ['Annual cash flow', money(annualCashFlow)], ['Total returned', money(totalDistributions)], ['Total profit', money(totalProfit)]],
+        note: `As a passive LP, you earn ongoing cash-on-cash distributions plus a lump at sale/refinance — the equity multiple captures both. Returns hinge on the sponsor's execution and the business plan (value-add, lease-up); vet the operator's track record above the pro-forma. Educational only, not financial advice.`,
+      }
+    },
+  },
+  {
+    id: 'sober-living-home-simulator', name: 'Sober Living Home Simulator', category: 'Care',
+    tagline: 'Project a recovery residence’s profit.',
+    description: 'Model beds and weekly rate against occupancy and cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'beds', label: 'Beds', default: 12 },
+      { key: 'rate', label: 'Weekly rate / bed', default: 250, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 85, suffix: '%' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 4000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.beds * v.rate * 4.33 * (v.occupancy / 100)
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Sober living homes provide structured, peer-supported housing during recovery — revenue is per-bed weekly rent against a residential-property cost base. Occupancy and referral relationships with treatment centers drive it; quality operations and ethics matter enormously in this space. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'group-home-simulator', name: 'Group Home Simulator', category: 'Care',
+    tagline: 'Project a residential care home.',
+    description: 'Model residents and monthly rate against occupancy and cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'residents', label: 'Residents', default: 6 },
+      { key: 'rate', label: 'Monthly rate / resident', default: 4500, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 95, suffix: '%' },
+      { key: 'cost', label: 'Staff + variable %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.residents * v.rate * (v.occupancy / 100)
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Group homes serving seniors or individuals with disabilities generate steady per-resident revenue, often partly funded by Medicaid waivers or private pay. Licensing, staffing ratios, and care quality are the operating burden; small homes can be run owner-operator, larger ones scale into a portfolio. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'assisted-living-simulator', name: 'Assisted Living Facility Simulator', category: 'Care',
+    tagline: 'Project a senior living community.',
+    description: 'Model units and monthly rate against occupancy and cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 60 },
+      { key: 'rate', label: 'Monthly rate / unit', default: 4200, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 88, suffix: '%' },
+      { key: 'cost', label: 'Staff + variable %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.units * v.rate * (v.occupancy / 100)
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Assisted living rides powerful demographic tailwinds (the aging boomer wave) — occupancy against a heavy fixed real-estate and staffing base drives the model. Care-level upcharges and memory-care premiums lift revenue per unit; labor availability is the binding constraint. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'home-health-agency-simulator', name: 'Home Health Agency Simulator', category: 'Care',
+    tagline: 'Project an in-home care agency.',
+    description: 'Model client load and visit volume against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Active clients', default: 120 },
+      { key: 'visits', label: 'Visits / client / mo', default: 12 },
+      { key: 'revenuePerVisit', label: 'Revenue / visit', default: 60, prefix: '$' },
+      { key: 'cost', label: 'Caregiver + variable %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.visits * v.revenuePerVisit
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Caregiver + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Home health/home care scales with caregivers and client hours — the spread between bill rate and caregiver pay is the margin. Caregiver recruiting and retention are the binding constraint in a tight labor market; private-pay clients and VA/long-term-care insurance beat thin Medicaid rates. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'adult-day-care-simulator', name: 'Adult Day Care Simulator', category: 'Care',
+    tagline: 'Project an adult day services center.',
+    description: 'Model daily attendance and rate against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'attendees', label: 'Attendees / day', default: 50 },
+      { key: 'rate', label: 'Daily rate', default: 75, prefix: '$' },
+      { key: 'cost', label: 'Staff + variable %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 22 },
+    ],
+    compute: v => {
+      const revenue = v.attendees * v.rate * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff + variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Adult day care gives seniors supervised daytime engagement and gives family caregivers respite — daily attendance against staff and facility cost drives it. Medicaid waivers, VA programs, and private pay fund attendance; transportation and a warm program are what keep census full. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'butcher-shop-simulator', name: 'Butcher Shop Simulator', category: 'Retail',
+    tagline: 'Project a craft butcher / meat market.',
+    description: 'Model daily sales and gross margin against fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dailySales', label: 'Daily sales', default: 2500, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dailySales * 30
+      const profit = revenue * (v.margin / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(revenue * (v.margin / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Craft butchers win on quality, whole-animal utilization, and value-add — sausages, prepared meats, and marinated cuts lift margin over commodity retail cuts. Restaurant wholesale accounts and a strong local-sourcing story drive both volume and premium pricing. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'deli-simulator', name: 'Deli Simulator', category: 'Hospitality',
+    tagline: 'Project a delicatessen’s monthly profit.',
+    description: 'Model daily orders and ticket against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 160 },
+      { key: 'ticket', label: 'Average ticket', default: 13, prefix: '$' },
+      { key: 'cost', label: 'Food + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 13000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Delis run on lunch-rush throughput and catering — trays and office platters carry higher margins than the counter sandwich. A tight prep operation, quality meats, and a loyal regular base drive the daily volume; breakfast and grab-and-go extend the dayparts. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'farmers-market-stand-simulator', name: 'Farmers Market Stand Simulator', category: 'Retail',
+    tagline: 'Project a market vendor’s monthly profit.',
+    description: 'Model market days and daily sales against COGS to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'marketDays', label: 'Market days / month', default: 12 },
+      { key: 'salesPerDay', label: 'Sales / market day', default: 900, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed (fees, fuel)', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.marketDays * v.salesPerDay
+      const profit = revenue * (1 - v.cogs / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS', money(revenue * (v.cogs / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A market stand is the lowest-overhead way to test a food product — no storefront, direct customer feedback, and cash margins. Value-added goods (jams, baked goods, prepared foods) beat raw produce on margin; the best vendors use the stand to build a brand and wholesale/CSA pipeline. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'catering-company-simulator', name: 'Catering Company Simulator', category: 'Hospitality',
+    tagline: 'Project a catering business’s profit.',
+    description: 'Model monthly events and value against food and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'events', label: 'Events / month', default: 25 },
+      { key: 'avgEvent', label: 'Average event', default: 2500, prefix: '$' },
+      { key: 'cost', label: 'Food + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.events * v.avgEvent
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Catering has better margins and less overhead than a restaurant — no dining room, and you cook to confirmed, prepaid headcounts (minimal waste). Corporate accounts and preferred-vendor status at venues drive recurring volume; weekend weddings are the high-ticket peak. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'car-detailing-simulator', name: 'Car Detailing Simulator', category: 'Home Services',
+    tagline: 'Project a mobile/auto detailing business.',
+    description: 'Model daily cars and ticket against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cars', label: 'Cars / day', default: 8 },
+      { key: 'ticket', label: 'Average ticket', default: 150, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 9000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.cars * v.ticket * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Detailing is low-overhead and high-margin — especially mobile, where you skip the rent entirely. Ceramic coatings, paint correction, and monthly maintenance plans push the ticket and add recurring revenue; fleet and dealership accounts provide steady volume beyond one-off retail. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
