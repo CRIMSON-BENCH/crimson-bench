@@ -12465,6 +12465,414 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'orthodontics-practice-simulator', name: 'Orthodontics Practice Simulator', category: 'Healthcare',
+    tagline: 'Project an orthodontics practice’s profit.',
+    description: 'Model new case starts and case value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'starts', label: 'New case starts / month', default: 25 },
+      { key: 'caseValue', label: 'Average case value', default: 5500, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 55000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.starts * v.caseValue
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Production', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Production', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Orthodontics is high-ticket and largely cash/financed — case value books at start but collects over 18-24 months, so cash flow lags production. Clear aligners, referral relationships, and treatment-coordinator conversion drive new starts, the practice's true growth metric. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'optometry-practice-simulator', name: 'Optometry Practice Simulator', category: 'Healthcare',
+    tagline: 'Project an eye-care & eyewear practice.',
+    description: 'Model daily exams plus eyewear revenue against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'exams', label: 'Exams / day', default: 20 },
+      { key: 'examFee', label: 'Exam fee', default: 120, prefix: '$' },
+      { key: 'eyewear', label: 'Eyewear revenue / exam', default: 180, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+      { key: 'days', label: 'Clinic days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.exams * (v.examFee + v.eyewear) * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `The exam gets patients in the chair; the optical dispensary is the profit center — frames and lenses carry strong retail margins, and a high capture rate (patients buying glasses on-site vs. online) makes the practice. Contact lens subscriptions add recurring revenue. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'physical-therapy-clinic-simulator', name: 'Physical Therapy Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a PT clinic’s monthly profit.',
+    description: 'Model daily visits and reimbursement against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 45 },
+      { key: 'reimbursement', label: 'Reimbursement / visit', default: 90, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 35000, prefix: '$' },
+      { key: 'days', label: 'Clinic days / month', default: 22 },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.reimbursement * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `PT economics run on visits-per-therapist-per-day and plan-of-care completion — patients who finish their prescribed episodes drive both outcomes and revenue. Cash-pay wellness, dry needling, and physician referral relationships lift the payer-pressured base. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'chiropractic-clinic-simulator', name: 'Chiropractic Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a chiropractic practice.',
+    description: 'Model daily visits and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 40 },
+      { key: 'fee', label: 'Fee per visit', default: 65, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+      { key: 'days', label: 'Clinic days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.fee * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Chiropractic thrives on visit frequency and retention — care plans and memberships turn one adjustment into a recurring relationship. Cash/membership models sidestep insurance hassle; massage, decompression, and supplements add ancillary revenue per patient. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'solar-installer-simulator', name: 'Solar Installer Simulator', category: 'Energy',
+    tagline: 'Project a residential solar business.',
+    description: 'Model monthly installs and system value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'installs', label: 'Installs / month', default: 20 },
+      { key: 'avgSystem', label: 'Average system price', default: 22000, prefix: '$' },
+      { key: 'cost', label: 'Equipment + install %', default: 70, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.installs * v.avgSystem
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Equipment + install', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Solar sales ride tax credits and utility rates — the federal ITC and rising electricity prices drive close rates. Customer acquisition cost is the killer; a referral engine and battery/storage attach lift margin over lead-bought deals. Financing partnerships close more systems. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ev-charging-station-simulator', name: 'EV Charging Station Simulator', category: 'Energy',
+    tagline: 'Project a public EV charging site.',
+    description: 'Model port count and session volume against electricity cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'ports', label: 'Charging ports', default: 20 },
+      { key: 'sessions', label: 'Sessions / port / day', default: 6 },
+      { key: 'revenue', label: 'Revenue / session', default: 12, prefix: '$' },
+      { key: 'electricity', label: 'Electricity + variable %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.ports * v.sessions * v.revenue * 30
+      const profit = revenue * (1 - v.electricity / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Electricity + variable', money(revenue * (v.electricity / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `EV charging economics hinge on utilization and demand charges — a port that sits idle still costs money, while demand charges can spike electricity cost at fast chargers. Site selection, pricing per kWh vs. per session, and adjacent retail (the real draw) determine profitability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'commercial-roofing-simulator', name: 'Commercial Roofing Simulator', category: 'Construction',
+    tagline: 'Project a commercial roofing business.',
+    description: 'Model job volume and value against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 8 },
+      { key: 'avgJob', label: 'Average job', default: 45000, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 65, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Commercial roofing is large-ticket with recurring re-roof and maintenance cycles — flat/TPO systems age on predictable schedules. Service agreements, warranty inspections, and storm/insurance work smooth the lumpy new-install pipeline. Bonding capacity gates the biggest jobs. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'commercial-hvac-simulator', name: 'Commercial HVAC Simulator', category: 'Construction',
+    tagline: 'Project a commercial HVAC service business.',
+    description: 'Model job volume and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 30 },
+      { key: 'avgJob', label: 'Average job', default: 3500, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Commercial HVAC is a service-contract business at heart — planned maintenance agreements generate recurring revenue and feed the high-margin repair and replacement work. Building relationships with property managers and a well-utilized tech fleet drive the numbers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'atm-route-simulator', name: 'ATM Route Simulator', category: 'Real Assets',
+    tagline: 'Project a surcharge-ATM portfolio.',
+    description: 'Model machine count and transaction volume against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'Machines', default: 50 },
+      { key: 'txns', label: 'Transactions / machine / mo', default: 300 },
+      { key: 'surcharge', label: 'Surcharge / transaction', default: 3, prefix: '$' },
+      { key: 'cost', label: 'Cash + service cost %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 3000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.machines * v.txns * v.surcharge
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / machine', value: money(v.machines > 0 ? profit / v.machines : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Surcharge revenue', money(revenue)], ['Cash + service', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `ATM routes earn on surcharge per withdrawal — location traffic is everything, and cash-only venues (bars, clubs, festivals) drive the highest transaction counts. It's semi-passive once placed; the cost is the vault cash tied up and the restocking labor. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cell-tower-lease-simulator', name: 'Cell Tower Lease Simulator', category: 'Real Assets',
+    tagline: 'Project a cell tower ground-lease portfolio.',
+    description: 'Model tower count and monthly rent against opex to see NOI and value at a cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'towers', label: 'Towers', default: 15 },
+      { key: 'rent', label: 'Monthly rent / tower', default: 2000, prefix: '$' },
+      { key: 'opex', label: 'Operating expense %', default: 15, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 6, suffix: '%' },
+    ],
+    compute: v => {
+      const grossMonthly = v.towers * v.rent
+      const noiMonthly = grossMonthly * (1 - v.opex / 100)
+      const noiAnnual = noiMonthly * 12
+      const value = v.capRate > 0 ? noiAnnual / (v.capRate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Monthly NOI', value: money(noiMonthly), highlight: true },
+          { label: 'Annual NOI', value: money(noiAnnual) },
+          { label: 'Value at cap', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross monthly', money(grossMonthly)], ['Operating expenses', money(grossMonthly * (v.opex / 100))], ['Monthly NOI', money(noiMonthly)], ['Value at cap', money(value)]],
+        note: `Cell tower leases are among the best real-asset cash flows — long-term carrier tenants, built-in escalators, and near-zero opex. Adding a second or third carrier ("co-location") to an existing tower drops almost entirely to NOI, which is why towers trade at premium (low-cap) valuations. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'farmland-lease-simulator', name: 'Farmland Lease Simulator', category: 'Real Assets',
+    tagline: 'Project farmland rental income and yield.',
+    description: 'Model acreage, cash rent, and land value to see annual income and current yield. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acres', label: 'Acres', default: 500 },
+      { key: 'rent', label: 'Cash rent / acre / yr', default: 250, prefix: '$' },
+      { key: 'landValue', label: 'Land value / acre', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const income = v.acres * v.rent
+      const value = v.acres * v.landValue
+      const yieldPct = value > 0 ? income / value : 0
+      return {
+        metrics: [
+          { label: 'Annual rent income', value: money(income), highlight: true },
+          { label: 'Current yield', value: pct(yieldPct), highlight: true },
+          { label: 'Land value', value: money(value) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Rent income', money(income)], ['Land value', money(value)], ['Cash yield', pct(yieldPct)]],
+        note: `Farmland is a low-yield, low-volatility inflation hedge — cash rent yields look modest, but the total return comes from decades of land appreciation on top of the rent. It's uncorrelated with stocks and prized by long-horizon and institutional investors. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'amazon-fba-simulator', name: 'Amazon FBA Simulator', category: 'Ecommerce',
+    tagline: 'Project an Amazon private-label business.',
+    description: 'Model units and price against COGS, FBA fees, and ad spend to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units / month', default: 3000 },
+      { key: 'price', label: 'Selling price', default: 30, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 30, suffix: '%' },
+      { key: 'fba', label: 'FBA + referral fees %', default: 25, suffix: '%' },
+      { key: 'ppc', label: 'Ad spend %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 5000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.units * v.price
+      const costs = revenue * ((v.cogs + v.fba + v.ppc) / 100)
+      const profit = revenue - costs - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + FBA + ads', money(costs)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `FBA margins get squeezed from three sides — product cost, Amazon's fees, and PPC to stay visible. Winning means differentiated products, review velocity, and tight ACoS (ad efficiency). Inventory cash flow and the risk of a single platform are the structural challenges. Educational only.`,
+      }
+    },
+    sells: 'ecommerce-unit-economics-model',
+  },
+  {
+    id: 'shopify-dtc-simulator', name: 'Shopify DTC Brand Simulator', category: 'Ecommerce',
+    tagline: 'Project a direct-to-consumer brand.',
+    description: 'Model orders and AOV against COGS and customer acquisition cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / month', default: 2500 },
+      { key: 'aov', label: 'Average order value', default: 60, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 35, suffix: '%' },
+      { key: 'cac', label: 'CAC / order', default: 18, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.aov
+      const grossAfterCogs = revenue * (1 - v.cogs / 100)
+      const profit = grossAfterCogs - v.orders * v.cac - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS', money(revenue * (v.cogs / 100))], ['Acquisition', money(v.orders * v.cac)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `DTC lives and dies on the CAC-to-AOV relationship — if it costs $18 to acquire a $60 order, the first purchase barely breaks even after COGS, so repeat purchase and lifetime value are the whole game. Email/SMS retention, subscriptions, and bundles are how brands actually profit. Educational only.`,
+      }
+    },
+    sells: 'ecommerce-unit-economics-model',
+  },
+  {
+    id: 'staffing-agency-simulator', name: 'Staffing Agency Simulator', category: 'Professional',
+    tagline: 'Project a temp/contract staffing business.',
+    description: 'Model placed workers and the bill-pay spread against fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'workers', label: 'Placed workers', default: 60 },
+      { key: 'bill', label: 'Bill rate / hour', default: 45, prefix: '$' },
+      { key: 'pay', label: 'Pay rate / hour', default: 30, prefix: '$' },
+      { key: 'hours', label: 'Hours / worker / week', default: 40 },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const spread = v.bill - v.pay
+      const grossMonthly = v.workers * spread * v.hours * 4.33
+      const profit = grossMonthly - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: money(grossMonthly) },
+          { label: 'Spread / hour', value: money(spread), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross margin', money(grossMonthly)], ['Fixed', money(v.fixed)], ['Profit', money(profit)], ['Spread / hr', money(spread)]],
+        note: `Staffing is a spread business on labor — you bill the client, pay the worker less, and keep the markup times hours times headcount. Scale is linear with placements; the working-capital drag (you pay workers weekly but collect from clients on net-30+) is the real constraint. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bookkeeping-firm-simulator', name: 'Bookkeeping Firm Simulator', category: 'Professional',
+    tagline: 'Project a recurring bookkeeping practice.',
+    description: 'Model client count and monthly fee against delivery cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Clients', default: 80 },
+      { key: 'fee', label: 'Monthly fee', default: 500, prefix: '$' },
+      { key: 'delivery', label: 'Delivery cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.fee
+      const profit = revenue * (1 - v.delivery / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Delivery cost', money(revenue * (v.delivery / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Bookkeeping is sticky recurring revenue — once you're in a client's books, switching is painful, so retention is high. Fixed monthly pricing (not hourly), standardized workflows, and offshore/associate delivery scale the margin; advisory and tax add-ons lift revenue per client. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
