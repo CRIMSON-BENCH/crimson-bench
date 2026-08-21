@@ -7494,6 +7494,427 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'cap-table-model',
   },
+
+  {
+    id: 'wind-farm-simulator', name: 'Wind Farm Simulator', category: 'Energy',
+    tagline: 'Project a wind project’s generation and profit.',
+    description: 'Model turbine capacity and capacity factor against power price and opex to see annual generation, revenue, and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'turbines', label: 'Turbines', default: 20 },
+      { key: 'mw', label: 'MW per turbine', default: 2.5 },
+      { key: 'cf', label: 'Capacity factor', default: 35, suffix: '%' },
+      { key: 'price', label: 'Price per MWh', default: 40, prefix: '$' },
+      { key: 'opex', label: 'Opex / MW / year', default: 45000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalMW = v.turbines * v.mw
+      const mwh = totalMW * 8760 * (v.cf / 100)
+      const revenue = mwh * v.price
+      const opex = totalMW * v.opex
+      const profit = revenue - opex
+      return {
+        metrics: [
+          { label: 'Annual generation', value: `${Math.round(mwh).toLocaleString()} MWh`, highlight: true },
+          { label: 'Annual revenue', value: money(revenue), highlight: true },
+          { label: 'Profit (pre-financing)', value: money(profit) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Capacity', `${totalMW} MW`], ['Generation', `${Math.round(mwh).toLocaleString()} MWh`], ['Revenue', money(revenue)], ['Opex', money(opex)], ['Profit', money(profit)]],
+        note: `Capacity factor (real output vs. nameplate) and the power purchase price drive everything. Wind is capital-heavy up front, then nearly free to run — so financing terms and site wind quality make or break returns. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'battery-storage-simulator', name: 'Grid Battery Storage Simulator', category: 'Energy',
+    tagline: 'Project revenue from energy arbitrage.',
+    description: 'Model battery capacity and cycles against a buy-sell price spread to see annual arbitrage revenue and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'capacity', label: 'Capacity (MWh)', default: 100 },
+      { key: 'cycles', label: 'Cycles / year', default: 350 },
+      { key: 'efficiency', label: 'Round-trip efficiency', default: 88, suffix: '%' },
+      { key: 'spread', label: 'Price spread / MWh', default: 40, prefix: '$' },
+      { key: 'opex', label: 'Annual opex', default: 500000, prefix: '$' },
+    ],
+    compute: v => {
+      const throughput = v.capacity * v.cycles * (v.efficiency / 100)
+      const revenue = throughput * v.spread
+      const profit = revenue - v.opex
+      return {
+        metrics: [
+          { label: 'Annual throughput', value: `${Math.round(throughput).toLocaleString()} MWh`, highlight: true },
+          { label: 'Annual revenue', value: money(revenue), highlight: true },
+          { label: 'Profit', value: money(profit) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Throughput', `${Math.round(throughput).toLocaleString()} MWh`], ['Revenue', money(revenue)], ['Opex', money(v.opex)], ['Profit', money(profit)]],
+        note: `Storage profits by buying cheap power and selling it dear — the price spread and cycle count are everything. Efficiency losses and battery degradation (not modeled) eat into returns over time. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dairy-farm-simulator', name: 'Dairy Farm Simulator', category: 'Manufacturing',
+    tagline: 'Project a dairy operation’s profit.',
+    description: 'Model herd size and milk yield against milk price and feed cost to see monthly profit and per-cow economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cows', label: 'Milking cows', default: 200 },
+      { key: 'gallons', label: 'Gallons / cow / day', default: 7 },
+      { key: 'price', label: 'Price per gallon', default: 1.9, prefix: '$' },
+      { key: 'feed', label: 'Feed cost / cow / day', default: 6, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cows * v.gallons * v.price * 30
+      const feed = v.cows * v.feed * 30
+      const profit = revenue - feed - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / cow', value: money(v.cows > 0 ? profit / v.cows : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Milk revenue', money(revenue)], ['Feed cost', money(feed)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Dairy margins are painfully thin and volatile — milk price and feed cost both swing, often against you. Efficiency (gallons per cow) and scale are survival tools; many farms hedge both prices. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'vertical-farm-simulator', name: 'Vertical Farm Simulator', category: 'Manufacturing',
+    tagline: 'Project a controlled-environment farm’s profit.',
+    description: 'Model grow area and yield against premium pricing versus high energy and labor cost to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sqft', label: 'Grow area (sq ft)', default: 20000 },
+      { key: 'yield', label: 'Yield / sq ft / year (lbs)', default: 30 },
+      { key: 'price', label: 'Price per lb', default: 4, prefix: '$' },
+      { key: 'energy', label: 'Energy cost / sq ft / year', default: 15, prefix: '$' },
+      { key: 'labor', label: 'Labor + fixed / month', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const annualYield = v.sqft * v.yield
+      const revenue = annualYield * v.price
+      const energy = v.sqft * v.energy
+      const profit = revenue - energy - v.labor * 12
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / sq ft', value: money(v.sqft > 0 ? profit / v.sqft : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Energy cost', money(energy)], ['Labor + fixed', money(v.labor * 12)], ['Profit', money(profit)]],
+        note: `Vertical farming fights high energy and labor costs — the pitch is premium, local, pesticide-free greens grown year-round near cities. Crop selection (high-value herbs and greens) and energy efficiency decide viability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'liquor-store-simulator', name: 'Liquor Store Simulator', category: 'Retail',
+    tagline: 'Project a liquor store’s profit.',
+    description: 'Model daily sales and gross margin against fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Sales / day', default: 8000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.sales * 30
+      const profit = revenue * (v.margin / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(revenue * (v.margin / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Liquor retail runs on volume and tight margins, but it's recession-resistant and cash-heavy. Higher-margin wine and spirits, plus a good location and selection, lift the blended margin above the beer-heavy average. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pet-store-simulator', name: 'Pet Store Simulator', category: 'Retail',
+    tagline: 'Project a pet store with grooming services.',
+    description: 'Model retail plus grooming, at their different margins, against fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'retail', label: 'Retail sales / mo', default: 120000, prefix: '$' },
+      { key: 'retailMargin', label: 'Retail margin', default: 40, suffix: '%' },
+      { key: 'grooming', label: 'Grooming revenue / mo', default: 20000, prefix: '$' },
+      { key: 'groomingMargin', label: 'Grooming margin', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const retailProfit = v.retail * (v.retailMargin / 100)
+      const groomingProfit = v.grooming * (v.groomingMargin / 100)
+      const profit = retailProfit + groomingProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Grooming profit', value: money(groomingProfit), highlight: true },
+          { label: 'Retail profit', value: money(retailProfit) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [['Retail', money(retailProfit)], ['Grooming', money(groomingProfit)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Services (grooming, training) and recurring consumables (food, litter) — especially subscriptions — are how pet stores fight big-box and online competition. Higher-margin services carry the lower-margin retail. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bar-nightclub-simulator', name: 'Bar / Nightclub Simulator', category: 'Hospitality',
+    tagline: 'Project a bar’s monthly profit.',
+    description: 'Model covers, average spend, and cover charge against COGS, labor, and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'covers', label: 'Covers / night', default: 300 },
+      { key: 'spend', label: 'Average spend', default: 35, prefix: '$' },
+      { key: 'cover', label: 'Cover charge', default: 10, prefix: '$' },
+      { key: 'nights', label: 'Nights / month', default: 20 },
+      { key: 'cogs', label: 'COGS %', default: 22, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.covers * (v.spend + v.cover) * v.nights
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Beverage margins are excellent — the battle is filling the room on non-peak nights. Events, DJs, bottle service, and a strong weekend drive the numbers; slow Tuesdays still pay full rent and staff. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'distillery-simulator', name: 'Distillery Simulator', category: 'Manufacturing',
+    tagline: 'Project a distillery across wholesale and tasting room.',
+    description: 'Model bottle production and the tasting room to see monthly profit — and why the tasting room matters.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'bottles', label: 'Bottles / month', default: 3000 },
+      { key: 'price', label: 'Wholesale price / bottle', default: 30, prefix: '$' },
+      { key: 'cost', label: 'Cost / bottle', default: 10, prefix: '$' },
+      { key: 'tasting', label: 'Tasting room revenue / mo', default: 25000, prefix: '$' },
+      { key: 'tastingMargin', label: 'Tasting room margin', default: 65, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const bottleProfit = v.bottles * (v.price - v.cost)
+      const tastingProfit = v.tasting * (v.tastingMargin / 100)
+      const profit = bottleProfit + tastingProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Tasting room profit', value: money(tastingProfit), highlight: true },
+          { label: 'Wholesale profit', value: money(bottleProfit) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [['Wholesale bottles', money(bottleProfit)], ['Tasting room', money(tastingProfit)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Aged spirits tie up capital for years before sale — so the tasting room, which captures full retail margin on today's production, is the cash-flow lifeline for young distilleries. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'twitch-streamer-simulator', name: 'Twitch Streamer Income Simulator', category: 'Creator',
+    tagline: 'Project a streamer’s monthly income.',
+    description: 'Model subs, bits, ads, and sponsorships to see a streamer’s total monthly income and its mix.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subs', label: 'Subscribers', default: 500 },
+      { key: 'subNet', label: 'Net per sub', default: 2.5, prefix: '$' },
+      { key: 'bits', label: 'Bits/tips income / mo', default: 3000, prefix: '$' },
+      { key: 'ads', label: 'Ad income / mo', default: 800, prefix: '$' },
+      { key: 'sponsorship', label: 'Sponsorship / mo', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const subIncome = v.subs * v.subNet
+      const total = subIncome + v.bits + v.ads + v.sponsorship
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(total), highlight: true },
+          { label: 'Annualized', value: money(total * 12), highlight: true },
+          { label: 'Sub income', value: money(subIncome) },
+        ],
+        columns: ['Source', 'Monthly'],
+        rows: [['Subscriptions', money(subIncome)], ['Bits / tips', money(v.bits)], ['Ads', money(v.ads)], ['Sponsorships', money(v.sponsorship)], ['Total', money(total)]],
+        note: `Diversified income is the goal — subs and ads are steady, sponsorships are lumpy but high, and a loyal community drives all of it. The platform's revenue split makes off-platform income (sponsorships, own products) especially valuable. Educational only.`,
+      }
+    },
+    sells: 'email-marketing-kit',
+  },
+  {
+    id: 'creator-subscription-simulator', name: 'Creator Subscription Simulator', category: 'Creator',
+    tagline: 'Project fan-subscription income after the platform cut.',
+    description: 'Model paid subscribers and price against the platform’s take to see net creator income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subscribers', label: 'Paying subscribers', default: 2000 },
+      { key: 'price', label: 'Monthly price', default: 12, prefix: '$' },
+      { key: 'cut', label: 'Platform cut', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const gross = v.subscribers * v.price
+      const net = gross * (1 - v.cut / 100)
+      return {
+        metrics: [
+          { label: 'Net monthly income', value: money(net), highlight: true },
+          { label: 'Annualized', value: money(net * 12), highlight: true },
+          { label: 'Net / subscriber', value: money(v.price * (1 - v.cut / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross', money(gross)], ['Platform cut', money(-(gross * (v.cut / 100)))], ['Net', money(net)]],
+        note: `Direct fan subscriptions are the most durable creator income — but the platform cut and churn define the take. Owning the audience relationship (email, own app) protects you from platform changes. Educational only.`,
+      }
+    },
+    sells: 'email-marketing-kit',
+  },
+  {
+    id: 'mobile-game-simulator', name: 'Mobile Game Revenue Simulator', category: 'SaaS',
+    tagline: 'Project revenue from ads and in-app purchases.',
+    description: 'Model daily active users against ad ARPDAU and IAP conversion to see total monthly revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dau', label: 'Daily active users', default: 50000 },
+      { key: 'adArpdau', label: 'Ad revenue / DAU / day', default: 0.05, prefix: '$' },
+      { key: 'iapConversion', label: 'IAP payer %', default: 2, suffix: '%' },
+      { key: 'arppu', label: 'IAP revenue / payer / mo', default: 20, prefix: '$' },
+    ],
+    compute: v => {
+      const adRevenue = v.dau * v.adArpdau * 30
+      const payers = v.dau * (v.iapConversion / 100)
+      const iapRevenue = payers * v.arppu
+      const total = adRevenue + iapRevenue
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(total), highlight: true },
+          { label: 'IAP revenue', value: money(iapRevenue), highlight: true },
+          { label: 'Ad revenue', value: money(adRevenue) },
+        ],
+        columns: ['Source', 'Monthly Revenue'],
+        rows: [['Ads', money(adRevenue)], ['In-app purchases', money(iapRevenue)], ['Total', money(total)]],
+        note: `A small share of "whales" drives most IAP revenue, while ads monetize the free majority. Retention (DAU) compounds both — a game that keeps players earns exponentially more than one that churns. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'display-ad-blog-simulator', name: 'Display Ad Blog Simulator', category: 'Creator',
+    tagline: 'What blog traffic earns in display ads.',
+    description: 'Model monthly pageviews against your ad RPM to see display revenue — and why niche matters.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'pageviews', label: 'Pageviews / month', default: 1000000 },
+      { key: 'rpm', label: 'Ad RPM (per 1k views)', default: 12, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = (v.pageviews / 1000) * v.rpm
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(revenue), highlight: true },
+          { label: 'Annualized', value: money(revenue * 12), highlight: true },
+          { label: 'Per 1k views', value: money(v.rpm) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Pageviews', Math.round(v.pageviews).toLocaleString()], ['RPM', money(v.rpm)], ['Revenue', money(revenue)]],
+        note: `RPM swings enormously by niche — finance, insurance, and legal content can earn 5–10x general-interest RPMs because advertisers pay more for those readers. Traffic quality beats raw volume. Educational only.`,
+      }
+    },
+    sells: 'seo-content-toolkit',
+  },
+  {
+    id: 'ice-rink-simulator', name: 'Ice Rink Simulator', category: 'Recreation',
+    tagline: 'Project an ice rink’s profit.',
+    description: 'Model public sessions plus rentals and programs against heavy fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sessions', label: 'Public sessions / week', default: 20 },
+      { key: 'attendees', label: 'Avg. attendees', default: 60 },
+      { key: 'admission', label: 'Admission', default: 12, prefix: '$' },
+      { key: 'rentalRate', label: 'Skate rental %', default: 50, suffix: '%' },
+      { key: 'rentalPrice', label: 'Rental price', default: 5, prefix: '$' },
+      { key: 'programs', label: 'Ice time / programs / mo', default: 30000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 45000, prefix: '$' },
+    ],
+    compute: v => {
+      const admissionRev = v.sessions * v.attendees * v.admission * 4.33
+      const rentalRev = v.sessions * v.attendees * (v.rentalRate / 100) * v.rentalPrice * 4.33
+      const revenue = admissionRev + rentalRev + v.programs
+      const profit = revenue - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Programs / ice time', value: money(v.programs), highlight: true },
+        ],
+        columns: ['Source', 'Monthly Revenue'],
+        rows: [['Public admission', money(admissionRev)], ['Skate rentals', money(rentalRev)], ['Programs / ice time', money(v.programs)], ['Profit', money(profit)]],
+        note: `Rinks carry huge fixed costs (ice-making runs 24/7), so selling ice time — leagues, lessons, and rentals — beyond public skates is what carries the facility. Concessions and pro shop add margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'go-kart-track-simulator', name: 'Go-Kart Track Simulator', category: 'Recreation',
+    tagline: 'Project a kart track’s monthly profit.',
+    description: 'Model race volume and racers against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'races', label: 'Races / day', default: 60 },
+      { key: 'racers', label: 'Avg. racers / race', default: 8 },
+      { key: 'price', label: 'Price per race', default: 22, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 15, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.races * v.racers * v.price * 26
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Karts and track are big upfront cost with low variable cost per race — so throughput at peak times drives it. Memberships, leagues, corporate events, and arcade/F&B multiply revenue per visitor. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'axe-throwing-simulator', name: 'Axe Throwing Venue Simulator', category: 'Recreation',
+    tagline: 'Project an axe-throwing venue’s profit.',
+    description: 'Model lanes and session volume against variable and fixed costs to see monthly profit and revenue per lane.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lanes', label: 'Lanes', default: 8 },
+      { key: 'sessions', label: 'Sessions / lane / day', default: 5 },
+      { key: 'groupSize', label: 'Avg. group size', default: 6 },
+      { key: 'price', label: 'Price per person', default: 25, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 22000, prefix: '$' },
+    ],
+    compute: v => {
+      const sessions = v.lanes * v.sessions * 26
+      const revenue = sessions * v.groupSize * v.price
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / lane', value: money(v.lanes > 0 ? revenue / v.lanes : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Very low variable cost means high incremental margin once fixed cost is covered — it's an experience business. Corporate events, leagues, and a bar (where permitted) are the profit multipliers. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
