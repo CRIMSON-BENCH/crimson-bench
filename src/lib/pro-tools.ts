@@ -4122,6 +4122,444 @@ export const PRO_TOOLS: ProTool[] = [
     },
     sells: 'saas-metrics-dashboard',
   },
+
+  {
+    id: 'position-size-simulator', name: 'Position Size Calculator', category: 'Trading',
+    tagline: 'Risk a fixed amount — let the stop set your size.',
+    description: 'Enter account size, risk per trade, entry, and stop to get the exact position size that keeps your loss capped. Educational only, not trading advice.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'account', label: 'Account size', default: 50000, prefix: '$' },
+      { key: 'riskPct', label: 'Risk per trade', default: 1, suffix: '%' },
+      { key: 'entry', label: 'Entry price', default: 100, prefix: '$' },
+      { key: 'stop', label: 'Stop price', default: 95, prefix: '$' },
+    ],
+    compute: v => {
+      const riskAmount = v.account * (v.riskPct / 100)
+      const perShare = Math.abs(v.entry - v.stop)
+      const shares = perShare > 0 ? riskAmount / perShare : 0
+      return {
+        metrics: [
+          { label: 'Risk amount', value: money(riskAmount), highlight: true },
+          { label: 'Position size (shares)', value: Math.floor(shares).toLocaleString(), highlight: true },
+          { label: 'Position value', value: money(Math.floor(shares) * v.entry) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Risk per trade', money(riskAmount)],
+          ['Risk per share', money(perShare)],
+          ['Shares', Math.floor(shares).toLocaleString()],
+          ['Position value', money(Math.floor(shares) * v.entry)],
+        ],
+        note: `Position sizing off a fixed risk % is the core of survival — the stop distance, not a gut feeling, sets your size. Risking 1% means 20 losses in a row still leaves you standing. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'risk-reward-simulator', name: 'Risk / Reward Calculator', category: 'Trading',
+    tagline: 'The win rate a trade actually needs.',
+    description: 'Enter entry, stop, and target to get the risk-reward ratio and the win rate you need just to break even.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'entry', label: 'Entry price', default: 100, prefix: '$' },
+      { key: 'stop', label: 'Stop price', default: 95, prefix: '$' },
+      { key: 'target', label: 'Target price', default: 115, prefix: '$' },
+    ],
+    compute: v => {
+      const risk = Math.abs(v.entry - v.stop)
+      const reward = Math.abs(v.target - v.entry)
+      const rr = risk > 0 ? reward / risk : 0
+      const breakeven = 1 / (1 + rr)
+      return {
+        metrics: [
+          { label: 'Risk : Reward', value: `1 : ${rr.toFixed(1)}`, highlight: true },
+          { label: 'Break-even win rate', value: pct(breakeven), highlight: true },
+          { label: 'Reward per $1 risk', value: money(rr) },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Risk per share', money(risk)],
+          ['Reward per share', money(reward)],
+          ['R:R ratio', `${rr.toFixed(2)}x`],
+        ],
+        note: `A ${rr.toFixed(1)}:1 reward-to-risk trade only needs to win ${pct(breakeven)} of the time to break even. Favorable R:R is why disciplined traders can be profitable while losing most of their trades. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'trading-expectancy-simulator', name: 'Trading Expectancy Simulator', category: 'Trading',
+    tagline: 'Is your strategy actually profitable?',
+    description: 'Enter win rate, average win, and average loss to see expectancy per trade — the single number that decides if a system makes money.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'winRate', label: 'Win rate', default: 45, suffix: '%' },
+      { key: 'avgWin', label: 'Average win', default: 300, prefix: '$' },
+      { key: 'avgLoss', label: 'Average loss', default: 150, prefix: '$' },
+      { key: 'trades', label: 'Trades / month', default: 40 },
+    ],
+    compute: v => {
+      const expectancy = (v.winRate / 100) * v.avgWin - (1 - v.winRate / 100) * v.avgLoss
+      return {
+        metrics: [
+          { label: 'Expectancy / trade', value: money(expectancy), highlight: expectancy < 0 },
+          { label: 'Monthly', value: money(expectancy * v.trades), highlight: true },
+          { label: 'Annualized', value: money(expectancy * v.trades * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Expected value per trade', money(expectancy)],
+          ['Trades per month', v.trades.toString()],
+          ['Monthly expectancy', money(expectancy * v.trades)],
+        ],
+        note: expectancy > 0 ? `Positive expectancy of ${money(expectancy)}/trade — over enough trades, volume works for you. Protect the edge; it's the whole game.` : `Negative expectancy — this system loses money on average, so more trading just loses faster. No amount of position sizing fixes a negative edge. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'kelly-criterion-simulator', name: 'Kelly Criterion Calculator', category: 'Trading',
+    tagline: 'The mathematically optimal bet size.',
+    description: 'Enter your win probability and win/loss ratio to get the Kelly-optimal fraction of capital to risk — and the safer half-Kelly.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'winProb', label: 'Win probability', default: 55, suffix: '%' },
+      { key: 'ratio', label: 'Win / loss size ratio', default: 1.5 },
+    ],
+    compute: v => {
+      const p = v.winProb / 100, q = 1 - p, b = v.ratio
+      const kelly = b > 0 ? (b * p - q) / b : 0
+      return {
+        metrics: [
+          { label: 'Full Kelly', value: pct(Math.max(0, kelly)), highlight: true },
+          { label: 'Half Kelly', value: pct(Math.max(0, kelly / 2)), highlight: true },
+          { label: 'Edge', value: kelly > 0 ? 'Positive' : 'None', highlight: kelly <= 0 },
+        ],
+        columns: ['Sizing', 'Fraction of Capital'],
+        rows: [
+          ['Full Kelly', pct(Math.max(0, kelly))],
+          ['Half Kelly (recommended)', pct(Math.max(0, kelly / 2))],
+          ['Quarter Kelly (conservative)', pct(Math.max(0, kelly / 4))],
+        ],
+        note: kelly > 0 ? `Full Kelly maximizes long-run growth but is wild — most practitioners use half-Kelly to cut volatility for nearly the same growth. Never size above full Kelly; it guarantees eventual ruin. Educational only.` : `A negative Kelly means no edge — the math says don't bet at all. If you have no edge, sizing doesn't matter; you lose over time. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'drawdown-recovery-simulator', name: 'Drawdown Recovery Calculator', category: 'Trading',
+    tagline: 'Why losses hurt more than they look.',
+    description: 'See the gain required to recover from a drawdown — the brutal asymmetry every trader and investor must respect.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'drawdown', label: 'Your drawdown', default: 30, suffix: '%' },
+    ],
+    compute: v => {
+      const gain = (1 / (1 - v.drawdown / 100) - 1)
+      const rows = [10, 20, 30, 50, 70].map(dd => [`${dd}%`, pct(1 / (1 - dd / 100) - 1)])
+      return {
+        metrics: [
+          { label: 'Your drawdown', value: `${v.drawdown}%` },
+          { label: 'Gain to recover', value: pct(gain), highlight: true },
+        ],
+        columns: ['Drawdown', 'Gain to Recover'],
+        rows,
+        note: `A ${v.drawdown}% loss needs a ${pct(gain)} gain just to get back to even — losses and gains are not symmetric. This is why capital preservation and stop-losses matter more than home runs. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'leverage-liquidation-simulator', name: 'Leverage Liquidation Calculator', category: 'Trading',
+    tagline: 'How small a move wipes a leveraged position.',
+    description: 'Enter entry price and leverage to see your approximate liquidation price and how little the market must move against you.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'entry', label: 'Entry price', default: 100, prefix: '$' },
+      { key: 'leverage', label: 'Leverage', default: 10 },
+    ],
+    compute: v => {
+      const distance = v.leverage > 0 ? 1 / v.leverage : 0
+      const liqLong = v.entry * (1 - distance)
+      const liqShort = v.entry * (1 + distance)
+      return {
+        metrics: [
+          { label: 'Move to liquidation', value: pct(distance), highlight: true },
+          { label: 'Long liquidation ~', value: money(liqLong), highlight: true },
+          { label: 'Short liquidation ~', value: money(liqShort) },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Leverage', `${v.leverage}x`],
+          ['Move to wipe out', pct(distance)],
+          ['Long liquidation price', money(liqLong)],
+          ['Short liquidation price', money(liqShort)],
+        ],
+        note: `At ${v.leverage}x, only a ~${pct(distance)} move against you wipes the position (before fees and funding). High leverage magnifies gains and destroys accounts — it is the fastest way to lose everything. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'compound-trading-simulator', name: 'Compound Trading Returns Simulator', category: 'Trading',
+    tagline: 'What a small per-trade edge compounds to.',
+    description: 'Model a steady average return per trade compounding over time. A deterministic illustration — real trading has variance and losing streaks.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'capital', label: 'Starting capital', default: 10000, prefix: '$' },
+      { key: 'perTrade', label: 'Avg. return / trade', default: 1, suffix: '%' },
+      { key: 'trades', label: 'Trades / month', default: 20 },
+      { key: 'months', label: 'Months', default: 12 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let eq = v.capital
+      const mo = Math.min(Math.max(v.months, 1), 60)
+      for (let m = 1; m <= mo; m++) {
+        eq *= Math.pow(1 + v.perTrade / 100, v.trades)
+        if (m % 2 === 0) rows.push([`Month ${m}`, money(eq)])
+      }
+      return {
+        metrics: [
+          { label: 'Ending equity', value: money(eq), highlight: true },
+          { label: 'Total return', value: pct(v.capital > 0 ? eq / v.capital - 1 : 0), highlight: true },
+          { label: 'Multiple', value: `${(v.capital > 0 ? eq / v.capital : 0).toFixed(1)}x` },
+        ],
+        columns: ['Month', 'Equity'],
+        rows,
+        note: `Even a 1% edge compounds dramatically on paper — but this assumes no losing streaks or variance, which real trading always has. Use it to see the power of consistency, not as a forecast. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'crypto-dca-simulator', name: 'Crypto DCA Simulator', category: 'Crypto',
+    tagline: 'Model dollar-cost-averaging into a volatile asset.',
+    description: 'Model regular purchases growing at an assumed rate. Crypto is far more volatile than any steady rate — this is an educational illustration, not a prediction.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'monthly', label: 'Monthly purchase', default: 500, prefix: '$' },
+      { key: 'months', label: 'Months', default: 24 },
+      { key: 'appreciation', label: 'Assumed annual appreciation', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const r = v.appreciation / 1200
+      const mo = Math.min(Math.max(v.months, 1), 120)
+      let value = 0
+      for (let m = 1; m <= mo; m++) value += v.monthly * Math.pow(1 + r, mo - m)
+      const invested = v.monthly * mo
+      return {
+        metrics: [
+          { label: 'Ending value', value: money(value), highlight: true },
+          { label: 'Invested', value: money(invested) },
+          { label: 'Gain', value: money(value - invested), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total invested', money(invested)],
+          ['Ending value', money(value)],
+          ['Gain', money(value - invested)],
+        ],
+        note: `DCA removes the pressure of timing a volatile market by buying steadily. This uses a smooth assumed rate; real crypto can swing wildly in both directions, so never invest more than you can afford to lose. Educational only, not investment advice.`,
+      }
+    },
+  },
+  {
+    id: 'impermanent-loss-simulator', name: 'Impermanent Loss Simulator', category: 'Crypto',
+    tagline: 'The hidden cost of providing liquidity.',
+    description: 'Enter a price change in one paired asset to see the impermanent loss versus simply holding — the risk every DeFi liquidity provider takes.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'change', label: 'Price change of one asset', default: 50, suffix: '%' },
+    ],
+    compute: v => {
+      const il = (change: number) => { const r = 1 + change / 100; return r > 0 ? 2 * Math.sqrt(r) / (1 + r) - 1 : -1 }
+      const rows = [25, 50, 100, 200, -50].map(c => [`${c > 0 ? '+' : ''}${c}%`, pct(il(c))])
+      return {
+        metrics: [
+          { label: 'Impermanent loss', value: pct(il(v.change)), highlight: true },
+        ],
+        columns: ['Price Change', 'Impermanent Loss'],
+        rows,
+        note: `Impermanent loss is what you give up versus just holding the two assets — the more one asset moves, the larger it grows. Trading fees earned must exceed this loss to make liquidity provision worthwhile. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'yield-farming-apy-simulator', name: 'APR → APY Yield Simulator', category: 'Crypto',
+    tagline: 'What compounding turns an APR into.',
+    description: 'Enter an APR and compounding frequency to see the effective APY and annual earnings. High advertised yields usually carry high risk.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'principal', label: 'Principal', default: 10000, prefix: '$' },
+      { key: 'apr', label: 'APR', default: 40, suffix: '%' },
+      { key: 'compounds', label: 'Compounds / year', default: 365 },
+    ],
+    compute: v => {
+      const n = Math.max(1, v.compounds)
+      const apy = Math.pow(1 + v.apr / 100 / n, n) - 1
+      return {
+        metrics: [
+          { label: 'Effective APY', value: pct(apy), highlight: true },
+          { label: 'Annual earnings', value: money(v.principal * apy), highlight: true },
+          { label: 'vs. simple APR', value: money(v.principal * (v.apr / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['APR', pct(v.apr / 100)],
+          ['APY (compounded)', pct(apy)],
+          ['Annual earnings', money(v.principal * apy)],
+        ],
+        note: `Frequent compounding turns a ${v.apr}% APR into a ${pct(apy)} APY. But eye-popping DeFi yields usually come from inflationary token rewards and carry smart-contract and de-peg risk — the yield can vanish faster than it compounds. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'token-unlock-simulator', name: 'Token Unlock / Sell-Pressure Simulator', category: 'Crypto',
+    tagline: 'How vesting unlocks dilute a token.',
+    description: 'Model monthly token unlocks growing the circulating supply to see the sell pressure they add over time.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'total', label: 'Total supply', default: 1000000000 },
+      { key: 'circulating', label: 'Circulating now', default: 200000000 },
+      { key: 'unlock', label: 'Monthly unlock', default: 30000000 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let circ = v.circulating
+      for (let m = 1; m <= 12; m++) {
+        circ = Math.min(v.total, circ + v.unlock)
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(circ).toLocaleString(), pct(v.total > 0 ? circ / v.total : 0), pct(circ > 0 ? v.unlock / circ : 0)])
+      }
+      return {
+        metrics: [
+          { label: 'Circulating (mo 12)', value: Math.round(circ).toLocaleString(), highlight: true },
+          { label: '% of total (mo 12)', value: pct(v.total > 0 ? circ / v.total : 0), highlight: true },
+          { label: 'Monthly unlock / circ', value: pct(v.circulating > 0 ? v.unlock / v.circulating : 0) },
+        ],
+        columns: ['Month', 'Circulating', '% of Total', 'Unlock / Circ'],
+        rows,
+        note: `Unlocks add new supply that can be sold — when the monthly unlock is large relative to circulating supply, it's persistent sell pressure. Big "cliff" unlocks often precede price drops. Check vesting schedules before buying. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'house-edge-simulator', name: 'House Edge Simulator', category: 'Betting',
+    tagline: 'The math of why the house always wins.',
+    description: 'Enter bet size, pace, and the game’s house edge to see your mathematically expected loss over a session. An odds-awareness tool.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'bet', label: 'Average bet', default: 50, prefix: '$' },
+      { key: 'perHour', label: 'Bets per hour', default: 60 },
+      { key: 'edge', label: 'House edge', default: 2.7, suffix: '%' },
+      { key: 'hours', label: 'Hours played', default: 4 },
+    ],
+    compute: v => {
+      const wagered = v.bet * v.perHour * v.hours
+      const expectedLoss = wagered * (v.edge / 100)
+      return {
+        metrics: [
+          { label: 'Expected loss', value: money(expectedLoss), highlight: true },
+          { label: 'Total wagered', value: money(wagered) },
+          { label: 'Loss per hour', value: money(v.hours > 0 ? expectedLoss / v.hours : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total wagered', money(wagered)],
+          ['House edge', pct(v.edge / 100)],
+          ['Expected loss', money(expectedLoss)],
+        ],
+        note: `The house edge guarantees that, over time, the math favors the casino — the longer you play, the closer your results move to this expected loss. Gamble only for entertainment with money you can afford to lose, never as income. If gambling is a problem, call 1-800-522-4700 (US).`,
+      }
+    },
+  },
+  {
+    id: 'bet-expected-value-simulator', name: 'Bet Expected Value Calculator', category: 'Betting',
+    tagline: 'Is a bet +EV — or is the book taking its cut?',
+    description: 'Enter the odds, your true win probability, and stake to see the bet’s expected value and the break-even probability the odds imply.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stake', label: 'Stake', default: 100, prefix: '$' },
+      { key: 'odds', label: 'Decimal odds', default: 2.5 },
+      { key: 'trueProb', label: 'Your true win probability', default: 35, suffix: '%' },
+    ],
+    compute: v => {
+      const payout = v.stake * v.odds
+      const p = v.trueProb / 100
+      const ev = p * (payout - v.stake) - (1 - p) * v.stake
+      const impliedProb = v.odds > 0 ? 1 / v.odds : 0
+      return {
+        metrics: [
+          { label: 'Expected value', value: money(ev), highlight: ev < 0 },
+          { label: 'EV per $1 staked', value: money(v.stake > 0 ? ev / v.stake : 0) },
+          { label: 'Break-even probability', value: pct(impliedProb), highlight: true },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Potential payout', money(payout)],
+          ['Break-even (implied) probability', pct(impliedProb)],
+          ['Your probability', pct(p)],
+          ['Expected value', money(ev)],
+        ],
+        note: ev > 0 ? `Positive EV only because you've assumed your probability beats the ${pct(impliedProb)} the odds imply — and books build in a margin (vig) that makes most bets negative EV. Be honest about your true edge. If gambling is a problem, call 1-800-522-4700 (US).` : `Negative EV — the odds imply you need to win ${pct(impliedProb)} of the time, more than your ${pct(p)}. Most bets are -EV by design; the house margin is the point. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'gambling-risk-of-ruin-simulator', name: 'Gambling Risk of Ruin Simulator', category: 'Betting',
+    tagline: 'How fast a bankroll disappears against an edge.',
+    description: 'With any house edge, ruin is the long-run certainty — this shows the expected number of bets until a bankroll is gone.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'bankroll', label: 'Bankroll', default: 1000, prefix: '$' },
+      { key: 'bet', label: 'Bet size', default: 50, prefix: '$' },
+      { key: 'edge', label: 'House edge', default: 2, suffix: '%' },
+    ],
+    compute: v => {
+      const lossPerBet = v.bet * (v.edge / 100)
+      const bets = lossPerBet > 0 ? v.bankroll / lossPerBet : 0
+      return {
+        metrics: [
+          { label: 'Expected bets to ruin', value: Math.round(bets).toLocaleString(), highlight: true },
+          { label: 'Expected loss / bet', value: money(lossPerBet) },
+          { label: 'Long-run outcome', value: 'Ruin', highlight: true },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Bankroll', money(v.bankroll)],
+          ['Expected loss per bet', money(lossPerBet)],
+          ['Expected bets to broke', Math.round(bets).toLocaleString()],
+        ],
+        note: `Against a house edge, the only question is how fast — the expected end state is always ruin. Variance can let you win for a while, which is exactly what keeps people playing. Set a hard loss limit and treat any wager as entertainment spending. Help: 1-800-522-4700 (US).`,
+      }
+    },
+  },
+  {
+    id: 'parlay-odds-simulator', name: 'Parlay Odds Calculator', category: 'Betting',
+    tagline: 'Why big parlay payouts are long shots.',
+    description: 'Enter the number of legs and odds per leg to see the combined payout and how unlikely winning the whole parlay really is.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'legs', label: 'Number of legs', default: 4 },
+      { key: 'oddsPerLeg', label: 'Decimal odds / leg', default: 1.9 },
+      { key: 'stake', label: 'Stake', default: 50, prefix: '$' },
+    ],
+    compute: v => {
+      const legs = Math.min(Math.max(Math.round(v.legs), 1), 15)
+      const combined = Math.pow(v.oddsPerLeg, legs)
+      const payout = v.stake * combined
+      const implied = combined > 0 ? 1 / combined : 0
+      return {
+        metrics: [
+          { label: 'Combined odds', value: `${combined.toFixed(1)}x`, highlight: true },
+          { label: 'Potential payout', value: money(payout), highlight: true },
+          { label: 'Implied win chance', value: pct(implied), highlight: true },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [
+          ['Legs', legs.toString()],
+          ['Combined odds', `${combined.toFixed(1)}x`],
+          ['Payout', money(payout)],
+          ['Implied probability', pct(implied)],
+        ],
+        note: `Every added leg multiplies the payout — and the house edge. A ${legs}-leg parlay here has only about a ${pct(implied)} chance to hit, which is why books love them and long-term expected value is deeply negative. Educational only. Help: 1-800-522-4700 (US).`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
