@@ -8339,6 +8339,415 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'staffing-agency-simulator', name: 'Staffing Agency Simulator', category: 'Professional',
+    tagline: 'Project a staffing firm’s profit on the bill-pay spread.',
+    description: 'Model placed workers and the spread between bill and pay rate to see monthly gross margin and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'workers', label: 'Placed workers', default: 100 },
+      { key: 'bill', label: 'Bill rate / hour', default: 45, prefix: '$' },
+      { key: 'pay', label: 'Pay rate / hour', default: 30, prefix: '$' },
+      { key: 'hours', label: 'Hours / week', default: 40 },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const spread = v.bill - v.pay
+      const monthlyMargin = v.workers * spread * v.hours * 4.33
+      const profit = monthlyMargin - v.fixed
+      const revenue = v.workers * v.bill * v.hours * 4.33
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: pct(v.bill > 0 ? spread / v.bill : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Bill revenue', money(revenue)], ['Gross margin', money(monthlyMargin)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Staffing is a spread business — thin margin per hour, but it scales with placed workers. The whole game is billing more workers at a healthy markup while keeping fill rates and retention high. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'recruiting-firm-simulator', name: 'Recruiting Firm Simulator', category: 'Professional',
+    tagline: 'Project a placement firm’s profit.',
+    description: 'Model placements and a percentage-of-salary fee against recruiter cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'placements', label: 'Placements / month', default: 8 },
+      { key: 'salary', label: 'Average salary', default: 90000, prefix: '$' },
+      { key: 'fee', label: 'Fee % of salary', default: 20, suffix: '%' },
+      { key: 'recruiterCost', label: 'Recruiter cost / month', default: 30000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.placements * v.salary * (v.fee / 100)
+      const profit = revenue - v.recruiterCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Fee / placement', value: money(v.salary * (v.fee / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Recruiter cost', money(v.recruiterCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Contingency recruiting is lumpy — you only earn when a placement sticks. Retained search and a strong candidate pipeline smooth the revenue; recruiter productivity (placements per head) is the key metric. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'architecture-firm-simulator', name: 'Architecture Firm Simulator', category: 'Professional',
+    tagline: 'Project an architecture firm’s annual profit.',
+    description: 'Model projects and fees (a percentage of construction value) against staff cost to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'projects', label: 'Projects / year', default: 30 },
+      { key: 'construction', label: 'Avg construction value', default: 2000000, prefix: '$' },
+      { key: 'fee', label: 'Fee % of construction', default: 8, suffix: '%' },
+      { key: 'staff', label: 'Staff', default: 12 },
+      { key: 'staffCost', label: 'Cost per staff / year', default: 90000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.projects * v.construction * (v.fee / 100)
+      const staffCost = v.staff * v.staffCost
+      const profit = revenue - staffCost
+      return {
+        metrics: [
+          { label: 'Annual revenue', value: money(revenue), highlight: true },
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff cost', money(staffCost)], ['Profit', money(profit)]],
+        note: `Architecture firms profit on staff leverage and fee realization — the trap is scope creep and unpaid revisions eroding the fixed fee. Utilization (billable ratio) and clear contracts protect the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'painting-company-simulator', name: 'Painting Company Simulator', category: 'Construction',
+    tagline: 'Project a painting contractor’s profit.',
+    description: 'Model job volume and value against material and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 40 },
+      { key: 'avgJob', label: 'Average job', default: 3500, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 15, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * ((v.material + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Painting is labor-driven and estimate-sensitive — underbidding the hours is where jobs lose money. Commercial and repaint contracts, plus crew productivity, are what scale it beyond one-off residential work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'concrete-paving-simulator', name: 'Concrete & Paving Simulator', category: 'Construction',
+    tagline: 'Project a concrete contractor’s profit.',
+    description: 'Model job volume and value against material, labor, and equipment cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 15 },
+      { key: 'avgJob', label: 'Average job', default: 12000, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'equipment', label: 'Equipment %', default: 10, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor + v.equipment) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor + equipment', money(revenue * ((v.material + v.labor + v.equipment) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Concrete is material- and weather-dependent — a rained-out pour or a mispriced yard of concrete eats the margin fast. Commercial and municipal contracts provide the steady, larger jobs that carry the fixed cost. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'solar-installer-simulator', name: 'Residential Solar Installer Simulator', category: 'Construction',
+    tagline: 'Project a solar installer’s profit — and the CAC problem.',
+    description: 'Model install volume and system margin against customer-acquisition cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'installs', label: 'Installs / month', default: 25 },
+      { key: 'system', label: 'Average system price', default: 25000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 30, suffix: '%' },
+      { key: 'cac', label: 'Sales/acquisition cost / install', default: 2500, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.installs * v.system * (v.margin / 100)
+      const cac = v.installs * v.cac
+      const profit = gross - cac - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin $', value: money(gross), highlight: true },
+          { label: 'Acquisition cost', value: money(cac) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross margin', money(gross)], ['Acquisition cost', money(cac)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Customer acquisition cost is the number that sinks residential solar installers — high-pressure sales channels are expensive. The winners lower CAC (referrals, reputation) and install efficiently. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'window-cleaning-simulator', name: 'Window Cleaning Simulator', category: 'Home Services',
+    tagline: 'Project a window-cleaning business’s profit.',
+    description: 'Model job volume and ticket against labor and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 6 },
+      { key: 'ticket', label: 'Average ticket', default: 250, prefix: '$' },
+      { key: 'labor', label: 'Labor %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 24
+      const profit = revenue * (1 - v.labor / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor', money(revenue * (v.labor / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Window cleaning is low-overhead and high-margin — the key is recurring commercial routes and route density. Add-ons (gutters, pressure washing, solar-panel cleaning) lift the ticket and fill the schedule. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'poultry-farm-simulator', name: 'Poultry Farm Simulator', category: 'Manufacturing',
+    tagline: 'Project a poultry operation’s annual profit.',
+    description: 'Model bird count and grow cycles against feed cost and revenue per bird to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'birds', label: 'Birds per cycle', default: 20000 },
+      { key: 'cycles', label: 'Cycles / year', default: 5 },
+      { key: 'revenue', label: 'Revenue per bird', default: 7, prefix: '$' },
+      { key: 'feed', label: 'Feed cost per bird', default: 3.5, prefix: '$' },
+      { key: 'fixed', label: 'Annual fixed', default: 100000, prefix: '$' },
+    ],
+    compute: v => {
+      const annualBirds = v.birds * v.cycles
+      const revenue = annualBirds * v.revenue
+      const feed = annualBirds * v.feed
+      const profit = revenue - feed - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / bird', value: money(v.revenue - v.feed), highlight: true },
+          { label: 'Birds / year', value: Math.round(annualBirds).toLocaleString() },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Feed cost', money(feed)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Poultry runs on razor-thin per-bird margins and fast cycles, so feed conversion and mortality rates matter enormously. Contract growing for an integrator trades upside for stability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'orchard-simulator', name: 'Orchard Simulator', category: 'Manufacturing',
+    tagline: 'Project an orchard’s annual profit.',
+    description: 'Model acres and yield against price and per-acre cost to see annual profit and per-acre economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acres', label: 'Producing acres', default: 40 },
+      { key: 'yield', label: 'Yield / acre (lbs)', default: 20000 },
+      { key: 'price', label: 'Price per lb', default: 0.5, prefix: '$' },
+      { key: 'cost', label: 'Cost per acre', default: 4000, prefix: '$' },
+      { key: 'fixed', label: 'Annual fixed', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.acres * v.yield * v.price
+      const cost = v.acres * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / acre', value: money(v.acres > 0 ? profit / v.acres : 0), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Growing cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Orchards take years to reach full production, and price and weather swing wildly year to year. Direct sales (U-pick, farm stand, agritourism) capture retail margin and smooth commodity price risk. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'furniture-store-simulator', name: 'Furniture Store Simulator', category: 'Retail',
+    tagline: 'Project a furniture retailer’s profit.',
+    description: 'Model sales and margin against delivery and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Sales / month', default: 400000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 45, suffix: '%' },
+      { key: 'delivery', label: 'Delivery cost %', default: 5, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 90000, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.sales * (v.margin / 100)
+      const delivery = v.sales * (v.delivery / 100)
+      const profit = gross - delivery - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross profit', value: money(gross) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Sales', money(v.sales)], ['Gross profit', money(gross)], ['Delivery', money(delivery)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Furniture carries healthy margins but slow inventory turns and big showroom overhead. Financing offers, delivery/assembly services, and protection plans lift the effective margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'jewelry-store-simulator', name: 'Jewelry Store Simulator', category: 'Retail',
+    tagline: 'Project a jewelry store’s profit.',
+    description: 'Model sales at keystone margins against fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Sales / month', default: 200000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.sales * (v.margin / 100)
+      const profit = gross - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross profit', value: money(gross), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Sales', money(v.sales)], ['Gross profit', money(gross)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Jewelry runs high margins (often keystone or better) but very slow inventory turns — capital sits in the case. Custom design, repairs, and appraisals are high-margin services that don't tie up inventory. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'flower-shop-simulator', name: 'Flower Shop Simulator', category: 'Retail',
+    tagline: 'Project a florist’s monthly profit.',
+    description: 'Model daily orders and value against perishable COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 40 },
+      { key: 'avgOrder', label: 'Average order', default: 65, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 40, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.avgOrder * 26
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Perishable inventory means waste is a constant tax, and revenue spikes hard around holidays (Valentine's, Mother's Day). Weddings, events, and subscriptions provide steadier, higher-margin work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'music-venue-simulator', name: 'Music Venue Simulator', category: 'Entertainment',
+    tagline: 'Why the bar, not the ticket, makes the venue.',
+    description: 'Model shows and attendance with ticket and bar revenue against artist and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shows', label: 'Shows / month', default: 20 },
+      { key: 'capacity', label: 'Capacity', default: 400 },
+      { key: 'attendance', label: 'Attendance', default: 70, suffix: '%' },
+      { key: 'ticket', label: 'Ticket price', default: 25, prefix: '$' },
+      { key: 'bar', label: 'Bar spend / head', default: 20, prefix: '$' },
+      { key: 'artist', label: 'Artist cost / show', default: 3000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const attendees = v.shows * v.capacity * (v.attendance / 100)
+      const ticketRev = attendees * v.ticket
+      const barProfit = attendees * v.bar * 0.75
+      const artistCost = v.shows * v.artist
+      const profit = ticketRev + barProfit - artistCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Bar profit', value: money(barProfit), highlight: true },
+          { label: 'Ticket revenue', value: money(ticketRev) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Ticket revenue', money(ticketRev)], ['Bar profit', money(barProfit)], ['Artist cost', money(-artistCost)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Ticket sales often just cover the artist guarantee — the bar (high-margin drinks × a full room) is where the venue actually profits. Booking acts that draw drinkers, not just fans, is the business. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'rd-tax-credit-simulator', name: 'R&D Tax Credit Simulator', category: 'Finance',
+    tagline: 'Estimate the credit on your development spend.',
+    description: 'Model qualified research expenses against a credit rate to estimate your R&D tax credit. A rough estimate, not tax advice.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'qre', label: 'Qualified research expenses', default: 500000, prefix: '$' },
+      { key: 'rate', label: 'Effective credit rate', default: 10, suffix: '%' },
+    ],
+    compute: v => {
+      const credit = v.qre * (v.rate / 100)
+      return {
+        metrics: [
+          { label: 'Estimated credit', value: money(credit), highlight: true },
+          { label: 'As % of QRE', value: pct(v.rate / 100) },
+          { label: 'QRE', value: money(v.qre) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Qualified expenses', money(v.qre)], ['Credit rate', pct(v.rate / 100)], ['Estimated credit', money(credit)]],
+        note: `The R&D credit rewards qualified development — wages, supplies, and contract research — and even pre-revenue startups can apply it against payroll taxes. A qualified study is needed to substantiate it. Rough estimate; not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'section-179-simulator', name: 'Section 179 Deduction Simulator', category: 'Finance',
+    tagline: 'The year-one tax savings on equipment.',
+    description: 'Model an equipment purchase and your tax rate to see the Section 179 deduction, tax savings, and net cost. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Equipment cost', default: 150000, prefix: '$' },
+      { key: 'taxRate', label: 'Your tax rate', default: 32, suffix: '%' },
+    ],
+    compute: v => {
+      const savings = v.cost * (v.taxRate / 100)
+      const net = v.cost - savings
+      return {
+        metrics: [
+          { label: 'Tax savings (year 1)', value: money(savings), highlight: true },
+          { label: 'Net cost after deduction', value: money(net), highlight: true },
+          { label: 'Effective discount', value: pct(v.taxRate / 100) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Equipment cost', money(v.cost)], ['Section 179 deduction', money(v.cost)], ['Tax savings', money(savings)], ['Net cost', money(net)]],
+        note: `Section 179 lets you deduct the full cost of qualifying equipment in year one instead of depreciating it over years — pulling the tax benefit forward and lowering the effective cost. Annual limits apply; not tax advice.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
