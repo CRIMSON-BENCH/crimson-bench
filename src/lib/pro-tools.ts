@@ -10022,6 +10022,417 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'tax-loss-harvesting-simulator', name: 'Tax-Loss Harvesting Simulator', category: 'Money',
+    tagline: 'Turn losses into tax savings that compound.',
+    description: 'Model harvesting losses to offset gains and see the tax saved — and what that saving grows to if reinvested. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'gains', label: 'Realized gains', default: 50000, prefix: '$' },
+      { key: 'losses', label: 'Harvested losses', default: 30000, prefix: '$' },
+      { key: 'taxRate', label: 'Tax rate', default: 30, suffix: '%' },
+      { key: 'return', label: 'Reinvestment return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 10 },
+    ],
+    compute: v => {
+      const offset = Math.min(v.losses, v.gains)
+      const taxSaved = offset * (v.taxRate / 100)
+      const grown = taxSaved * Math.pow(1 + v.return / 100, v.years)
+      return {
+        metrics: [
+          { label: 'Tax saved now', value: money(taxSaved), highlight: true },
+          { label: 'Gains offset', value: money(offset) },
+          { label: 'Savings grown', value: money(grown), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gains offset by losses', money(offset)], ['Tax saved', money(taxSaved)], ['Value if reinvested', money(grown)]],
+        note: `Harvesting losses to offset gains defers tax, and the deferred dollars keep compounding for you — a real edge over time. Mind the wash-sale rule (don't rebuy the same security within 30 days). Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'muni-bond-simulator', name: 'Muni Bond Tax-Equivalent Yield', category: 'Money',
+    tagline: 'What a tax-free yield is really worth to you.',
+    description: 'Enter a municipal bond yield and your tax brackets to see the taxable yield it equals — often much higher for high earners.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'muni', label: 'Muni yield', default: 4, suffix: '%' },
+      { key: 'federal', label: 'Federal bracket', default: 32, suffix: '%' },
+      { key: 'state', label: 'State bracket', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const combined = (v.federal + v.state) / 100
+      const tey = combined < 1 ? (v.muni / 100) / (1 - combined) : 0
+      return {
+        metrics: [
+          { label: 'Tax-equivalent yield', value: pct(tey), highlight: true },
+          { label: 'Muni yield', value: pct(v.muni / 100) },
+          { label: 'Yield boost', value: pct(tey - v.muni / 100), highlight: true },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [['Muni (tax-free) yield', pct(v.muni / 100)], ['Combined tax rate', pct(combined)], ['Tax-equivalent yield', pct(tey)]],
+        note: `A ${v.muni}% tax-free muni equals a ${pct(tey)} taxable yield at your brackets — which is why munis are so attractive to high earners. In-state bonds add the state exemption too. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'qsbs-simulator', name: 'QSBS Exclusion Simulator', category: 'Finance',
+    tagline: 'The startup founder tax break that excludes millions.',
+    description: 'Model Qualified Small Business Stock to see how much gain can be excluded from federal tax on a 5-year hold. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'gain', label: 'Capital gain', default: 5000000, prefix: '$' },
+      { key: 'cap', label: 'Exclusion cap', default: 10000000, prefix: '$' },
+      { key: 'taxRate', label: 'Cap gains + NIIT rate', default: 23.8, suffix: '%' },
+    ],
+    compute: v => {
+      const excluded = Math.min(v.gain, v.cap)
+      const taxable = Math.max(0, v.gain - excluded)
+      const taxSaved = excluded * (v.taxRate / 100)
+      return {
+        metrics: [
+          { label: 'Tax saved', value: money(taxSaved), highlight: true },
+          { label: 'Gain excluded', value: money(excluded), highlight: true },
+          { label: 'Taxable gain remaining', value: money(taxable) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Total gain', money(v.gain)], ['Excluded (QSBS)', money(excluded)], ['Tax saved', money(taxSaved)]],
+        note: `QSBS can exclude up to $10M (or 10× basis) of gain from federal tax on qualified small-business stock held five-plus years — one of the biggest breaks in the code, and a major reason to structure early. Strict rules apply. Educational only, not tax advice.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: '83b-election-simulator', name: '83(b) Election Simulator', category: 'Finance',
+    tagline: 'Why founders file within 30 days.',
+    description: 'Compare the tax of filing an 83(b) election at grant versus being taxed as equity vests. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shares', label: 'Shares', default: 100000 },
+      { key: 'grantValue', label: 'Value / share at grant', default: 0.1, prefix: '$' },
+      { key: 'vestValue', label: 'Value / share at vest', default: 2, prefix: '$' },
+      { key: 'taxRate', label: 'Ordinary tax rate', default: 37, suffix: '%' },
+    ],
+    compute: v => {
+      const taxWith = v.shares * v.grantValue * (v.taxRate / 100)
+      const taxWithout = v.shares * (v.vestValue - v.grantValue) * (v.taxRate / 100)
+      const savings = taxWithout - taxWith
+      return {
+        metrics: [
+          { label: 'Tax if 83(b) filed', value: money(taxWith), highlight: true },
+          { label: 'Tax if not filed (at vest)', value: money(taxWithout), highlight: true },
+          { label: 'Ordinary income avoided', value: money(savings), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Tax now (83b)', money(taxWith)], ['Tax at vest (no election)', money(taxWithout)], ['Difference', money(savings)]],
+        note: `Filing an 83(b) within 30 days pays tiny tax now on low-value stock and starts the capital-gains clock — converting future appreciation from ordinary income to capital gains. Miss the 30-day window and you can't undo it. Educational only, not tax advice.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'heloc-simulator', name: 'HELOC Payment Simulator', category: 'Money',
+    tagline: 'The real cost of a home equity line.',
+    description: 'Model a drawn balance and rate to see the interest-only payment and annual interest cost during the draw period.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'drawn', label: 'Amount drawn', default: 80000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate (variable)', default: 9, suffix: '%' },
+    ],
+    compute: v => {
+      const monthly = v.drawn * (v.rate / 1200)
+      return {
+        metrics: [
+          { label: 'Interest-only payment', value: money(monthly), highlight: true },
+          { label: 'Annual interest', value: money(monthly * 12), highlight: true },
+          { label: 'Balance (unchanged)', value: money(v.drawn) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Drawn balance', money(v.drawn)], ['Monthly interest-only', money(monthly)], ['Annual interest', money(monthly * 12)]],
+        note: `HELOCs are flexible and cheap to access, but usually variable-rate and interest-only up front — so the balance doesn't shrink until the repayment period, when payments jump. Great for short-term needs, dangerous as permanent debt. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'vertical-saas-simulator', name: 'Vertical SaaS + Payments Simulator', category: 'SaaS',
+    tagline: 'When embedded payments out-earn the software.',
+    description: 'Model software subscription revenue plus a payments take-rate on customer volume to see the combined model’s revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 2000 },
+      { key: 'arpu', label: 'Software ARPU / mo', default: 200, prefix: '$' },
+      { key: 'volume', label: 'Payment volume / customer / mo', default: 20000, prefix: '$' },
+      { key: 'takeRate', label: 'Payments take rate', default: 0.8, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 100000, prefix: '$' },
+    ],
+    compute: v => {
+      const software = v.customers * v.arpu
+      const payments = v.customers * v.volume * (v.takeRate / 100)
+      const revenue = software + payments
+      const profit = revenue - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(revenue), highlight: true },
+          { label: 'Payments revenue', value: money(payments), highlight: true },
+          { label: 'Software revenue', value: money(software) },
+        ],
+        columns: ['Source', 'Monthly Revenue'],
+        rows: [['Software subscriptions', money(software)], ['Embedded payments', money(payments)], ['Total', money(revenue)], ['Profit', money(profit)]],
+        note: `Embedding payments into vertical software often earns more than the subscription itself — you monetize the customer's transaction volume, not just their seat. It's the model behind many of the fastest-growing SaaS companies. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'home-inspection-simulator', name: 'Home Inspection Business Simulator', category: 'Professional',
+    tagline: 'Project a home inspection business’s income.',
+    description: 'Model inspection volume and fees against variable and fixed costs to see monthly income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'inspections', label: 'Inspections / month', default: 60 },
+      { key: 'fee', label: 'Fee', default: 450, prefix: '$' },
+      { key: 'variable', label: 'Cost / inspection', default: 50, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.inspections * v.fee
+      const variable = v.inspections * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly income', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Income', money(profit)]],
+        note: `Home inspection is low-overhead and referral-driven (real-estate agents). Ancillary services — radon, mold, sewer scope, thermal — lift the ticket, and adding inspectors scales it past a solo practice. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'general-contractor-simulator', name: 'General Contractor Simulator', category: 'Construction',
+    tagline: 'Project a GC’s annual profit.',
+    description: 'Model project volume and value at your gross margin against annual overhead to see profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'projects', label: 'Projects / year', default: 12 },
+      { key: 'avgProject', label: 'Average project', default: 400000, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 18, suffix: '%' },
+      { key: 'overhead', label: 'Annual overhead', default: 300000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.projects * v.avgProject
+      const gross = revenue * (v.margin / 100)
+      const profit = gross - v.overhead
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross profit', value: money(gross), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(gross)], ['Overhead', money(v.overhead)], ['Profit', money(profit)]],
+        note: `GCs profit on markup over subcontractor and material cost, minus overhead — the trap is a single mispriced or delayed project wiping out a year's margin. Accurate estimating and change-order discipline protect it. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'flooring-company-simulator', name: 'Flooring Company Simulator', category: 'Construction',
+    tagline: 'Project a flooring business’s profit.',
+    description: 'Model job volume and value against material and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 40 },
+      { key: 'avgJob', label: 'Average job', default: 4000, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 40, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * ((v.material + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Flooring is material-heavy — buying power and installer productivity drive the margin. Builder and commercial accounts provide steady volume; retail/residential brings higher margins but more sales effort. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ice-cream-shop-simulator', name: 'Ice Cream Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a scoop shop’s monthly profit.',
+    description: 'Model daily servings and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'servings', label: 'Servings / day', default: 300 },
+      { key: 'price', label: 'Average price', default: 5, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 25, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.servings * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Ice cream has fantastic product margins but strong seasonality — summer carries the year. Catering, cakes, and wholesale smooth the off-season; location and foot traffic are everything. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bubble-tea-simulator', name: 'Bubble Tea Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a boba shop’s monthly profit.',
+    description: 'Model daily cups and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cups', label: 'Cups / day', default: 200 },
+      { key: 'price', label: 'Average price', default: 6, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 28, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 11000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cups * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Bubble tea has strong margins and a young, loyal, repeat customer base. Throughput at peak and menu variety (toppings, seasonal drinks) drive it; a good location near schools or nightlife is gold. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'meal-prep-simulator', name: 'Meal Prep Business Simulator', category: 'Hospitality',
+    tagline: 'Project a subscription meal-prep business.',
+    description: 'Model weekly meals and price against food, labor, and packaging cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'meals', label: 'Meals / week', default: 2000 },
+      { key: 'price', label: 'Price / meal', default: 11, prefix: '$' },
+      { key: 'food', label: 'Food cost %', default: 35, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'packaging', label: 'Packaging %', default: 5, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.meals * v.price * 4.33
+      const profit = revenue * (1 - (v.food + v.labor + v.packaging) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor + packaging', money(revenue * ((v.food + v.labor + v.packaging) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Subscription meal prep has recurring revenue and predictable batch production — the swing factors are food cost, packaging, and last-mile delivery. Menu efficiency (shared ingredients across meals) protects the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'vr-arcade-simulator', name: 'VR Arcade Simulator', category: 'Entertainment',
+    tagline: 'Project a virtual-reality arcade’s profit.',
+    description: 'Model station and session volume against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stations', label: 'VR stations', default: 10 },
+      { key: 'sessions', label: 'Sessions / station / day', default: 8 },
+      { key: 'price', label: 'Price per session', default: 20, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const sessions = v.stations * v.sessions * 26
+      const revenue = sessions * v.price
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / station', value: money(v.stations > 0 ? revenue / v.stations : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `VR arcades are high-fixed, low-variable — station utilization at peak drives it, and content must refresh to keep people coming back. Parties, corporate events, and esports lift revenue per station. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'christmas-tree-farm-simulator', name: 'Christmas Tree Farm Simulator', category: 'Manufacturing',
+    tagline: 'Project a tree farm’s annual profit.',
+    description: 'Model trees sold and price against per-tree cost and fixed cost to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'trees', label: 'Trees sold / year', default: 5000 },
+      { key: 'price', label: 'Price per tree', default: 70, prefix: '$' },
+      { key: 'cost', label: 'Cost per tree (amortized)', default: 25, prefix: '$' },
+      { key: 'fixed', label: 'Annual fixed', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.trees * v.price
+      const cost = v.trees * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / tree', value: money(v.price - v.cost), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Tree cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Trees take 7–10 years to grow, so it's a patient, land-based business with a once-a-year selling window. Choose-and-cut experiences plus agritourism (cocoa, photos, wreaths) lift per-visit revenue far above the tree price. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'party-bus-simulator', name: 'Party Bus / Limo Fleet Simulator', category: 'Transportation',
+    tagline: 'Project a party bus operation’s profit.',
+    description: 'Model buses and bookings against driver pay and vehicle cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'buses', label: 'Buses', default: 3 },
+      { key: 'bookings', label: 'Bookings / bus / month', default: 25 },
+      { key: 'price', label: 'Average booking', default: 600, prefix: '$' },
+      { key: 'driverPay', label: 'Driver pay %', default: 25, suffix: '%' },
+      { key: 'vehicleCost', label: 'Fuel + maintenance / booking', default: 80, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const bookings = v.buses * v.bookings
+      const revenue = bookings * v.price
+      const driverPay = revenue * (v.driverPay / 100)
+      const vehicleCost = bookings * v.vehicleCost
+      const profit = revenue - driverPay - vehicleCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin / booking', value: money(v.price * (1 - v.driverPay / 100) - v.vehicleCost), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Driver pay', money(driverPay)], ['Fuel + maintenance', money(vehicleCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Party bus and event transport is weekend- and event-driven — proms, weddings, and nights out. Utilization on peak weekends, premium pricing on holidays, and vehicle upkeep drive the numbers. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
