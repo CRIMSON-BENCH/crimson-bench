@@ -11244,6 +11244,419 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'key-person-insurance-simulator', name: 'Key Person Insurance Simulator', category: 'Finance',
+    tagline: 'Size coverage on an indispensable person.',
+    description: 'Model the profit at risk if a key person is lost to estimate coverage need and premium. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'atRisk', label: 'Annual profit dependent on them', default: 1250000, prefix: '$' },
+      { key: 'years', label: 'Years to replace', default: 2 },
+      { key: 'premiumRate', label: 'Annual premium rate', default: 1.2, suffix: '%' },
+    ],
+    compute: v => {
+      const coverage = v.atRisk * v.years
+      const premium = coverage * (v.premiumRate / 100)
+      return {
+        metrics: [
+          { label: 'Recommended coverage', value: money(coverage), highlight: true },
+          { label: 'Annual premium', value: money(premium), highlight: true },
+          { label: 'Monthly premium', value: money(premium / 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Profit at risk / yr', money(v.atRisk)], ['Years to replace', String(v.years)], ['Coverage', money(coverage)], ['Annual premium', money(premium)]],
+        note: `Key person insurance protects the business against the loss of a founder, top salesperson, or technical lead — the payout funds the search, lost profit, and lender assurances during the gap. Coverage usually scales to the profit or debt tied to that individual. Educational only, not insurance advice.`,
+      }
+    },
+  },
+  {
+    id: 'deferred-comp-simulator', name: 'Deferred Compensation Simulator', category: 'Finance',
+    tagline: 'Defer income now, pay tax later.',
+    description: 'Compare deferring compensation (pre-tax growth, taxed later) with taking it now and investing after-tax. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'deferral', label: 'Annual deferral', default: 50000, prefix: '$' },
+      { key: 'years', label: 'Years', default: 15 },
+      { key: 'growth', label: 'Annual growth', default: 6, suffix: '%' },
+      { key: 'taxNow', label: 'Tax rate now', default: 37, suffix: '%' },
+      { key: 'taxLater', label: 'Tax rate at payout', default: 25, suffix: '%' },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 40)
+      let deferred = 0, now = 0
+      for (let y = 1; y <= yrs; y++) {
+        deferred = deferred * (1 + v.growth / 100) + v.deferral
+        now = now * (1 + v.growth / 100) + v.deferral * (1 - v.taxNow / 100)
+      }
+      const deferredAfterTax = deferred * (1 - v.taxLater / 100)
+      const advantage = deferredAfterTax - now
+      return {
+        metrics: [
+          { label: 'Deferred (after-tax)', value: money(deferredAfterTax), highlight: true },
+          { label: 'Take-now (after-tax)', value: money(now) },
+          { label: 'Deferral advantage', value: money(advantage), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Deferred pre-tax balance', money(deferred)], ['Deferred after-tax', money(deferredAfterTax)], ['Take-now after-tax', money(now)], ['Advantage', money(advantage)]],
+        note: `Deferring comp lets the whole pre-tax sum compound, and payout often lands in retirement at a lower rate — that's the edge. The risk: NQDC balances are unsecured creditors of the company, so you're betting on the employer still being solvent at payout. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'ground-lease-simulator', name: 'Ground Lease Simulator', category: 'Real Estate',
+    tagline: 'Income from owning the land under a building.',
+    description: 'Model ground rent on land value with annual escalation to see current income and total over the term. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'landValue', label: 'Land value', default: 2000000, prefix: '$' },
+      { key: 'rate', label: 'Ground rent rate', default: 6, suffix: '%' },
+      { key: 'escalation', label: 'Annual escalation', default: 2, suffix: '%' },
+      { key: 'term', label: 'Lease term (years)', default: 30 },
+    ],
+    compute: v => {
+      const yr1 = v.landValue * (v.rate / 100)
+      const yrs = Math.min(Math.max(v.term, 1), 99)
+      let total = 0
+      for (let t = 0; t < yrs; t++) total += yr1 * Math.pow(1 + v.escalation / 100, t)
+      const yrN = yr1 * Math.pow(1 + v.escalation / 100, yrs - 1)
+      return {
+        metrics: [
+          { label: 'Year-1 ground rent', value: money(yr1), highlight: true },
+          { label: 'Final-year rent', value: money(yrN) },
+          { label: 'Total over term', value: money(total), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Land value', money(v.landValue)], ['Year-1 rent', money(yr1)], ['Final-year rent', money(yrN)], ['Total collected', money(total)]],
+        note: `A ground lease keeps you owning the dirt while a tenant builds and operates on top — steady, escalating, low-management income, and at term end improvements often revert to you. It's a favorite of long-horizon owners (endowments, families) who want inflation-hedged rent without operating risk. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'section-1031-exchange-simulator', name: '1031 Exchange Simulator', category: 'Real Estate',
+    tagline: 'Defer capital gains, keep your equity working.',
+    description: 'Model the tax deferred by rolling sale proceeds into a like-kind property instead of paying gains today. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sale', label: 'Sale price', default: 1500000, prefix: '$' },
+      { key: 'basis', label: 'Adjusted cost basis', default: 600000, prefix: '$' },
+      { key: 'rate', label: 'Combined gains + recapture rate', default: 25, suffix: '%' },
+    ],
+    compute: v => {
+      const gain = Math.max(v.sale - v.basis, 0)
+      const taxDeferred = gain * (v.rate / 100)
+      return {
+        metrics: [
+          { label: 'Capital gain', value: money(gain) },
+          { label: 'Tax deferred', value: money(taxDeferred), highlight: true },
+          { label: 'Extra buying power', value: money(taxDeferred), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Sale price', money(v.sale)], ['Cost basis', money(v.basis)], ['Gain', money(gain)], ['Tax deferred', money(taxDeferred)]],
+        note: `A 1031 exchange lets you sell an investment property and reinvest 100% of the proceeds — the deferred tax stays working as equity in the next deal. Strict rules apply (45-day identification, 180-day close, a qualified intermediary), and the basis carries over. "Swap till you drop" can defer indefinitely. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'mega-backdoor-roth-simulator', name: 'Mega Backdoor Roth Simulator', category: 'Finance',
+    tagline: 'Supercharge tax-free retirement savings.',
+    description: 'Model large after-tax 401(k) contributions converted to Roth, compounding tax-free. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contribution', label: 'After-tax contribution / yr', default: 30000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 8, suffix: '%' },
+      { key: 'years', label: 'Years', default: 20 },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 45)
+      let fv = 0
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.return / 100) + v.contribution
+      const contributed = v.contribution * yrs
+      return {
+        metrics: [
+          { label: 'Tax-free value', value: money(fv), highlight: true },
+          { label: 'Total contributed', value: money(contributed) },
+          { label: 'Tax-free growth', value: money(fv - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Annual contribution', money(v.contribution)], ['Total contributed', money(contributed)], ['Tax-free value', money(fv)]],
+        note: `If your 401(k) plan allows after-tax contributions plus in-plan Roth conversion (or in-service withdrawals), you can funnel far more than the normal limit into Roth — all growth tax-free. Not every plan supports it; confirm the two features exist before counting on it. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'whole-life-cash-value-simulator', name: 'Whole Life Cash Value Simulator', category: 'Finance',
+    tagline: 'Project a permanent policy’s cash value.',
+    description: 'Model premiums building cash value at a crediting rate alongside the death benefit. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'premium', label: 'Annual premium', default: 12000, prefix: '$' },
+      { key: 'allocation', label: '% of premium to cash value', default: 70, suffix: '%' },
+      { key: 'growth', label: 'Crediting rate', default: 4, suffix: '%' },
+      { key: 'years', label: 'Years', default: 20 },
+      { key: 'deathBenefit', label: 'Death benefit', default: 500000, prefix: '$' },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 60)
+      let cash = 0
+      const toCash = v.premium * (v.allocation / 100)
+      for (let y = 1; y <= yrs; y++) cash = cash * (1 + v.growth / 100) + toCash
+      const totalPremiums = v.premium * yrs
+      return {
+        metrics: [
+          { label: 'Projected cash value', value: money(cash), highlight: true },
+          { label: 'Total premiums paid', value: money(totalPremiums) },
+          { label: 'Death benefit', value: money(v.deathBenefit) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Total premiums', money(totalPremiums)], ['To cash value', money(toCash * yrs)], ['Projected cash value', money(cash)], ['Death benefit', money(v.deathBenefit)]],
+        note: `Whole life builds tax-deferred cash value you can borrow against, plus a guaranteed death benefit — but early years are eaten by fees and cost of insurance, so cash value lags premiums for a while. It's a slow, conservative vehicle; the "infinite banking" pitch oversells it. Educational only, not insurance advice.`,
+      }
+    },
+  },
+  {
+    id: 'siding-installation-simulator', name: 'Siding Installation Simulator', category: 'Construction',
+    tagline: 'Project an exterior siding business.',
+    description: 'Model job volume and value against material and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 15 },
+      { key: 'avgJob', label: 'Average job', default: 12000, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Siding is a high-ticket exterior job often bundled with windows and gutters, and insurance/storm-restoration work can flood the pipeline after hail and wind events. Material choice (vinyl vs. fiber cement) and crew speed drive the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'drywall-contractor-simulator', name: 'Drywall Contractor Simulator', category: 'Construction',
+    tagline: 'Project a drywall & finishing business.',
+    description: 'Model job volume and value against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 30 },
+      { key: 'avgJob', label: 'Average job', default: 3500, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 62, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Drywall is labor-driven and volume-based — hanging and finishing speed is the margin, and steady GC relationships keep crews booked across new construction and remodels. Piece-rate subcontracting and tight material waste control protect profit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'insulation-contractor-simulator', name: 'Insulation Contractor Simulator', category: 'Home Services',
+    tagline: 'Project an insulation & energy business.',
+    description: 'Model job volume and value against material and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 40 },
+      { key: 'avgJob', label: 'Average job', default: 2200, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 35, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * ((v.material + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Insulation rides both new construction and retrofit demand, and utility rebates plus energy-efficiency tax credits often subsidize the customer's cost, boosting close rates. Spray foam commands premium pricing over batt and blown-in. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bagel-shop-simulator', name: 'Bagel Shop Simulator', category: 'Hospitality',
+    tagline: 'Project a bagel shop’s monthly profit.',
+    description: 'Model daily dozens and price against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dozens', label: 'Dozens / day', default: 180 },
+      { key: 'price', label: 'Price per dozen', default: 14, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 28, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dozens * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Bagels have excellent food-cost margins, and the real money is in the upgrade — cream cheese, breakfast sandwiches, and coffee lift a $1 bagel into a $9 ticket. It's a morning business; catering and wholesale accounts extend the day. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wine-bar-simulator', name: 'Wine Bar Simulator', category: 'Hospitality',
+    tagline: 'Project a wine bar’s monthly profit.',
+    description: 'Model daily covers and average check against COGS and labor to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'covers', label: 'Covers / day', default: 90 },
+      { key: 'check', label: 'Average check', default: 45, prefix: '$' },
+      { key: 'cogs', label: 'Beverage/food COGS %', default: 32, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 28, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 22000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.covers * v.check * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Wine bars profit on pour margins and a curated by-the-glass list — small plates round the ticket, and retail bottle sales add a second revenue line. Rent, ambiance, and events (tastings, private parties) make or break the model. Serve responsibly. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'iv-therapy-clinic-simulator', name: 'IV Therapy Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project an IV hydration & wellness clinic.',
+    description: 'Model daily treatments and price against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'treatments', label: 'Treatments / day', default: 25 },
+      { key: 'price', label: 'Average price', default: 150, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.treatments * v.price * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `IV therapy is cash-pay wellness with strong per-treatment margins — memberships, mobile/concierge service, and add-on boosters (NAD+, vitamins) drive the ticket. It needs medical direction and nurses; regulation varies by state. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'medical-lab-simulator', name: 'Medical Lab Simulator', category: 'Healthcare',
+    tagline: 'Project a clinical diagnostics lab.',
+    description: 'Model daily test volume and reimbursement against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tests', label: 'Tests / day', default: 400 },
+      { key: 'reimbursement', label: 'Avg reimbursement / test', default: 22, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 90000, prefix: '$' },
+      { key: 'days', label: 'Operating days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.tests * v.reimbursement * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Diagnostic labs are volume-and-automation businesses — high fixed cost for instruments and CLIA compliance, then strong marginal economics as test volume scales. Payer mix and reimbursement pressure are the swing factors; specialty and molecular tests carry richer margins. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ugc-creator-agency-simulator', name: 'UGC Creator Agency Simulator', category: 'Media',
+    tagline: 'Project a user-generated-content agency.',
+    description: 'Model creator roster and video output against a creator revenue share to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'creators', label: 'Active creators', default: 30 },
+      { key: 'videos', label: 'Videos / creator / mo', default: 8 },
+      { key: 'price', label: 'Price per video', default: 250, prefix: '$' },
+      { key: 'share', label: 'Creator revenue share', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.creators * v.videos * v.price
+      const profit = revenue * (1 - v.share / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Creator payouts', money(revenue * (v.share / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A UGC agency is a managed marketplace — brands pay for authentic creator videos, creators take the majority split, and the agency margin is coordination, QA, and account management. Retainer brand deals and a reliable creator bench turn it from project work into recurring revenue. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mobile-home-park-simulator', name: 'Mobile Home Park Simulator', category: 'Real Estate',
+    tagline: 'Project a manufactured-housing community.',
+    description: 'Model pad rents and occupancy against an expense ratio to see NOI and value at a cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'pads', label: 'Number of pads', default: 120 },
+      { key: 'lotRent', label: 'Monthly lot rent', default: 450, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 92, suffix: '%' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 35, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 7, suffix: '%' },
+    ],
+    compute: v => {
+      const grossMonthly = v.pads * v.lotRent * (v.occupancy / 100)
+      const noiMonthly = grossMonthly * (1 - v.expenseRatio / 100)
+      const noiAnnual = noiMonthly * 12
+      const value = v.capRate > 0 ? noiAnnual / (v.capRate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Monthly NOI', value: money(noiMonthly), highlight: true },
+          { label: 'Annual NOI', value: money(noiAnnual) },
+          { label: 'Value at cap', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross monthly rent', money(grossMonthly)], ['Expenses', money(grossMonthly * (v.expenseRatio / 100))], ['Monthly NOI', money(noiMonthly)], ['Value at cap', money(value)]],
+        note: `Mobile home parks are prized for low expense ratios — tenants own the homes and pay the utilities, so you maintain little more than the land and roads. Value comes from raising below-market lot rents, filling vacant pads, and submetering. Tight supply (few new parks get built) supports pricing. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
