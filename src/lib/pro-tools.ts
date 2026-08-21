@@ -12873,6 +12873,411 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'insurance-agency-simulator', name: 'Insurance Agency Simulator', category: 'Professional',
+    tagline: 'Project a commission book of business.',
+    description: 'Model policies in force and premium against commission rate to see recurring income and book value.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'policies', label: 'Policies in force', default: 1200 },
+      { key: 'premium', label: 'Avg annual premium', default: 1400, prefix: '$' },
+      { key: 'commission', label: 'Commission rate', default: 12, suffix: '%' },
+      { key: 'multiple', label: 'Book value multiple', default: 2 },
+    ],
+    compute: v => {
+      const annualCommission = v.policies * v.premium * (v.commission / 100)
+      const bookValue = annualCommission * v.multiple
+      return {
+        metrics: [
+          { label: 'Annual commission', value: money(annualCommission), highlight: true },
+          { label: 'Monthly income', value: money(annualCommission / 12) },
+          { label: 'Est. book value', value: money(bookValue), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Policies in force', v.policies.toLocaleString('en-US')], ['Premium volume', money(v.policies * v.premium)], ['Annual commission', money(annualCommission)], ['Book value', money(bookValue)]],
+        note: `An insurance book is a recurring-revenue annuity — renewals pay commission every year with little new work, and retention is the whole game. Agencies sell for a multiple of commissions, so every retained policy compounds both income and the eventual sale value. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'title-company-simulator', name: 'Title Company Simulator', category: 'Professional',
+    tagline: 'Project a title & escrow business.',
+    description: 'Model monthly closings and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'closings', label: 'Closings / month', default: 120 },
+      { key: 'fee', label: 'Average fee / closing', default: 950, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.closings * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Title volume tracks real-estate transactions, so it's rate-sensitive and cyclical — refinance booms flood the pipeline, rate spikes drain it. Realtor and lender referral relationships are the moat; title insurance and escrow fees carry high margins once the fixed staff is covered. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tax-prep-firm-simulator', name: 'Tax Prep Firm Simulator', category: 'Professional',
+    tagline: 'Project a seasonal tax preparation business.',
+    description: 'Model returns filed and average fee against cost to see season profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'returns', label: 'Returns / season', default: 2500 },
+      { key: 'fee', label: 'Average fee / return', default: 350, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Season fixed cost', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.returns * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Season profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Season revenue', value: money(revenue) },
+          { label: 'Profit / return', value: money(v.returns > 0 ? profit / v.returns : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Tax prep earns a year's income in roughly ten weeks, so throughput and staffing during the crunch are everything. Bookkeeping, payroll, and advisory add-ons turn a seasonal spike into year-round revenue; client retention makes each season easier than the last. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'law-practice-simulator', name: 'Law Practice Simulator', category: 'Professional',
+    tagline: 'Project a billable-hour law firm.',
+    description: 'Model attorney count and billable hours against per-attorney cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'attorneys', label: 'Attorneys', default: 6 },
+      { key: 'hours', label: 'Billable hours / mo each', default: 140 },
+      { key: 'rate', label: 'Billing rate / hour', default: 300, prefix: '$' },
+      { key: 'cost', label: 'Cost / attorney / mo', default: 14000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.attorneys * v.hours * v.rate
+      const cost = v.attorneys * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / attorney', value: money(v.attorneys > 0 ? profit / v.attorneys : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Attorney cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Law firm profit is leverage times utilization times realization — associates billing above their cost, kept busy, and actually collecting their rate. Contingency and flat-fee work change the math; the classic partnership model prints money when associates are fully utilized. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'architecture-firm-simulator', name: 'Architecture Firm Simulator', category: 'Professional',
+    tagline: 'Project a design studio’s economics.',
+    description: 'Model architect count and billable hours against per-person cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'architects', label: 'Billable architects', default: 10 },
+      { key: 'hours', label: 'Billable hours / mo each', default: 130 },
+      { key: 'rate', label: 'Billing rate / hour', default: 150, prefix: '$' },
+      { key: 'cost', label: 'Cost / architect / mo', default: 8000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.architects * v.hours * v.rate
+      const cost = v.architects * v.cost
+      const profit = revenue - cost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / architect', value: money(v.architects > 0 ? profit / v.architects : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Staff cost', money(cost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Architecture margins are thin and utilization-driven — scope creep and unbilled revisions quietly erase profit. Percentage-of-construction fees on larger projects, repeat institutional clients, and disciplined phase billing are what turn a respected studio into a profitable one. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'med-spa-simulator', name: 'Med Spa Simulator', category: 'Healthcare',
+    tagline: 'Project an aesthetics / med spa business.',
+    description: 'Model daily treatments and ticket against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'treatments', label: 'Treatments / day', default: 18 },
+      { key: 'ticket', label: 'Average ticket', default: 350, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.treatments * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Med spas are cash-pay with fat margins on injectables and devices — the recurring nature of Botox and filler (every 3-4 months) builds a repeat book fast. Membership plans, packages, and a strong injector's reputation drive both retention and premium pricing. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'concierge-medicine-simulator', name: 'Concierge Medicine Simulator', category: 'Healthcare',
+    tagline: 'Project a membership primary-care practice.',
+    description: 'Model member count and annual retainer against cost to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 600 },
+      { key: 'retainer', label: 'Annual retainer', default: 2000, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Annual fixed cost', default: 200000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.retainer
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / member', value: money(v.members > 0 ? profit / v.members : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Retainer revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Concierge medicine trades volume for depth — a capped panel of members paying retainers means predictable revenue, more time per patient, and far less insurance billing overhead. The model lives on retention and referrals; a smaller panel at a higher retainer often beats chasing headcount. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'urgent-care-simulator', name: 'Urgent Care Simulator', category: 'Healthcare',
+    tagline: 'Project an urgent care clinic’s profit.',
+    description: 'Model daily visits and revenue per visit against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 50 },
+      { key: 'revenuePerVisit', label: 'Revenue / visit', default: 170, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.revenuePerVisit * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Urgent care profits on daily visit volume and payer mix — every incremental visit above the fixed-cost break-even is high margin. Occupational health contracts, on-site labs/imaging, and convenient hours (nights, weekends) drive the throughput that makes a clinic work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'hair-transplant-clinic-simulator', name: 'Hair Transplant Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a hair restoration practice.',
+    description: 'Model monthly procedures and fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'procedures', label: 'Procedures / month', default: 25 },
+      { key: 'fee', label: 'Average procedure fee', default: 8000, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.procedures * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Hair restoration is high-ticket, cash-pay, and marketing-driven — before/after results and financing offers convert consultations. Technician-assisted FUE lets a clinic run multiple cases per day; reputation and consult-to-booking rate are the growth levers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dropshipping-simulator', name: 'Dropshipping Simulator', category: 'Ecommerce',
+    tagline: 'Project a dropshipping store’s profit.',
+    description: 'Model orders and AOV against product cost and ad spend to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / month', default: 2000 },
+      { key: 'aov', label: 'Average order value', default: 45, prefix: '$' },
+      { key: 'productCost', label: 'Product + shipping %', default: 45, suffix: '%' },
+      { key: 'ads', label: 'Ad spend / order', default: 14, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 4000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.aov
+      const profit = revenue * (1 - v.productCost / 100) - v.orders * v.ads - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Product + shipping', money(revenue * (v.productCost / 100))], ['Ad spend', money(v.orders * v.ads)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Dropshipping is a paid-ads arbitrage — you profit on the gap between price and (product + shipping + ad cost). Margins are razor-thin and ad platforms capture most of the upside; winning products, faster fulfillment, and retention are the only durable edges. Educational only.`,
+      }
+    },
+    sells: 'ecommerce-unit-economics-model',
+  },
+  {
+    id: 'print-on-demand-simulator', name: 'Print-on-Demand Simulator', category: 'Ecommerce',
+    tagline: 'Project a POD merch business.',
+    description: 'Model orders and price against base cost and platform fees to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / month', default: 1500 },
+      { key: 'aov', label: 'Average order value', default: 28, prefix: '$' },
+      { key: 'baseCost', label: 'Base product cost %', default: 55, suffix: '%' },
+      { key: 'platform', label: 'Platform + processing %', default: 5, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed (ads, design)', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.aov
+      const profit = revenue * (1 - (v.baseCost + v.platform) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Base cost', money(revenue * (v.baseCost / 100))], ['Platform + fees', money(revenue * (v.platform / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Print-on-demand is zero-inventory and zero-risk — the fulfiller prints and ships per order, so you never hold stock. The tradeoff is a high base cost that squeezes margin; design/niche differentiation and organic traffic (vs. paid) are what make it profitable. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'subscription-box-simulator', name: 'Subscription Box Simulator', category: 'Ecommerce',
+    tagline: 'Project a recurring physical-box business.',
+    description: 'Model subscriber count and price against COGS and shipping to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subscribers', label: 'Subscribers', default: 5000 },
+      { key: 'price', label: 'Monthly price', default: 35, prefix: '$' },
+      { key: 'cost', label: 'COGS + shipping %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.subscribers * v.price
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['COGS + shipping', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Subscription boxes have predictable revenue but brutal churn — the average subscriber lasts only months, so acquisition cost must be recouped fast. Buying power on curated goods, longer prepaid plans, and a can't-cancel experience are what separate winners from the graveyard. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'supplement-brand-simulator', name: 'Supplement Brand Simulator', category: 'Ecommerce',
+    tagline: 'Project a nutraceutical brand’s profit.',
+    description: 'Model unit volume and price against COGS, fulfillment, and marketing to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units / month', default: 8000 },
+      { key: 'price', label: 'Price per unit', default: 40, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 25, suffix: '%' },
+      { key: 'fulfillment', label: 'Fulfillment %', default: 12, suffix: '%' },
+      { key: 'marketing', label: 'Marketing %', default: 22, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.units * v.price
+      const profit = revenue * (1 - (v.cogs + v.fulfillment + v.marketing) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Net margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + fulfillment', money(revenue * ((v.cogs + v.fulfillment) / 100))], ['Marketing', money(revenue * (v.marketing / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Supplements have great gross margins (low COGS) but marketing eats the difference — the model works when subscription reorders drive lifetime value well past the first-order acquisition cost. Compliant claims, quality sourcing, and a subscribe-and-save base are the keys. Educational only.`,
+      }
+    },
+    sells: 'ecommerce-unit-economics-model',
+  },
+  {
+    id: 'boat-rv-storage-simulator', name: 'Boat & RV Storage Simulator', category: 'Real Assets',
+    tagline: 'Project a vehicle-storage facility.',
+    description: 'Model space count and rate against occupancy and opex to see NOI and value at a cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'spaces', label: 'Storage spaces', default: 200 },
+      { key: 'rate', label: 'Monthly rate / space', default: 120, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 88, suffix: '%' },
+      { key: 'opex', label: 'Operating expense %', default: 25, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 7, suffix: '%' },
+    ],
+    compute: v => {
+      const grossMonthly = v.spaces * v.rate * (v.occupancy / 100)
+      const noiMonthly = grossMonthly * (1 - v.opex / 100)
+      const noiAnnual = noiMonthly * 12
+      const value = v.capRate > 0 ? noiAnnual / (v.capRate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Monthly NOI', value: money(noiMonthly), highlight: true },
+          { label: 'Annual NOI', value: money(noiAnnual) },
+          { label: 'Value at cap', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross monthly', money(grossMonthly)], ['Operating expenses', money(grossMonthly * (v.opex / 100))], ['Monthly NOI', money(noiMonthly)], ['Value at cap', money(value)]],
+        note: `Boat/RV storage is self-storage's low-maintenance cousin — mostly gravel or covered lots with minimal build-out and staffing. Demand rides recreational-vehicle ownership, and HOA rules banning driveway storage keep facilities full. Covered and enclosed spaces command premium rates. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'water-rights-simulator', name: 'Water Rights Simulator', category: 'Real Assets',
+    tagline: 'Project income from leased water rights.',
+    description: 'Model acre-feet and lease price against asset value to see annual income and yield. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acreFeet', label: 'Acre-feet', default: 1000 },
+      { key: 'price', label: 'Lease price / acre-foot / yr', default: 300, prefix: '$' },
+      { key: 'assetValue', label: 'Total asset value', default: 4000000, prefix: '$' },
+    ],
+    compute: v => {
+      const income = v.acreFeet * v.price
+      const yieldPct = v.assetValue > 0 ? income / v.assetValue : 0
+      return {
+        metrics: [
+          { label: 'Annual lease income', value: money(income), highlight: true },
+          { label: 'Current yield', value: pct(yieldPct), highlight: true },
+          { label: 'Asset value', value: money(v.assetValue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Lease income', money(income)], ['Asset value', money(v.assetValue)], ['Cash yield', pct(yieldPct)]],
+        note: `Water rights are a scarcity asset — in the arid West, senior rights are finite and appreciate as agriculture, cities, and industry compete for a shrinking supply. Leasing generates income while you hold; the long-term thesis is that water only gets more valuable. Rules are highly local. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
