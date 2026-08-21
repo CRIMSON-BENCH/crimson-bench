@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
+    supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
   const signOut = () => supabase.auth.signOut()
 
   return <Ctx.Provider value={{ user, loading, signInWithGoogle, signOut }}>{children}</Ctx.Provider>
