@@ -13,9 +13,13 @@ export interface EcoApp {
   coupon: string
 }
 
-/** Standing cross-promo discount offered to Crimson Bench customers. */
+/** Outbound: Crimson Bench customers get this % off the partner apps (code set up in each app). */
 export const ECO_DISCOUNT_PCT = 20
 export const ECO_COUPON = 'CRIMSON20'
+
+/** Reciprocal / inbound: customers of the partner apps get this % off Crimson Bench. */
+export const RECIPROCAL_PCT = 15
+export const RECIPROCAL_COUPON = 'CRIMSON15'
 
 export const ECOSYSTEM: EcoApp[] = [
   {
