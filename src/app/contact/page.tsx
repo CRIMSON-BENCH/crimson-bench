@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import JsonLd from '@/components/JsonLd'
+import ContactForm from '@/components/ContactForm'
 import { orgSchema, localBusinessSchema } from '@/lib/schema'
 
 export const metadata: Metadata = {
@@ -34,113 +35,7 @@ export default function ContactPage() {
             <p className="text-slate-600 dark:text-slate-400 mb-8 text-sm leading-relaxed">
               This form is processed by verified corporate accounts only. We respond to all inquiries within 4 business hours. For urgent needs, state &ldquo;URGENT&rdquo; in the mandate description.
             </p>
-
-            {/* Static form — Lovable/Stripe will wire up submission in Phase 3 */}
-            <div className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors"
-                    placeholder="Alexandra"
-                  />
-                </div>
-                <div>
-                  <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors"
-                    placeholder="Chen"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                  Work Email *
-                </label>
-                <input
-                  type="email"
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors"
-                  placeholder="alexandra@company.com"
-                />
-              </div>
-
-              <div>
-                <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                  Company Name *
-                </label>
-                <input
-                  type="text"
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors"
-                  placeholder="Acme Corp"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                    Role Needed *
-                  </label>
-                  <select className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors">
-                    <option value="">Select a role</option>
-                    <option>Fractional CEO</option>
-                    <option>Fractional CFO</option>
-                    <option>Fractional CTO</option>
-                    <option>Fractional COO</option>
-                    <option>Fractional CRO</option>
-                    <option>Fractional CMO</option>
-                    <option>Fractional CHRO</option>
-                    <option>Fractional CISO</option>
-                    <option>Executive Diagnostic</option>
-                    <option>Multiple Roles / PE Package</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                    Engagement Tier
-                  </label>
-                  <select className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors">
-                    <option value="">Not sure yet</option>
-                    <option>Executive Diagnostic ($1,500)</option>
-                    <option>Advisory Retainer ($4,000/mo)</option>
-                    <option>Scale-Up Fractional ($7,500/mo)</option>
-                    <option>Growth Fractional ($12,500/mo)</option>
-                    <option>Embedded Executive ($22,500/mo)</option>
-                    <option>PE / Enterprise Package</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-mono text-xs tracking-widest uppercase text-slate-500 mb-2">
-                  Mandate Description *
-                </label>
-                <textarea
-                  rows={5}
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-4 py-3 text-sm focus:outline-none focus:border-[#B01C24] transition-colors resize-none"
-                  placeholder="Describe what you need accomplished. Include: current situation, urgency, company stage, and any specific constraints. The more specific, the faster we can match and deploy."
-                />
-              </div>
-
-              <div>
-                <button
-                  type="button"
-                  className="btn-crimson py-4 px-10 w-full md:w-auto"
-                >
-                  Submit Engagement Inquiry →
-                </button>
-                <p className="text-xs text-slate-400 font-mono mt-3">
-                  * Verified corporate accounts only · Response within 4 business hours
-                </p>
-              </div>
-            </div>
+            <ContactForm />
           </div>
         </div>
 
