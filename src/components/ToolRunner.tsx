@@ -115,7 +115,7 @@ export default function ToolRunner({ id }: { id: string }) {
         <div className="mt-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6">
           <p className="font-mono text-[10px] tracking-widest uppercase text-[#B01C24] mb-2">AI Analysis</p>
           {aiState === 'soon' && (
-            <p className="text-sm text-slate-500 dark:text-slate-400">AI analysis connects to your Gemini endpoint — set <code className="font-mono text-xs">NEXT_PUBLIC_AI_ENDPOINT</code> to turn it on. Your numbers are ready to send the moment it&apos;s wired.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Our AI is being connected and will be available here shortly. In the meantime, <a href="/contact" className="text-[#B01C24] underline">talk to an operator</a>.</p>
           )}
           {aiState === 'error' && <p className="text-sm text-red-600">Couldn&apos;t reach the AI service. Try again in a moment.</p>}
           {aiText && <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{aiText}</p>}

@@ -1765,6 +1765,413 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'lbo-returns-simulator', name: 'LBO Returns Simulator', category: 'Fundraising',
+    tagline: 'Model private-equity returns — MOIC and IRR.',
+    description: 'Enter entry EBITDA, multiple, leverage, growth, and exit multiple to project the equity return, MOIC, and IRR of a leveraged buyout.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'ebitda', label: 'Entry EBITDA', default: 5000000, prefix: '$' },
+      { key: 'entryMult', label: 'Entry multiple', default: 8 },
+      { key: 'debtPct', label: 'Debt %', default: 60, suffix: '%' },
+      { key: 'growth', label: 'EBITDA growth / yr', default: 8, suffix: '%' },
+      { key: 'exitMult', label: 'Exit multiple', default: 9 },
+      { key: 'years', label: 'Hold (years)', default: 5 },
+    ],
+    compute: v => {
+      const entryEV = v.ebitda * v.entryMult
+      const debt = entryEV * (v.debtPct / 100)
+      const equityIn = entryEV - debt
+      const rows: string[][] = []
+      let ebitda = v.ebitda
+      const yrs = Math.min(Math.max(v.years, 1), 15)
+      for (let y = 1; y <= yrs; y++) {
+        ebitda *= 1 + v.growth / 100
+        const ev = ebitda * v.exitMult
+        rows.push([`Year ${y}`, money(ebitda), money(ev), money(ev - debt)])
+      }
+      const exitEV = ebitda * v.exitMult
+      const equityOut = exitEV - debt
+      const moic = equityIn > 0 ? equityOut / equityIn : 0
+      const irr = moic > 0 ? Math.pow(moic, 1 / yrs) - 1 : 0
+      return {
+        metrics: [
+          { label: 'Equity out', value: money(equityOut), highlight: true },
+          { label: 'MOIC', value: `${moic.toFixed(1)}x`, highlight: true },
+          { label: 'IRR', value: pct(irr), highlight: true },
+        ],
+        columns: ['Year', 'EBITDA', 'Exit EV', 'Equity Value'],
+        rows,
+        note: `Leverage magnifies returns: with ${v.debtPct}% debt, a ${moic.toFixed(1)}x equity return (${pct(irr)} IRR). Debt paydown and multiple expansion both add to this — and both cut the other way if things go wrong.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'retirement-drawdown-simulator', name: 'Retirement Drawdown Simulator', category: 'Money',
+    tagline: 'Will your nest egg last?',
+    description: 'Model spending down a portfolio with inflation-adjusted withdrawals to see how many years it lasts.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'nestEgg', label: 'Nest egg', default: 1000000, prefix: '$' },
+      { key: 'withdrawal', label: 'Annual withdrawal', default: 45000, prefix: '$' },
+      { key: 'return', label: 'Annual return', default: 5, suffix: '%' },
+      { key: 'inflation', label: 'Inflation', default: 2.5, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let bal = v.nestEgg, w = v.withdrawal, year = 0
+      while (bal > 0 && year < 50) {
+        year++
+        bal = bal * (1 + v.return / 100) - w
+        w *= 1 + v.inflation / 100
+        if (year % 5 === 0 || bal <= 0) rows.push([`Year ${year}`, money(w), money(Math.max(0, bal))])
+      }
+      const lasts = bal > 0
+      return {
+        metrics: [
+          { label: 'Portfolio lasts', value: lasts ? '50+ years' : `${year} years`, highlight: true },
+          { label: 'Withdrawal rate', value: pct(v.nestEgg > 0 ? v.withdrawal / v.nestEgg : 0) },
+          { label: 'Status', value: lasts ? 'Sustainable' : 'Runs out', highlight: !lasts },
+        ],
+        columns: ['Year', 'Withdrawal', 'Balance'],
+        rows,
+        note: lasts ? `At this rate the portfolio outlasts a long retirement. A withdrawal rate near 4% is the classic rule of thumb for lasting 30+ years.` : `The money runs out in about ${year} years. Lower the withdrawal, delay a bit, or grow the nest egg — small changes early buy many years later.`,
+      }
+    },
+  },
+  {
+    id: 'retail-store-pnl-simulator', name: 'Retail Store P&L Simulator', category: 'Retail',
+    tagline: 'Project a retail store’s monthly profit.',
+    description: 'Model a year of retail sales against COGS, labor, and fixed costs to see monthly profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sales', label: 'Month 1 sales', default: 80000, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 55, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 15, suffix: '%' },
+      { key: 'rent', label: 'Rent + fixed / mo', default: 13000, prefix: '$' },
+      { key: 'growth', label: 'Sales growth / mo', default: 2, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let sales = v.sales, yearSales = 0, yearProfit = 0
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) sales *= 1 + v.growth / 100
+        const profit = sales * (1 - (v.cogs + v.labor) / 100) - v.rent
+        yearSales += sales; yearProfit += profit
+        if (m % 2 === 0) rows.push([`Month ${m}`, money(sales), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Year sales', value: money(yearSales) },
+          { label: 'Year profit', value: money(yearProfit), highlight: yearProfit < 0 },
+          { label: 'Avg margin', value: pct(yearSales > 0 ? yearProfit / yearSales : 0), highlight: true },
+        ],
+        columns: ['Month', 'Sales', 'Profit'],
+        rows,
+        note: `Retail lives on thin margins and fixed rent — a couple points of COGS or a slow month swings the whole result. Sales per square foot and inventory turns are the levers that matter most.`,
+      }
+    },
+  },
+  {
+    id: 'fleet-expansion-simulator', name: 'Fleet Expansion Simulator', category: 'Logistics',
+    tagline: 'Project revenue and profit as you add trucks.',
+    description: 'Model adding trucks over several years to see how revenue and profit scale with the fleet.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'trucks', label: 'Starting trucks', default: 3 },
+      { key: 'add', label: 'Trucks added / year', default: 2 },
+      { key: 'revPerTruck', label: 'Revenue / truck / yr', default: 220000, prefix: '$' },
+      { key: 'costPerTruck', label: 'Cost / truck / yr', default: 160000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let trucks = v.trucks
+      for (let y = 1; y <= 5; y++) {
+        if (y > 1) trucks += v.add
+        const revenue = trucks * v.revPerTruck
+        const profit = trucks * (v.revPerTruck - v.costPerTruck)
+        rows.push([`Year ${y}`, trucks.toString(), money(revenue), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Trucks (yr 5)', value: trucks.toString(), highlight: true },
+          { label: 'Revenue (yr 5)', value: money(trucks * v.revPerTruck), highlight: true },
+          { label: 'Profit (yr 5)', value: money(trucks * (v.revPerTruck - v.costPerTruck)) },
+        ],
+        columns: ['Year', 'Trucks', 'Revenue', 'Profit'],
+        rows,
+        note: `Each truck is a mini-business — but expansion adds dispatch, maintenance, and driver-management overhead that per-truck math hides. Grow only as fast as you can keep trucks loaded and drivers seated.`,
+      }
+    },
+  },
+  {
+    id: 'ad-saturation-simulator', name: 'Ad Spend Saturation Simulator', category: 'Marketing',
+    tagline: 'See CAC rise as you scale ad spend.',
+    description: 'Model how customer acquisition cost climbs as you push budget higher — the diminishing returns every marketer eventually hits.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'baseSpend', label: 'Starting monthly budget', default: 10000, prefix: '$' },
+      { key: 'increment', label: 'Budget step', default: 10000, prefix: '$' },
+      { key: 'baseCAC', label: 'CAC at starting budget', default: 30, prefix: '$' },
+      { key: 'cacRise', label: 'CAC rise per step', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let topCustomers = 0, topCAC = 0, topSpend = 0
+      for (let step = 0; step < 6; step++) {
+        const spend = v.baseSpend + step * v.increment
+        const cac = v.baseCAC * Math.pow(1 + v.cacRise / 100, step)
+        const customers = cac > 0 ? spend / cac : 0
+        rows.push([money(spend), money(cac), Math.round(customers).toString()])
+        topCustomers = customers; topCAC = cac; topSpend = spend
+      }
+      return {
+        metrics: [
+          { label: 'CAC at top budget', value: money(topCAC), highlight: true },
+          { label: 'Customers at top', value: Math.round(topCustomers).toString() },
+          { label: 'Top budget', value: money(topSpend) },
+        ],
+        columns: ['Monthly Budget', 'CAC', 'Customers'],
+        rows,
+        note: `Every channel saturates — CAC climbs as you exhaust the cheap audience. The art is scaling until CAC approaches your max allowable, then opening a new channel rather than overpaying the old one.`,
+      }
+    },
+    sells: 'marketing-metrics-dashboard',
+  },
+  {
+    id: 'inventory-cash-gap-simulator', name: 'Inventory Cash Gap Simulator', category: 'E-Commerce',
+    tagline: 'Why profitable growth can still run you out of cash.',
+    description: 'Model how scaling sales ties up more cash in inventory — the trap that sinks fast-growing product businesses.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Month 1 revenue', default: 100000, prefix: '$' },
+      { key: 'growth', label: 'Growth / month', default: 8, suffix: '%' },
+      { key: 'cogs', label: 'COGS %', default: 60, suffix: '%' },
+      { key: 'days', label: 'Inventory days', default: 60 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let revenue = v.revenue, prevInv = 0, cumCash = 0
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) revenue *= 1 + v.growth / 100
+        const invValue = revenue * (v.cogs / 100) * (v.days / 30)
+        const cashOut = invValue - prevInv
+        cumCash += cashOut
+        prevInv = invValue
+        if (m % 2 === 0) rows.push([`Month ${m}`, money(revenue), money(invValue), money(cumCash)])
+      }
+      return {
+        metrics: [
+          { label: 'Inventory (mo 12)', value: money(prevInv), highlight: true },
+          { label: 'Cash absorbed by growth', value: money(cumCash), highlight: true },
+          { label: 'Revenue (mo 12)', value: money(revenue) },
+        ],
+        columns: ['Month', 'Revenue', 'Inventory Value', 'Cumulative Cash'],
+        rows,
+        note: `Growth eats cash: every new sale needs inventory bought before payment arrives. Profitable companies go bankrupt in exactly this gap — fund growth deliberately, with financing or supplier terms.`,
+      }
+    },
+  },
+  {
+    id: 'franchise-vs-independent-simulator', name: 'Franchise vs. Independent Simulator', category: 'Franchise',
+    tagline: 'Do the royalties pay for the brand?',
+    description: 'Compare running a franchise (fees, but a brand lift) to going independent, over five years of profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Independent annual revenue', default: 800000, prefix: '$' },
+      { key: 'brandLift', label: 'Franchise revenue lift', default: 20, suffix: '%' },
+      { key: 'royalty', label: 'Royalty', default: 6, suffix: '%' },
+      { key: 'marketing', label: 'Marketing fund', default: 2, suffix: '%' },
+      { key: 'margin', label: 'Operating margin', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      const franchiseRev = v.revenue * (1 + v.brandLift / 100)
+      const indProfit = v.revenue * (v.margin / 100)
+      const franProfit = franchiseRev * (v.margin / 100) - franchiseRev * ((v.royalty + v.marketing) / 100)
+      let indCum = 0, franCum = 0
+      for (let y = 1; y <= 5; y++) {
+        indCum += indProfit; franCum += franProfit
+        rows.push([`Year ${y}`, money(indCum), money(franCum)])
+      }
+      return {
+        metrics: [
+          { label: 'Independent (5yr)', value: money(indCum) },
+          { label: 'Franchise (5yr)', value: money(franCum), highlight: true },
+          { label: 'Franchise edge', value: money(franCum - indCum), highlight: true },
+        ],
+        columns: ['Year', 'Independent (cum)', 'Franchise (cum)'],
+        rows,
+        note: franCum > indCum ? `The brand lift outweighs the fees here by about ${money(franCum - indCum)} over five years. Franchises pay off when the brand genuinely drives more revenue than the royalties cost.` : `Independent wins — the fees exceed the brand's lift at these numbers. The franchise only pays if it drives materially more traffic than you could alone.`,
+      }
+    },
+  },
+  {
+    id: 'refi-cashout-simulator', name: 'Cash-Out Refinance Simulator', category: 'Real Estate',
+    tagline: 'How much equity you can pull as value grows.',
+    description: 'Model a property appreciating over the years and see the cash you could pull via a cash-out refinance at your target LTV.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'value', label: 'Current value', default: 400000, prefix: '$' },
+      { key: 'appreciation', label: 'Annual appreciation', default: 4, suffix: '%' },
+      { key: 'loan', label: 'Current loan balance', default: 300000, prefix: '$' },
+      { key: 'ltv', label: 'Refinance LTV', default: 75, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let value = v.value
+      for (let y = 1; y <= 5; y++) {
+        value *= 1 + v.appreciation / 100
+        const maxLoan = value * (v.ltv / 100)
+        const cashOut = Math.max(0, maxLoan - v.loan)
+        rows.push([`Year ${y}`, money(value), money(maxLoan), money(cashOut)])
+      }
+      const maxLoanFinal = value * (v.ltv / 100)
+      return {
+        metrics: [
+          { label: 'Value (yr 5)', value: money(value), highlight: true },
+          { label: 'Cash-out available', value: money(Math.max(0, maxLoanFinal - v.loan)), highlight: true },
+        ],
+        columns: ['Year', 'Value', 'Max Loan', 'Cash-Out'],
+        rows,
+        note: `Appreciation lets you pull tax-free cash via refinance to buy the next property — the engine of leveraged real-estate growth. Just remember the new loan raises your payment and lowers cash flow.`,
+      }
+    },
+  },
+  {
+    id: 'practice-associate-simulator', name: 'Add-an-Associate Simulator', category: 'Healthcare',
+    tagline: 'Does adding a provider actually add profit?',
+    description: 'Model adding provider capacity over several years to see how revenue and profit scale in a practice.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'providers', label: 'Current providers', default: 2 },
+      { key: 'add', label: 'Added / year', default: 1 },
+      { key: 'revPer', label: 'Revenue / provider / yr', default: 500000, prefix: '$' },
+      { key: 'costPct', label: 'Provider comp %', default: 40, suffix: '%' },
+      { key: 'overheadPer', label: 'Added overhead / provider', default: 100000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let providers = v.providers
+      for (let y = 1; y <= 5; y++) {
+        if (y > 1) providers += v.add
+        const revenue = providers * v.revPer
+        const profit = revenue * (1 - v.costPct / 100) - providers * v.overheadPer
+        rows.push([`Year ${y}`, providers.toString(), money(revenue), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Providers (yr 5)', value: providers.toString(), highlight: true },
+          { label: 'Revenue (yr 5)', value: money(providers * v.revPer), highlight: true },
+          { label: 'Profit (yr 5)', value: money(providers * v.revPer * (1 - v.costPct / 100) - providers * v.overheadPer) },
+        ],
+        columns: ['Year', 'Providers', 'Revenue', 'Profit'],
+        rows,
+        note: `Associates add profit only if they stay busy — an underutilized provider is pure cost. Have the patient demand (or referral flow) lined up before you add capacity.`,
+      }
+    },
+  },
+  {
+    id: 'tam-penetration-simulator', name: 'Market Penetration Simulator', category: 'Revenue',
+    tagline: 'Project revenue as you capture more of the market.',
+    description: 'Model growing your share of a market over several years to see revenue scale with penetration.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'market', label: 'Total market customers', default: 500000 },
+      { key: 'spend', label: 'Average annual spend', default: 1200, prefix: '$' },
+      { key: 'start', label: 'Starting penetration', default: 0.5, suffix: '%' },
+      { key: 'gain', label: 'Penetration gain / yr (pts)', default: 0.3 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      for (let y = 1; y <= 5; y++) {
+        const pen = v.start + (y - 1) * v.gain
+        const customers = v.market * (pen / 100)
+        const revenue = customers * v.spend
+        rows.push([`Year ${y}`, `${pen.toFixed(2)}%`, Math.round(customers).toLocaleString(), money(revenue)])
+      }
+      const penFinal = v.start + 4 * v.gain
+      return {
+        metrics: [
+          { label: 'Penetration (yr 5)', value: `${penFinal.toFixed(2)}%`, highlight: true },
+          { label: 'Revenue (yr 5)', value: money(v.market * (penFinal / 100) * v.spend), highlight: true },
+          { label: 'Customers (yr 5)', value: Math.round(v.market * (penFinal / 100)).toLocaleString() },
+        ],
+        columns: ['Year', 'Penetration', 'Customers', 'Revenue'],
+        rows,
+        note: `Even low single-digit penetration of a big market is a large business — which is why investors love a huge TAM. But penetration gets harder as you go; early adopters are far easier than the mainstream.`,
+      }
+    },
+  },
+  {
+    id: 'saas-tier-migration-simulator', name: 'SaaS Tier Migration Simulator', category: 'SaaS',
+    tagline: 'Project ARPU as users upgrade tiers.',
+    description: 'Model users migrating from a basic to a pro tier over a year to see MRR and ARPU climb.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'users', label: 'Total users', default: 5000 },
+      { key: 'basic', label: 'Basic price', default: 20, prefix: '$' },
+      { key: 'pro', label: 'Pro price', default: 50, prefix: '$' },
+      { key: 'startProPct', label: 'Starting pro %', default: 20, suffix: '%' },
+      { key: 'upgradeRate', label: 'Monthly upgrade rate', default: 2, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let proUsers = v.users * (v.startProPct / 100)
+      let basicUsers = v.users - proUsers
+      for (let m = 1; m <= 12; m++) {
+        const migrate = basicUsers * (v.upgradeRate / 100)
+        basicUsers -= migrate; proUsers += migrate
+        const mrr = basicUsers * v.basic + proUsers * v.pro
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(proUsers).toString(), money(mrr)])
+      }
+      const mrrFinal = basicUsers * v.basic + proUsers * v.pro
+      return {
+        metrics: [
+          { label: 'MRR (mo 12)', value: money(mrrFinal), highlight: true },
+          { label: 'ARPU (mo 12)', value: money(v.users > 0 ? mrrFinal / v.users : 0), highlight: true },
+          { label: 'Pro share', value: pct(v.users > 0 ? proUsers / v.users : 0) },
+        ],
+        columns: ['Month', 'Pro Users', 'MRR'],
+        rows,
+        note: `Migrating existing users up a tier is the cheapest revenue in SaaS — no new acquisition required. Feature gating and usage nudges that pull basic users to pro compound your ARPU month after month.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'event-business-simulator', name: 'Event Business Growth Simulator', category: 'Hospitality',
+    tagline: 'Project profit as you book more events.',
+    description: 'Model a growing volume of events at your average revenue and cost to see monthly profit build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'events', label: 'Events / month', default: 4 },
+      { key: 'revenue', label: 'Revenue / event', default: 8000, prefix: '$' },
+      { key: 'cost', label: 'Cost / event', default: 4500, prefix: '$' },
+      { key: 'growth', label: 'Event growth / month', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let events = v.events
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) events *= 1 + v.growth / 100
+        const profit = events * (v.revenue - v.cost)
+        if (m % 2 === 0) rows.push([`Month ${m}`, events.toFixed(1), money(events * v.revenue), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Events (mo 12)', value: events.toFixed(1), highlight: true },
+          { label: 'Profit (mo 12)', value: money(events * (v.revenue - v.cost)), highlight: true },
+          { label: 'Annualized profit', value: money(events * (v.revenue - v.cost) * 12) },
+        ],
+        columns: ['Month', 'Events', 'Revenue', 'Profit'],
+        rows,
+        note: `Events are capacity-constrained — there are only so many weekends. Once you're full, raising price per event beats trying to cram in more; premium positioning is how event businesses scale profit.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
