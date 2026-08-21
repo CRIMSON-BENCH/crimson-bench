@@ -2931,6 +2931,400 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'marketplace-gmv-simulator', name: 'Marketplace GMV Simulator', category: 'Revenue',
+    tagline: 'Project GMV and take-rate revenue over a year.',
+    description: 'Model transaction growth at your average order value and take rate to see gross merchandise value and the revenue you actually keep.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tx', label: 'Transactions / month', default: 2000 },
+      { key: 'growth', label: 'Growth / month', default: 10, suffix: '%' },
+      { key: 'aov', label: 'Average order value', default: 80, prefix: '$' },
+      { key: 'take', label: 'Take rate', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let tx = v.tx, cumRev = 0
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) tx *= 1 + v.growth / 100
+        const gmv = tx * v.aov
+        const rev = gmv * (v.take / 100)
+        cumRev += rev
+        if (m % 2 === 0) rows.push([`Month ${m}`, money(gmv), money(rev)])
+      }
+      const gmvFinal = tx * v.aov
+      return {
+        metrics: [
+          { label: 'GMV (mo 12)', value: money(gmvFinal), highlight: true },
+          { label: 'Revenue (mo 12)', value: money(gmvFinal * (v.take / 100)), highlight: true },
+          { label: '12-mo revenue', value: money(cumRev) },
+        ],
+        columns: ['Month', 'GMV', 'Revenue'],
+        rows,
+        note: `GMV is the vanity number; take-rate revenue pays the bills. Marketplaces win by growing GMV and defending take rate — raise it too far and supply or demand routes around you.`,
+      }
+    },
+  },
+  {
+    id: 'app-iap-simulator', name: 'App In-App Purchase Simulator', category: 'SaaS',
+    tagline: 'Project revenue from installs and paying users.',
+    description: 'Model monthly installs converting to payers against payer churn to see your recurring in-app revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'installs', label: 'Installs / month', default: 50000 },
+      { key: 'payingPct', label: 'Install → payer', default: 3, suffix: '%' },
+      { key: 'arppu', label: 'Revenue / payer / mo', default: 15, prefix: '$' },
+      { key: 'churn', label: 'Payer churn / mo', default: 15, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let payers = 0
+      for (let m = 1; m <= 12; m++) {
+        payers = payers * (1 - v.churn / 100) + v.installs * (v.payingPct / 100)
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(payers).toString(), money(payers * v.arppu)])
+      }
+      return {
+        metrics: [
+          { label: 'Payers (mo 12)', value: Math.round(payers).toString(), highlight: true },
+          { label: 'Revenue (mo 12)', value: money(payers * v.arppu), highlight: true },
+          { label: 'Annualized', value: money(payers * v.arppu * 12) },
+        ],
+        columns: ['Month', 'Paying Users', 'Revenue'],
+        rows,
+        note: `High payer churn caps the base fast — apps live on retention and re-engagement, not just installs. A small lift in payer retention outperforms buying more downloads.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'activation-funnel-simulator', name: 'Activation Funnel Simulator', category: 'SaaS',
+    tagline: 'Project paid growth through activation and conversion.',
+    description: 'Model signups moving through activation and paid conversion, accumulating a paid base against churn.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'signups', label: 'Signups / month', default: 3000 },
+      { key: 'activation', label: 'Activation rate', default: 40, suffix: '%' },
+      { key: 'conversion', label: 'Activated → paid', default: 8, suffix: '%' },
+      { key: 'price', label: 'Price / month', default: 30, prefix: '$' },
+      { key: 'churn', label: 'Paid churn / mo', default: 4, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let base = 0
+      for (let m = 1; m <= 12; m++) {
+        const activated = v.signups * (v.activation / 100)
+        const newPaid = activated * (v.conversion / 100)
+        base = base * (1 - v.churn / 100) + newPaid
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(activated).toString(), Math.round(newPaid).toString(), money(base * v.price)])
+      }
+      return {
+        metrics: [
+          { label: 'Paid base (mo 12)', value: Math.round(base).toString(), highlight: true },
+          { label: 'MRR (mo 12)', value: money(base * v.price), highlight: true },
+          { label: 'Signup → paid', value: pct((v.activation / 100) * (v.conversion / 100)) },
+        ],
+        columns: ['Month', 'Activated', 'New Paid', 'MRR'],
+        rows,
+        note: `Activation is the most-ignored lever — a user who never reaches value never pays. Improving activation lifts every downstream number, and it's usually cheaper than driving more signups.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'safety-stock-simulator', name: 'Safety Stock & Reorder Simulator', category: 'Manufacturing',
+    tagline: 'Set inventory buffers for your service level.',
+    description: 'Enter demand, its variability, and lead time to see the safety stock and reorder point for different service levels.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'demand', label: 'Average daily demand', default: 100 },
+      { key: 'stdDev', label: 'Demand std. deviation', default: 30 },
+      { key: 'leadTime', label: 'Lead time (days)', default: 14 },
+    ],
+    compute: v => {
+      const levels: [string, number][] = [['90%', 1.28], ['95%', 1.65], ['99%', 2.33]]
+      const sqrtLT = Math.sqrt(v.leadTime)
+      const rows = levels.map(([label, z]) => {
+        const safety = z * v.stdDev * sqrtLT
+        return [label, Math.round(safety).toString(), Math.round(v.demand * v.leadTime + safety).toString()]
+      })
+      const safety95 = 1.65 * v.stdDev * sqrtLT
+      return {
+        metrics: [
+          { label: 'Safety stock (95%)', value: Math.round(safety95).toString(), highlight: true },
+          { label: 'Reorder point (95%)', value: Math.round(v.demand * v.leadTime + safety95).toString(), highlight: true },
+          { label: 'Cycle demand', value: Math.round(v.demand * v.leadTime).toString() },
+        ],
+        columns: ['Service Level', 'Safety Stock', 'Reorder Point'],
+        rows,
+        note: `Higher service levels cost exponentially more inventory — going from 95% to 99% often nearly doubles safety stock. Match the service level to the cost of a stockout, not to perfectionism.`,
+      }
+    },
+  },
+  {
+    id: 'insurance-loss-ratio-simulator', name: 'Insurance Combined Ratio Simulator', category: 'Advisor',
+    tagline: 'Is the underwriting actually profitable?',
+    description: 'Enter premiums, losses, and expenses to see loss, expense, and combined ratios — and whether the book makes an underwriting profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'premium', label: 'Earned premium', default: 5000000, prefix: '$' },
+      { key: 'losses', label: 'Incurred losses', default: 3200000, prefix: '$' },
+      { key: 'expenses', label: 'Expenses', default: 1500000, prefix: '$' },
+    ],
+    compute: v => {
+      const lossRatio = v.premium > 0 ? v.losses / v.premium : 0
+      const expenseRatio = v.premium > 0 ? v.expenses / v.premium : 0
+      const combined = lossRatio + expenseRatio
+      const uw = v.premium - v.losses - v.expenses
+      return {
+        metrics: [
+          { label: 'Combined ratio', value: pct(combined), highlight: true },
+          { label: 'Underwriting profit', value: money(uw), highlight: uw < 0 },
+          { label: 'Loss ratio', value: pct(lossRatio) },
+        ],
+        columns: ['Metric', 'Value'],
+        rows: [
+          ['Loss ratio', pct(lossRatio)],
+          ['Expense ratio', pct(expenseRatio)],
+          ['Combined ratio', pct(combined)],
+          ['Underwriting profit', money(uw)],
+        ],
+        note: combined < 1 ? `A combined ratio under 100% means the book earns an underwriting profit before any investment income — the mark of disciplined underwriting.` : `Over 100% — the book loses money on underwriting and relies on investment income to profit. Sustainable only if float returns cover the gap; tighten pricing or claims.`,
+      }
+    },
+  },
+  {
+    id: 'crop-profit-simulator', name: 'Crop Profit Simulator', category: 'Manufacturing',
+    tagline: 'Project farm profit from yield and price.',
+    description: 'Enter acres, yield, price, and cost per acre to see total profit, profit per acre, and your break-even price.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'acres', label: 'Acres', default: 500 },
+      { key: 'yield', label: 'Yield / acre (bushels)', default: 180 },
+      { key: 'price', label: 'Price / bushel', default: 5, prefix: '$' },
+      { key: 'cost', label: 'Cost / acre', default: 550, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.acres * v.yield * v.price
+      const cost = v.acres * v.cost
+      const profit = revenue - cost
+      const breakeven = v.yield > 0 ? v.cost / v.yield : 0
+      return {
+        metrics: [
+          { label: 'Total profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / acre', value: money(v.acres > 0 ? profit / v.acres : 0), highlight: true },
+          { label: 'Break-even price', value: `$${breakeven.toFixed(2)}`, highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Cost', money(cost)],
+          ['Profit', money(profit)],
+          ['Profit / acre', money(v.acres > 0 ? profit / v.acres : 0)],
+        ],
+        note: `Your break-even is about $${breakeven.toFixed(2)}/bushel — below that, the crop loses money. Since farmers can't set price, controlling cost per acre and locking in prices (hedging) is where the margin is protected.`,
+      }
+    },
+  },
+  {
+    id: 'solar-farm-simulator', name: 'Solar Farm Revenue Simulator', category: 'Manufacturing',
+    tagline: 'Project revenue and profit from a solar installation.',
+    description: 'Enter capacity, capacity factor, and power price to project a utility-scale solar farm’s annual generation and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'mw', label: 'Capacity (MW)', default: 10 },
+      { key: 'cf', label: 'Capacity factor', default: 24, suffix: '%' },
+      { key: 'price', label: 'Price per MWh', default: 45, prefix: '$' },
+      { key: 'opex', label: 'Opex / MW / year', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const mwh = v.mw * 8760 * (v.cf / 100)
+      const revenue = mwh * v.price
+      const opex = v.mw * v.opex
+      const profit = revenue - opex
+      return {
+        metrics: [
+          { label: 'Annual generation', value: `${Math.round(mwh).toLocaleString()} MWh`, highlight: true },
+          { label: 'Annual revenue', value: money(revenue), highlight: true },
+          { label: 'Annual profit', value: money(profit) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Annual generation', `${Math.round(mwh).toLocaleString()} MWh`],
+          ['Revenue', money(revenue)],
+          ['Opex', money(opex)],
+          ['Profit (pre-financing)', money(profit)],
+        ],
+        note: `Capacity factor — real-world output vs. nameplate — drives everything; a sunnier site or better tracking beats raw panel count. This is pre-financing; the debt on the build is usually the biggest cost of all.`,
+      }
+    },
+  },
+  {
+    id: 'price-increase-simulator', name: 'Price Increase Impact Simulator', category: 'SaaS',
+    tagline: 'How much churn a price hike can absorb.',
+    description: 'Model raising prices against the extra churn it triggers to see the net revenue impact — and the churn you can afford.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 1000 },
+      { key: 'price', label: 'Current price', default: 50, prefix: '$' },
+      { key: 'increase', label: 'Price increase', default: 20, suffix: '%' },
+      { key: 'churn', label: 'Extra churn from increase', default: 5, suffix: '%' },
+    ],
+    compute: v => {
+      const newPrice = v.price * (1 + v.increase / 100)
+      const retained = v.customers * (1 - v.churn / 100)
+      const oldRev = v.customers * v.price
+      const newRev = retained * newPrice
+      const breakevenChurn = v.increase / (100 + v.increase)
+      return {
+        metrics: [
+          { label: 'New MRR', value: money(newRev), highlight: true },
+          { label: 'Net change', value: money(newRev - oldRev), highlight: newRev < oldRev },
+          { label: 'Break-even churn', value: pct(breakevenChurn), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Old MRR', money(oldRev)],
+          ['New MRR', money(newRev)],
+          ['Net change', money(newRev - oldRev)],
+        ],
+        note: `You could lose up to ${pct(breakevenChurn)} of customers and still come out even — most price increases churn far less. Pricing is the highest-leverage growth lever, and the most under-used.`,
+      }
+    },
+    sells: 'pricing-strategy-toolkit',
+  },
+  {
+    id: 'upsell-crosssell-simulator', name: 'Upsell & Cross-Sell Simulator', category: 'Revenue',
+    tagline: 'Project the revenue in add-ons to your base.',
+    description: 'Model upsell and cross-sell attach rates across your customer base to see the incremental revenue and lifted ARPU.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'customers', label: 'Customers', default: 2000 },
+      { key: 'baseARPU', label: 'Base ARPU / mo', default: 50, prefix: '$' },
+      { key: 'upsellRate', label: 'Upsell attach', default: 15, suffix: '%' },
+      { key: 'upsellValue', label: 'Upsell value / mo', default: 30, prefix: '$' },
+      { key: 'crossRate', label: 'Cross-sell attach', default: 10, suffix: '%' },
+      { key: 'crossValue', label: 'Cross-sell value / mo', default: 20, prefix: '$' },
+    ],
+    compute: v => {
+      const base = v.customers * v.baseARPU
+      const upsell = v.customers * (v.upsellRate / 100) * v.upsellValue
+      const cross = v.customers * (v.crossRate / 100) * v.crossValue
+      const total = base + upsell + cross
+      return {
+        metrics: [
+          { label: 'Total MRR', value: money(total), highlight: true },
+          { label: 'From add-ons', value: money(upsell + cross), highlight: true },
+          { label: 'New ARPU', value: money(v.customers > 0 ? total / v.customers : 0) },
+        ],
+        columns: ['Source', 'Monthly Revenue'],
+        rows: [
+          ['Base subscriptions', money(base)],
+          ['Upsells', money(upsell)],
+          ['Cross-sells', money(cross)],
+          ['Total', money(total)],
+        ],
+        note: `Add-ons raise ARPU with customers you already have — no acquisition cost. A few points of attach rate on an existing base is some of the cheapest revenue growth available.`,
+      }
+    },
+  },
+  {
+    id: 'retail-seasonality-simulator', name: 'Retail Seasonality Simulator', category: 'Retail',
+    tagline: 'See how your year’s revenue really lands by month.',
+    description: 'Distribute annual revenue across a typical retail seasonal curve to see peak and trough months — and plan cash and inventory around them.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'annual', label: 'Annual revenue', default: 1200000, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 55, suffix: '%' },
+    ],
+    compute: v => {
+      const weights = [0.75, 0.75, 0.85, 0.9, 0.95, 0.9, 0.9, 0.95, 1.0, 1.1, 1.5, 1.7]
+      const sum = weights.reduce((a, b) => a + b, 0)
+      const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const monthly = weights.map(w => v.annual * (w / sum))
+      const avg = v.annual / 12
+      const rows = names.map((n, i) => [n, money(monthly[i]), `${((monthly[i] / avg) * 100).toFixed(0)}%`])
+      const peak = Math.max(...monthly), trough = Math.min(...monthly)
+      return {
+        metrics: [
+          { label: 'Peak month', value: money(peak), highlight: true },
+          { label: 'Slowest month', value: money(trough) },
+          { label: 'Pre-peak inventory cash', value: money(peak * (v.cogs / 100)), highlight: true },
+        ],
+        columns: ['Month', 'Revenue', 'vs. Average'],
+        rows,
+        note: `The peak needs inventory bought (and paid for) months ahead — that pre-season cash squeeze sinks under-capitalized retailers even in a great year. Plan financing around the trough, not the average.`,
+      }
+    },
+  },
+  {
+    id: 'consulting-utilization-simulator', name: 'Consulting Utilization Simulator', category: 'Agency',
+    tagline: 'Project revenue as consultants ramp to full utilization.',
+    description: 'Model a services team ramping toward target utilization at your bill rate to see monthly revenue build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'consultants', label: 'Consultants', default: 10 },
+      { key: 'target', label: 'Target utilization', default: 75, suffix: '%' },
+      { key: 'hours', label: 'Available hours / mo', default: 160 },
+      { key: 'rate', label: 'Bill rate', default: 200, prefix: '$' },
+      { key: 'ramp', label: 'Ramp to target (months)', default: 3 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      for (let m = 1; m <= 12; m++) {
+        const util = Math.min(40 + (v.target - 40) * (m / v.ramp), v.target)
+        const revenue = v.consultants * v.hours * (util / 100) * v.rate
+        if (m % 2 === 0) rows.push([`Month ${m}`, `${util.toFixed(0)}%`, money(revenue)])
+      }
+      const steady = v.consultants * v.hours * (v.target / 100) * v.rate
+      return {
+        metrics: [
+          { label: 'Steady revenue / mo', value: money(steady), highlight: true },
+          { label: 'Annualized', value: money(steady * 12), highlight: true },
+          { label: 'At target', value: `${v.target}%` },
+        ],
+        columns: ['Month', 'Utilization', 'Revenue'],
+        rows,
+        note: `Utilization is the heartbeat of a services firm — a few points either way swings the whole P&L. Too low wastes payroll; too high burns people out and quality slips. The target is a balance, not a max.`,
+      }
+    },
+  },
+  {
+    id: 'warehouse-labor-simulator', name: 'Warehouse Labor Simulator', category: 'Logistics',
+    tagline: 'Project pick labor cost as order volume grows.',
+    description: 'Model order growth through pick rates and labor cost to see fulfillment labor scale — and cost per order.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 2000 },
+      { key: 'growth', label: 'Growth / month', default: 5, suffix: '%' },
+      { key: 'picks', label: 'Picks per order', default: 3 },
+      { key: 'rate', label: 'Picks / labor hour', default: 60 },
+      { key: 'cost', label: 'Labor cost / hour', default: 22, prefix: '$' },
+      { key: 'days', label: 'Operating days / mo', default: 26 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let orders = v.orders
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) orders *= 1 + v.growth / 100
+        const hours = (orders * v.picks) / v.rate
+        const monthlyLabor = hours * v.cost * v.days
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(orders).toLocaleString(), money(monthlyLabor)])
+      }
+      const hoursFinal = (orders * v.picks) / v.rate
+      const monthlyFinal = hoursFinal * v.cost * v.days
+      return {
+        metrics: [
+          { label: 'Monthly labor (mo 12)', value: money(monthlyFinal), highlight: true },
+          { label: 'Annualized', value: money(monthlyFinal * 12), highlight: true },
+          { label: 'Labor / order', value: `$${(orders * v.days > 0 ? monthlyFinal / (orders * v.days) : 0).toFixed(2)}` },
+        ],
+        columns: ['Month', 'Orders / Day', 'Monthly Labor'],
+        rows,
+        note: `Pick rate is the lever — slotting, batching, and layout that lift picks-per-hour cut cost per order directly. At scale, small productivity gains compound into large labor savings.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
