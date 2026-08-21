@@ -6171,6 +6171,476 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'bakery-simulator', name: 'Bakery Profit Simulator', category: 'Hospitality',
+    tagline: 'Project a bakery’s monthly profit.',
+    description: 'Model daily item volume and price against COGS, labor, and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'items', label: 'Items sold / day', default: 500 },
+      { key: 'price', label: 'Average item price', default: 4, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.items * v.price * 30
+      const profit = revenue * (1 - (v.cogs + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS + labor', money(revenue * ((v.cogs + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Bakeries fight waste (unsold goods) and early-morning labor. Wholesale accounts and pre-orders smooth demand, while high-margin specialty items lift the average ticket. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ghost-kitchen-simulator', name: 'Ghost Kitchen Simulator', category: 'Hospitality',
+    tagline: 'Delivery-only economics after the commissions.',
+    description: 'Model delivery orders against food cost, app commission, and labor to see if a ghost kitchen actually profits.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 120 },
+      { key: 'ticket', label: 'Average ticket', default: 22, prefix: '$' },
+      { key: 'food', label: 'Food cost %', default: 30, suffix: '%' },
+      { key: 'commission', label: 'App commission %', default: 25, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * 30
+      const profit = revenue * (1 - (v.food + v.commission + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'App commission', value: money(revenue * (v.commission / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + commission + labor', money(revenue * ((v.food + v.commission + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Delivery commissions (25%+) are the ghost-kitchen killer. The winning move is running several virtual brands from one kitchen to spread fixed cost, and driving first-party orders to skip the apps. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'catering-company-simulator', name: 'Catering Company Simulator', category: 'Hospitality',
+    tagline: 'Project a caterer’s monthly profit.',
+    description: 'Model event volume and revenue against food, labor, and fixed costs to see monthly and per-event profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'events', label: 'Events / month', default: 20 },
+      { key: 'revenue', label: 'Revenue / event', default: 3500, prefix: '$' },
+      { key: 'food', label: 'Food %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const rev = v.events * v.revenue
+      const profit = rev * (1 - (v.food + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / event', value: money(v.events > 0 ? profit / v.events : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(rev)], ['Food + labor', money(rev * ((v.food + v.labor) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Catering profit hides in accurate quoting — underestimating labor and rentals on a big event erases the margin. Deposits and minimums protect cash flow around seasonal swings. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'barbershop-simulator', name: 'Barbershop Simulator', category: 'Salon',
+    tagline: 'Project a barbershop’s monthly profit.',
+    description: 'Model chairs and cut volume against barber pay and fixed costs to see profit and revenue per chair.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'chairs', label: 'Chairs', default: 6 },
+      { key: 'cuts', label: 'Cuts / chair / day', default: 10 },
+      { key: 'price', label: 'Price per cut', default: 30, prefix: '$' },
+      { key: 'barberPay', label: 'Barber pay %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const cuts = v.chairs * v.cuts * 26
+      const revenue = cuts * v.price
+      const profit = revenue * (1 - v.barberPay / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / chair', value: money(v.chairs > 0 ? revenue / v.chairs : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Barber pay', money(revenue * (v.barberPay / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Chair-rental vs. commission changes the math entirely. Memberships, product retail, and add-ons (beard, hot towel) lift revenue per chair — the number that decides whether the shop scales. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'nail-salon-simulator', name: 'Nail Salon Simulator', category: 'Salon',
+    tagline: 'Project a nail salon’s monthly profit.',
+    description: 'Model stations and service volume against tech pay, supplies, and fixed costs to see profit per station.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stations', label: 'Stations', default: 8 },
+      { key: 'services', label: 'Services / station / day', default: 8 },
+      { key: 'price', label: 'Average service', default: 45, prefix: '$' },
+      { key: 'techPay', label: 'Tech pay %', default: 55, suffix: '%' },
+      { key: 'supplies', label: 'Supplies %', default: 8, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const services = v.stations * v.services * 26
+      const revenue = services * v.price
+      const profit = revenue * (1 - (v.techPay + v.supplies) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / station', value: money(v.stations > 0 ? revenue / v.stations : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Tech pay + supplies', money(revenue * ((v.techPay + v.supplies) / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Station utilization drives everything — an empty chair still pays rent. Upgrades (gel, designs, pedicures) and memberships raise the average ticket and fill slow hours. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'martial-arts-dojo-simulator', name: 'Martial Arts Dojo Simulator', category: 'Fitness',
+    tagline: 'Project a dojo’s recurring profit.',
+    description: 'Model membership volume and fee against instructor and rent costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 200 },
+      { key: 'fee', label: 'Monthly fee', default: 130, prefix: '$' },
+      { key: 'instructor', label: 'Instructor cost / mo', default: 12000, prefix: '$' },
+      { key: 'fixed', label: 'Rent + fixed / mo', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue - v.instructor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Instructor', money(v.instructor)], ['Rent + fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Belt progression and community make martial-arts memberships famously sticky — retention is a superpower here. Testing fees, pro-shop gear, and kids' programs layer more revenue on the base. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'crossfit-box-simulator', name: 'CrossFit Box Simulator', category: 'Fitness',
+    tagline: 'Project a box’s recurring profit.',
+    description: 'Model members and premium fees against coaching and rent to see monthly profit and per-member revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 150 },
+      { key: 'fee', label: 'Monthly fee', default: 165, prefix: '$' },
+      { key: 'coach', label: 'Coaching cost / mo', default: 10000, prefix: '$' },
+      { key: 'fixed', label: 'Rent + fixed / mo', default: 9000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue - v.coach - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / member', value: money(v.fee) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Coaching', money(v.coach)], ['Rent + fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Boxes charge premium fees for coached, community classes — but are capped by class size and coach availability. Nutrition programs and personal training lift revenue per member above the class fee. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'climbing-gym-simulator', name: 'Climbing Gym Simulator', category: 'Recreation',
+    tagline: 'Project a climbing gym’s profit.',
+    description: 'Model memberships plus day passes against fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 800 },
+      { key: 'fee', label: 'Monthly fee', default: 85, prefix: '$' },
+      { key: 'dayPasses', label: 'Day passes / month', default: 1500 },
+      { key: 'passPrice', label: 'Day pass price', default: 25, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const memberRev = v.members * v.fee
+      const passRev = v.dayPasses * v.passPrice
+      const profit = memberRev + passRev - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Member revenue', value: money(memberRev), highlight: true },
+          { label: 'Day-pass revenue', value: money(passRev) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Membership revenue', money(memberRev)], ['Day passes', money(passRev)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Climbing gyms carry big fixed costs (walls, space, staff) — memberships provide the stable base while day passes and gear/classes add upside. Route-setting quality drives retention. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bowling-alley-simulator', name: 'Bowling Alley Simulator', category: 'Recreation',
+    tagline: 'Project an alley’s profit from lanes and F&B.',
+    description: 'Model game volume across lanes plus food & beverage against fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lanes', label: 'Lanes', default: 24 },
+      { key: 'games', label: 'Games / lane / day', default: 20 },
+      { key: 'gamePrice', label: 'Price per game', default: 6, prefix: '$' },
+      { key: 'fb', label: 'F&B per game', default: 4, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 70000, prefix: '$' },
+    ],
+    compute: v => {
+      const gamesMonthly = v.lanes * v.games * 30
+      const revenue = gamesMonthly * (v.gamePrice + v.fb)
+      const profit = revenue - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / lane', value: money(v.lanes > 0 ? revenue / v.lanes : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Modern alleys are entertainment centers — food, bar, and events (leagues, parties) often out-earn the bowling itself. Weekend and league utilization carry the heavy fixed cost. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'trampoline-park-simulator', name: 'Trampoline Park Simulator', category: 'Recreation',
+    tagline: 'Project a jump park’s monthly profit.',
+    description: 'Model daily jumpers and ticket price against variable and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jumpers', label: 'Jumpers / day', default: 300 },
+      { key: 'ticket', label: 'Average ticket', default: 20, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 15, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jumpers * v.ticket * 30
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Low variable cost means high incremental margin — but big fixed cost and insurance demand strong attendance. Parties, memberships, and concessions are the profit multipliers on top of admission. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'driving-school-simulator', name: 'Driving School Simulator', category: 'Education',
+    tagline: 'Project a driving school’s profit.',
+    description: 'Model student volume and package price against instructor cost and overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Students / month', default: 120 },
+      { key: 'package', label: 'Package price', default: 500, prefix: '$' },
+      { key: 'instructorCost', label: 'Instructor cost / student', default: 200, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.students * v.package
+      const instructor = v.students * v.instructorCost
+      const profit = revenue - instructor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / student', value: money(v.students > 0 ? profit / v.students : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Instructor cost', money(instructor)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Driving schools scale on instructor utilization and steady enrollment. Vehicle and insurance costs are the main fixed burden; corporate and fleet training smooth seasonal demand. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'invoice-factoring-simulator', name: 'Invoice Factoring Cost Simulator', category: 'Finance',
+    tagline: 'The true cost of selling your invoices.',
+    description: 'Model an advance rate and factor fee to see cash received now — and the eye-opening effective APR.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'invoice', label: 'Invoice amount', default: 100000, prefix: '$' },
+      { key: 'advance', label: 'Advance rate', default: 85, suffix: '%' },
+      { key: 'fee', label: 'Factor fee / 30 days', default: 3, suffix: '%' },
+      { key: 'days', label: 'Days outstanding', default: 45 },
+    ],
+    compute: v => {
+      const advance = v.invoice * (v.advance / 100)
+      const fee = v.invoice * (v.fee / 100) * (v.days / 30)
+      const apr = v.days > 0 ? (v.fee / 100) * (365 / v.days) : 0
+      return {
+        metrics: [
+          { label: 'Cash advanced now', value: money(advance), highlight: true },
+          { label: 'Total fee', value: money(fee), highlight: true },
+          { label: 'Effective APR', value: pct(apr), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Advance', money(advance)], ['Factor fee', money(fee)], ['Net received', money(v.invoice - fee)]],
+        note: `Factoring solves cash-flow gaps fast — but annualized, a ${v.fee}% fee is roughly a ${pct(apr)} APR. Use it for genuine growth crunches, not as permanent financing; the cost compounds against thin margins. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'merchant-cash-advance-simulator', name: 'Merchant Cash Advance Cost Simulator', category: 'Finance',
+    tagline: 'What a factor rate really costs.',
+    description: 'Model an advance and factor rate to reveal the total payback and the true (often shocking) effective APR.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'advance', label: 'Advance amount', default: 50000, prefix: '$' },
+      { key: 'factor', label: 'Factor rate', default: 1.4 },
+      { key: 'months', label: 'Repayment term (months)', default: 8 },
+    ],
+    compute: v => {
+      const payback = v.advance * v.factor
+      const cost = payback - v.advance
+      const apr = v.months > 0 ? (v.factor - 1) * (12 / v.months) : 0
+      return {
+        metrics: [
+          { label: 'Total payback', value: money(payback), highlight: true },
+          { label: 'Cost of capital', value: money(cost), highlight: true },
+          { label: 'Approx. APR', value: pct(apr), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Advance', money(v.advance)], ['Total payback', money(payback)], ['Cost', money(cost)], ['Monthly payment', money(payback / v.months)]],
+        note: `MCAs hide their cost in a "factor rate" — a 1.4 over 8 months is roughly a ${pct(apr)} APR. They're among the most expensive money a business can take; exhaust every other option first. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'sba-7a-loan-simulator', name: 'SBA 7(a) Loan Payment Simulator', category: 'Finance',
+    tagline: 'Monthly payment and total interest on an SBA loan.',
+    description: 'Model an SBA 7(a) loan to see the monthly payment and how much interest you pay over the term.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'loan', label: 'Loan amount', default: 350000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate', default: 11, suffix: '%' },
+      { key: 'years', label: 'Term (years)', default: 10 },
+    ],
+    compute: v => {
+      const r = v.rate / 1200, n = v.years * 12
+      const pmt = r === 0 ? v.loan / n : (v.loan * r) / (1 - Math.pow(1 + r, -n))
+      const total = pmt * n
+      const rows: string[][] = []
+      let bal = v.loan
+      for (let y = 1; y <= v.years; y++) {
+        let yi = 0
+        for (let m = 0; m < 12; m++) { const i = bal * r; bal -= (pmt - i); yi += i }
+        if (y % 2 === 0 || y === v.years) rows.push([`Year ${y}`, money(yi), money(Math.max(0, bal))])
+      }
+      return {
+        metrics: [
+          { label: 'Monthly payment', value: money(pmt), highlight: true },
+          { label: 'Total interest', value: money(total - v.loan), highlight: true },
+          { label: 'Total repaid', value: money(total) },
+        ],
+        columns: ['Year', 'Interest', 'Balance'],
+        rows,
+        note: `SBA loans open doors with low down payments and long terms — but the variable rate (tied to prime) means payments can rise. Model a rate bump before you commit; debt service is the number that must clear your cash flow. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'business-loc-simulator', name: 'Business Line of Credit Simulator', category: 'Finance',
+    tagline: 'Interest and payoff on a revolving credit line.',
+    description: 'Model a drawn balance and monthly paydown to see interest cost and how long to clear the line.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'drawn', label: 'Amount drawn', default: 60000, prefix: '$' },
+      { key: 'apr', label: 'APR', default: 12, suffix: '%' },
+      { key: 'paydown', label: 'Monthly paydown', default: 5000, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.apr / 1200
+      let bal = v.drawn, months = 0, interest = 0
+      if (v.paydown <= bal * r) return { metrics: [{ label: 'Payoff', value: 'Never', highlight: true }, { label: 'Note', value: 'Paydown ≤ interest' }], columns: ['Line', 'Value'], rows: [['Balance', money(bal)]], note: `Your paydown barely covers interest — the balance won't fall. Increase it above the monthly interest to make progress. Educational only.` }
+      while (bal > 0 && months < 600) { const i = bal * r; bal -= (v.paydown - i); interest += i; months++ }
+      return {
+        metrics: [
+          { label: 'Months to payoff', value: months.toString(), highlight: true },
+          { label: 'Total interest', value: money(interest), highlight: true },
+          { label: 'Current monthly interest', value: money(v.drawn * r) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Drawn', money(v.drawn)], ['Monthly interest (now)', money(v.drawn * r)], ['Total interest', money(interest)]],
+        note: `A line of credit is flexible, cheap money for short-term needs — but only if you pay it down. Carrying a revolving balance long-term turns a cash-flow tool into an expensive habit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'equipment-financing-simulator', name: 'Equipment Financing Simulator', category: 'Finance',
+    tagline: 'Payment and true cost on financed equipment.',
+    description: 'Model an equipment loan to see the monthly payment, total interest, and all-in cost.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Equipment cost', default: 80000, prefix: '$' },
+      { key: 'down', label: 'Down payment', default: 10, suffix: '%' },
+      { key: 'rate', label: 'Interest rate', default: 8, suffix: '%' },
+      { key: 'years', label: 'Term (years)', default: 5 },
+    ],
+    compute: v => {
+      const loan = v.cost * (1 - v.down / 100)
+      const r = v.rate / 1200, n = v.years * 12
+      const pmt = r === 0 ? loan / n : (loan * r) / (1 - Math.pow(1 + r, -n))
+      const total = pmt * n
+      return {
+        metrics: [
+          { label: 'Monthly payment', value: money(pmt), highlight: true },
+          { label: 'Total interest', value: money(total - loan), highlight: true },
+          { label: 'All-in cost', value: money(total + v.cost * (v.down / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Financed amount', money(loan)], ['Monthly payment', money(pmt)], ['Total interest', money(total - loan)]],
+        note: `Financing preserves cash and often qualifies for tax deductions (Section 179), but you pay interest and the gear depreciates. Match the term to the equipment's useful life — never finance a 3-year asset over 7. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pickleball-club-simulator', name: 'Pickleball Club Simulator', category: 'Recreation',
+    tagline: 'Project a pickleball facility’s profit.',
+    description: 'Model court rentals plus memberships against fixed costs to see monthly profit and revenue per court.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'courts', label: 'Courts', default: 8 },
+      { key: 'hours', label: 'Booked hours / court / day', default: 8 },
+      { key: 'rate', label: 'Court rate / hour', default: 40, prefix: '$' },
+      { key: 'memberships', label: 'Membership revenue / mo', default: 20000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 45000, prefix: '$' },
+    ],
+    compute: v => {
+      const courtRev = v.courts * v.hours * v.rate * 30
+      const revenue = courtRev + v.memberships
+      const profit = revenue - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / court', value: money(v.courts > 0 ? revenue / v.courts : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Court revenue', money(courtRev)], ['Memberships', money(v.memberships)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pickleball is the fastest-growing sport, and indoor courts monetize through open play, memberships, leagues, lessons, and events. Court utilization at peak evening/weekend hours is what makes the fixed cost pencil. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
