@@ -216,10 +216,10 @@ export default function HomePage() {
       <section className="py-16 px-6 bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
         <div className="max-w-6xl mx-auto">
           <p className="font-mono text-xs tracking-widest uppercase text-slate-400 text-center mb-8">
-            Representative Engagements — Client Identities Protected Under NDA
+            The Organizations We Deploy Into
           </p>
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-4">
-            {['Goldman Sachs', 'Bain Capital', 'BlackRock', 'KKR', 'Sequoia Capital', 'Andreessen Horowitz', 'Thoma Bravo', 'Silver Lake', 'SpaceX', 'Palantir', 'Stripe', 'OpenAI'].map(co => (
+            {['Top-Tier PE & Buyout Funds', 'Global Venture Firms', 'Fortune 500 Boards', 'Category-Defining Startups', 'Sovereign & Family Offices', 'PE-Backed Scale-Ups', 'Public-Company C-Suites', 'Hyper-Growth SaaS'].map(co => (
               <span key={co} className="font-mono text-xs tracking-widest text-slate-400 uppercase">{co}</span>
             ))}
           </div>
