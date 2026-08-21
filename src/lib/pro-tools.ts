@@ -4957,6 +4957,412 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'shopify-dtc-simulator', name: 'Shopify DTC Store Simulator', category: 'E-Commerce',
+    tagline: 'Project a DTC store from traffic to profit.',
+    description: 'Model traffic growth through conversion and AOV against COGS and ad spend to see monthly revenue and profit build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'traffic', label: 'Month 1 traffic', default: 30000 },
+      { key: 'growth', label: 'Traffic growth / mo', default: 8, suffix: '%' },
+      { key: 'conversion', label: 'Conversion rate', default: 2, suffix: '%' },
+      { key: 'aov', label: 'Average order value', default: 65, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 40, suffix: '%' },
+      { key: 'adPct', label: 'Ad spend (% of revenue)', default: 20, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let traffic = v.traffic
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) traffic *= 1 + v.growth / 100
+        const revenue = traffic * (v.conversion / 100) * v.aov
+        const profit = revenue * (1 - v.cogs / 100) - revenue * (v.adPct / 100)
+        if (m % 2 === 0) rows.push([`Month ${m}`, money(revenue), money(profit)])
+      }
+      const revFinal = traffic * (v.conversion / 100) * v.aov
+      return {
+        metrics: [
+          { label: 'Revenue (mo 12)', value: money(revFinal), highlight: true },
+          { label: 'Profit (mo 12)', value: money(revFinal * (1 - v.cogs / 100) - revFinal * (v.adPct / 100)), highlight: true },
+          { label: 'Annualized profit', value: money((revFinal * (1 - v.cogs / 100) - revFinal * (v.adPct / 100)) * 12) },
+        ],
+        columns: ['Month', 'Revenue', 'Profit'],
+        rows,
+        note: `DTC profit hides between COGS and ad spend — if the two together approach your price, growth just loses money faster. Conversion rate and repeat purchases are what make the ad math work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'amazon-fba-launch-simulator', name: 'Amazon FBA Launch Simulator', category: 'E-Commerce',
+    tagline: 'Project a product launch to break-even.',
+    description: 'Model unit sales ramping as rank improves against per-unit profit and launch cost to find the break-even month.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Month 1 units', default: 200 },
+      { key: 'growth', label: 'Unit growth / mo', default: 20, suffix: '%' },
+      { key: 'profitPerUnit', label: 'Profit per unit (post-fees)', default: 8, prefix: '$' },
+      { key: 'launchCost', label: 'Launch cost (inventory + setup)', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let units = v.units, cum = -v.launchCost, be = 0
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) units *= 1 + v.growth / 100
+        cum += units * v.profitPerUnit
+        if (be === 0 && cum >= 0) be = m
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(units).toString(), money(cum)])
+      }
+      return {
+        metrics: [
+          { label: 'Break-even month', value: be ? `Month ${be}` : '> 12mo', highlight: true },
+          { label: 'Profit (mo 12)', value: money(units * v.profitPerUnit), highlight: true },
+          { label: 'Net (mo 12)', value: money(cum) },
+        ],
+        columns: ['Month', 'Units', 'Cumulative Net'],
+        rows,
+        note: `FBA launches burn cash early — inventory and PPC come before the rank that drives organic sales. The winners survive to break-even (month ${be || '12+'}) and then compound; the losers run out of inventory cash first. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ev-charging-station-simulator', name: 'EV Charging Station Simulator', category: 'Energy',
+    tagline: 'Project profit from a charging site.',
+    description: 'Model chargers and session volume against energy cost and fixed overhead to see monthly profit and revenue per charger.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'chargers', label: 'Chargers', default: 8 },
+      { key: 'sessions', label: 'Sessions / charger / day', default: 6 },
+      { key: 'kwh', label: 'kWh per session', default: 30 },
+      { key: 'price', label: 'Price per kWh', default: 0.45, prefix: '$' },
+      { key: 'cost', label: 'Electricity cost / kWh', default: 0.12, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 3000, prefix: '$' },
+    ],
+    compute: v => {
+      const monthlyKwh = v.chargers * v.sessions * 30 * v.kwh
+      const revenue = monthlyKwh * v.price
+      const energy = monthlyKwh * v.cost
+      const profit = revenue - energy - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / charger', value: money(v.chargers > 0 ? revenue / v.chargers : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Energy delivered', `${Math.round(monthlyKwh).toLocaleString()} kWh`],
+          ['Revenue', money(revenue)],
+          ['Electricity cost', money(energy)],
+          ['Fixed costs', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Utilization is everything — a charger sitting idle still costs demand charges and capital. The margin between what you charge per kWh and what you pay is thin, so site traffic and uptime make or break the economics. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'oil-well-decline-simulator', name: 'Oil Well Decline Simulator', category: 'Energy',
+    tagline: 'Project production and revenue as a well declines.',
+    description: 'Model a well’s natural production decline against price and operating cost to see revenue fall over the years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'initial', label: 'Initial production (bbl/day)', default: 100 },
+      { key: 'decline', label: 'Annual decline', default: 30, suffix: '%' },
+      { key: 'price', label: 'Price per barrel', default: 70, prefix: '$' },
+      { key: 'opex', label: 'Opex per barrel', default: 25, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let daily = v.initial, cumProfit = 0
+      for (let y = 1; y <= 6; y++) {
+        if (y > 1) daily *= 1 - v.decline / 100
+        const annualBbl = daily * 365
+        const profit = annualBbl * (v.price - v.opex)
+        cumProfit += profit
+        rows.push([`Year ${y}`, daily.toFixed(0), money(annualBbl * v.price), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Year 1 profit', value: money(v.initial * 365 * (v.price - v.opex)), highlight: true },
+          { label: '6-yr cumulative', value: money(cumProfit), highlight: true },
+          { label: 'Production (yr 6)', value: `${daily.toFixed(0)} bbl/day` },
+        ],
+        columns: ['Year', 'Bbl / Day', 'Revenue', 'Profit'],
+        rows,
+        note: `Wells front-load their returns — most cash comes in the first couple of years before decline sets in. That's why payback speed matters more than headline reserves, and why price at the start is so critical. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cattle-ranch-simulator', name: 'Cattle Ranch Profit Simulator', category: 'Manufacturing',
+    tagline: 'Project profit on a cattle operation.',
+    description: 'Model buying, feeding, and selling cattle to see the margin — and how sensitive it is to price spreads.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'head', label: 'Head of cattle', default: 200 },
+      { key: 'buyWeight', label: 'Purchase weight (lbs)', default: 500 },
+      { key: 'buyPrice', label: 'Buy price / lb', default: 1.8, prefix: '$' },
+      { key: 'sellWeight', label: 'Sale weight (lbs)', default: 1200 },
+      { key: 'sellPrice', label: 'Sell price / lb', default: 1.45, prefix: '$' },
+      { key: 'feed', label: 'Feed cost / head', default: 400, prefix: '$' },
+    ],
+    compute: v => {
+      const buyCost = v.head * v.buyWeight * v.buyPrice
+      const saleRev = v.head * v.sellWeight * v.sellPrice
+      const feed = v.head * v.feed
+      const profit = saleRev - buyCost - feed
+      return {
+        metrics: [
+          { label: 'Total profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / head', value: money(v.head > 0 ? profit / v.head : 0), highlight: true },
+          { label: 'Margin', value: pct(saleRev > 0 ? profit / saleRev : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Sale revenue', money(saleRev)],
+          ['Purchase cost', money(buyCost)],
+          ['Feed cost', money(feed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Cattle margins are thin and brutally price-sensitive — a small drop in sell price or spike in feed can flip a profit to a loss. Ranchers often hedge cattle and feed prices for exactly this reason. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'tutoring-center-simulator', name: 'Tutoring Center Simulator', category: 'Education',
+    tagline: 'Project a tutoring center’s monthly profit.',
+    description: 'Model student volume and session pricing against tutor pay and fixed costs to see profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Active students', default: 120 },
+      { key: 'sessions', label: 'Sessions / student / mo', default: 8 },
+      { key: 'price', label: 'Price per session', default: 40, prefix: '$' },
+      { key: 'tutorPay', label: 'Tutor pay / session', default: 20, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const sessions = v.students * v.sessions
+      const revenue = sessions * v.price
+      const tutor = sessions * v.tutorPay
+      const profit = revenue - tutor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Tutor pay', money(tutor)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Tutoring scales on the spread between session price and tutor pay, times volume. Group sessions and packages lift revenue per tutor-hour — the biggest lever once your schedule is full. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'coding-bootcamp-simulator', name: 'Coding Bootcamp Simulator', category: 'Education',
+    tagline: 'Project a bootcamp’s annual profit.',
+    description: 'Model cohorts and tuition against instructor, marketing, and fixed costs to see annual profit and per-student economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cohorts', label: 'Cohorts / year', default: 6 },
+      { key: 'students', label: 'Students / cohort', default: 25 },
+      { key: 'tuition', label: 'Tuition', default: 12000, prefix: '$' },
+      { key: 'instructor', label: 'Instructor cost / cohort', default: 40000, prefix: '$' },
+      { key: 'marketing', label: 'Marketing / student', default: 800, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cohorts * v.students * v.tuition
+      const instructor = v.cohorts * v.instructor
+      const marketing = v.cohorts * v.students * v.marketing
+      const fixed = v.fixed * 12
+      const profit = revenue - instructor - marketing - fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Profit / student', value: money(v.cohorts * v.students > 0 ? profit / (v.cohorts * v.students) : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Instructor cost', money(instructor)],
+          ['Marketing', money(marketing)],
+          ['Fixed', money(fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Bootcamps live on filling cohorts — an under-filled cohort still costs a full instructor. Marketing cost per enrolled student and outcomes (which drive referrals) are what make the model sustainable. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'accounting-firm-simulator', name: 'Accounting Firm Simulator', category: 'Professional',
+    tagline: 'Project a firm’s profit and profit per partner.',
+    description: 'Model client fees against staff leverage to see firm profit and what each partner earns.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'clients', label: 'Clients', default: 200 },
+      { key: 'fee', label: 'Average annual fee', default: 5000, prefix: '$' },
+      { key: 'partners', label: 'Partners', default: 3 },
+      { key: 'staffPerPartner', label: 'Staff per partner', default: 4 },
+      { key: 'staffCost', label: 'Cost per staff', default: 70000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.clients * v.fee
+      const staff = v.partners * v.staffPerPartner
+      const staffCost = staff * v.staffCost
+      const profit = revenue - staffCost
+      return {
+        metrics: [
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit', value: money(profit), highlight: true },
+          { label: 'Profit / partner', value: money(v.partners > 0 ? profit / v.partners : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Staff cost', money(staffCost)],
+          ['Profit', money(profit)],
+          ['Per partner', money(v.partners > 0 ? profit / v.partners : 0)],
+        ],
+        note: `Leverage — staff generating fees above their cost — is what lets a firm's profit-per-partner exceed a solo practitioner's. Recurring compliance work plus advisory upsells is the durable model. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'rideshare-driver-simulator', name: 'Rideshare Driver Earnings Simulator', category: 'Transportation',
+    tagline: 'What you actually keep after the platform and the car.',
+    description: 'Model fares against the platform cut and vehicle costs to see true net earnings and effective hourly pay.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'hours', label: 'Hours / week', default: 40 },
+      { key: 'fares', label: 'Gross fares / hour', default: 25, prefix: '$' },
+      { key: 'cut', label: 'Platform cut', default: 25, suffix: '%' },
+      { key: 'expenses', label: 'Vehicle cost / hour', default: 6, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.hours * v.fares
+      const afterPlatform = gross * (1 - v.cut / 100)
+      const expenses = v.hours * v.expenses
+      const net = afterPlatform - expenses
+      return {
+        metrics: [
+          { label: 'Weekly net', value: money(net), highlight: true },
+          { label: 'Effective hourly', value: money(v.hours > 0 ? net / v.hours : 0), highlight: true },
+          { label: 'Annualized', value: money(net * 52) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Gross fares', money(gross)],
+          ['Platform cut', money(-(gross * (v.cut / 100)))],
+          ['Vehicle costs', money(-expenses)],
+          ['Net', money(net)],
+        ],
+        note: `The headline fare is misleading — after the platform's cut and real vehicle costs (gas, maintenance, depreciation), the effective hourly is much lower. Track cost per mile; it's the number most drivers underestimate. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'nonprofit-endowment-simulator', name: 'Nonprofit Endowment Simulator', category: 'Nonprofit',
+    tagline: 'Will the endowment last forever — or erode?',
+    description: 'Model corpus, spending rate, return, and inflation to see whether an endowment grows or shrinks in real terms.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'corpus', label: 'Endowment corpus', default: 5000000, prefix: '$' },
+      { key: 'spend', label: 'Spending rate', default: 4, suffix: '%' },
+      { key: 'return', label: 'Investment return', default: 6, suffix: '%' },
+      { key: 'inflation', label: 'Inflation', default: 2.5, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let corpus = v.corpus
+      for (let y = 1; y <= 20; y++) {
+        const spend = corpus * (v.spend / 100)
+        corpus = corpus * (1 + v.return / 100) - spend
+        if (y % 5 === 0 || y === 20) rows.push([`Year ${y}`, money(corpus), money(spend)])
+      }
+      const realGrowth = v.return - v.spend - v.inflation
+      return {
+        metrics: [
+          { label: 'Corpus (yr 20)', value: money(corpus), highlight: true },
+          { label: 'Real growth / yr', value: pct(realGrowth / 100), highlight: realGrowth < 0 },
+          { label: 'Sustainable?', value: realGrowth >= 0 ? 'Yes' : 'Eroding', highlight: realGrowth < 0 },
+        ],
+        columns: ['Year', 'Corpus', 'Annual Spending'],
+        rows,
+        note: realGrowth >= 0 ? `Return minus spending exceeds inflation, so the endowment grows in real terms — it can support the mission in perpetuity.` : `Spending plus inflation outpaces return, so the corpus erodes in real terms over time. Trim the spending rate or accept a shrinking real endowment. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'recurring-revenue-valuation-simulator', name: 'Recurring Revenue Valuation Simulator', category: 'SaaS',
+    tagline: 'Watch ARR and valuation compound together.',
+    description: 'Model ARR growth at a revenue multiple to see how a recurring-revenue business’s valuation climbs over the years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'arr', label: 'Current ARR', default: 2000000, prefix: '$' },
+      { key: 'growth', label: 'Annual growth', default: 60, suffix: '%' },
+      { key: 'multiple', label: 'Revenue multiple', default: 8 },
+      { key: 'years', label: 'Years', default: 3 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let arr = v.arr
+      const yrs = Math.min(Math.max(v.years, 1), 10)
+      for (let y = 1; y <= yrs; y++) {
+        arr *= 1 + v.growth / 100
+        rows.push([`Year ${y}`, money(arr), money(arr * v.multiple)])
+      }
+      return {
+        metrics: [
+          { label: `ARR (yr ${yrs})`, value: money(arr), highlight: true },
+          { label: `Valuation (yr ${yrs})`, value: money(arr * v.multiple), highlight: true },
+          { label: 'Multiple', value: `${v.multiple}x` },
+        ],
+        columns: ['Year', 'ARR', 'Valuation'],
+        rows,
+        note: `Valuation is ARR times a multiple — and the multiple itself rises with growth and retention. That double compounding is why a few points of growth swing enterprise value by millions. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'self-publishing-simulator', name: 'Self-Publishing Backlist Simulator', category: 'Creator',
+    tagline: 'Watch a book catalog compound into income.',
+    description: 'Model publishing more titles each year, with a growing backlist earning royalties, to see author income build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'books', label: 'Starting titles', default: 5 },
+      { key: 'newPerYear', label: 'New titles / year', default: 4 },
+      { key: 'salesPerBook', label: 'Sales / book / mo', default: 80 },
+      { key: 'royalty', label: 'Royalty per sale', default: 4, prefix: '$' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let books = v.books
+      for (let y = 1; y <= 5; y++) {
+        if (y > 1) books += v.newPerYear
+        const monthly = books * v.salesPerBook * v.royalty
+        rows.push([`Year ${y}`, books.toString(), money(monthly), money(monthly * 12)])
+      }
+      const monthlyFinal = books * v.salesPerBook * v.royalty
+      return {
+        metrics: [
+          { label: 'Titles (yr 5)', value: books.toString(), highlight: true },
+          { label: 'Monthly income (yr 5)', value: money(monthlyFinal), highlight: true },
+          { label: 'Annualized', value: money(monthlyFinal * 12) },
+        ],
+        columns: ['Year', 'Titles', 'Monthly Income', 'Annual'],
+        rows,
+        note: `The backlist is the asset — every title you publish keeps earning while you write the next, so income compounds with catalog size. Prolific authors win less on any single book than on the library. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
