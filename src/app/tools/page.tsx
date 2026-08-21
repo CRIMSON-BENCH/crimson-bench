@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: '/tools' },
 }
 
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
 export default function ToolsPage() {
   const sections = TOOL_CATEGORIES.map(cat => ({ label: cat, tools: getToolsByCategory(cat) }))
 
@@ -42,11 +44,21 @@ export default function ToolsPage() {
         </div>
       </section>
 
+      <div className="max-w-6xl mx-auto px-6 pt-10">
+        <p className="font-mono text-xs tracking-widest uppercase text-slate-400 mb-3">Browse by category</p>
+        <div className="flex flex-wrap gap-2">
+          {sections.map(s => (
+            <a key={s.label} href={`/tools/category/${slugify(s.label)}`} className="font-mono text-xs tracking-wider uppercase px-3 py-1.5 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-[#B01C24] hover:text-[#B01C24] transition-colors">{s.label} <span className="opacity-50">{s.tools.length}</span></a>
+          ))}
+        </div>
+      </div>
+
       <div className="max-w-6xl mx-auto px-6 py-16 space-y-14">
         {sections.map(section => (
-          <div key={section.label}>
-            <h2 className="font-serif text-2xl font-normal text-slate-900 dark:text-white mb-8 pb-4 border-b border-slate-200 dark:border-slate-800">
-              {section.label}
+          <div key={section.label} id={slugify(section.label)}>
+            <h2 className="font-serif text-2xl font-normal text-slate-900 dark:text-white mb-8 pb-4 border-b border-slate-200 dark:border-slate-800 flex items-baseline justify-between">
+              <a href={`/tools/category/${slugify(section.label)}`} className="hover:text-[#B01C24] transition-colors">{section.label}</a>
+              <a href={`/tools/category/${slugify(section.label)}`} className="font-mono text-xs tracking-wider uppercase text-slate-400 hover:text-[#B01C24]">View all →</a>
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-slate-200 dark:bg-slate-800 border border-slate-200 dark:border-slate-800">
               {section.tools.map(tool => (
