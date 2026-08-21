@@ -6641,6 +6641,435 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'llm-app-unit-economics-simulator', name: 'LLM App Unit Economics Simulator', category: 'AI',
+    tagline: 'Does your AI app profit after the token bill?',
+    description: 'Model query volume and token cost against your price to see gross margin and compute cost per user — the make-or-break math of an AI product.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'users', label: 'Paying users', default: 1000 },
+      { key: 'queries', label: 'Queries / user / mo', default: 500 },
+      { key: 'tokens', label: 'Tokens / query', default: 2000 },
+      { key: 'costPerM', label: 'Cost per 1M tokens', default: 2, prefix: '$' },
+      { key: 'price', label: 'Price / user / mo', default: 20, prefix: '$' },
+    ],
+    compute: v => {
+      const totalTokens = v.users * v.queries * v.tokens
+      const compute = (totalTokens / 1000000) * v.costPerM
+      const revenue = v.users * v.price
+      const gross = revenue - compute
+      return {
+        metrics: [
+          { label: 'Gross margin', value: pct(revenue > 0 ? gross / revenue : 0), highlight: true },
+          { label: 'Monthly compute cost', value: money(compute), highlight: true },
+          { label: 'Compute cost / user', value: money(v.users > 0 ? compute / v.users : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Compute (token) cost', money(compute)], ['Gross profit', money(gross)]],
+        note: `AI compute is real, variable COGS — unlike classic SaaS. Power users can flip a profitable price into a loss, which is why usage caps, cheaper models for easy queries, and caching matter so much. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'ai-saas-margin-simulator', name: 'AI SaaS Gross Margin Simulator', category: 'AI',
+    tagline: 'Why AI SaaS margins run below classic SaaS.',
+    description: 'Model revenue against inference and other COGS to see the gross margin — and how much inference eats.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revenue', label: 'Revenue', default: 500000, prefix: '$' },
+      { key: 'inference', label: 'Inference / compute cost', default: 150000, prefix: '$' },
+      { key: 'other', label: 'Other COGS (hosting, support)', default: 50000, prefix: '$' },
+    ],
+    compute: v => {
+      const cogs = v.inference + v.other
+      const gross = v.revenue - cogs
+      return {
+        metrics: [
+          { label: 'Gross margin', value: pct(v.revenue > 0 ? gross / v.revenue : 0), highlight: true },
+          { label: 'Gross profit', value: money(gross), highlight: true },
+          { label: 'Inference % of revenue', value: pct(v.revenue > 0 ? v.inference / v.revenue : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(v.revenue)], ['Inference cost', money(v.inference)], ['Other COGS', money(v.other)], ['Gross profit', money(gross)]],
+        note: `Classic SaaS runs 80%+ gross margin; AI SaaS often sits lower because inference is a genuine cost of goods. Model optimization, caching, and tiered pricing are how the best AI companies claw margin back. Educational only.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'gpu-training-cost-simulator', name: 'GPU Training Cost Simulator', category: 'AI',
+    tagline: 'What a training run actually costs.',
+    description: 'Model GPU count, run time, and hourly cost to see the total cost of a model training run.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'gpus', label: 'GPUs', default: 64 },
+      { key: 'hours', label: 'Run time (hours)', default: 200 },
+      { key: 'costPerHour', label: 'Cost / GPU-hour', default: 2.5, prefix: '$' },
+    ],
+    compute: v => {
+      const gpuHours = v.gpus * v.hours
+      const total = gpuHours * v.costPerHour
+      return {
+        metrics: [
+          { label: 'Total run cost', value: money(total), highlight: true },
+          { label: 'GPU-hours', value: Math.round(gpuHours).toLocaleString() },
+          { label: 'Cost / hour (all GPUs)', value: money(v.gpus * v.costPerHour) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['GPU-hours', Math.round(gpuHours).toLocaleString()], ['Cost per GPU-hour', money(v.costPerHour)], ['Total', money(total)]],
+        note: `Training cost scales with GPUs × time — a single large run can cost more than a small team's monthly salary. This is why efficient architectures, spot instances, and not over-training matter so much. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ai-automation-roi-simulator', name: 'AI Automation ROI Simulator', category: 'AI',
+    tagline: 'What automating a task actually saves.',
+    description: 'Model tasks automated and time saved against AI cost to see net savings and ROI.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tasks', label: 'Tasks / month', default: 5000 },
+      { key: 'minutes', label: 'Minutes saved / task', default: 8 },
+      { key: 'hourly', label: 'Loaded labor cost / hour', default: 30, prefix: '$' },
+      { key: 'aiCost', label: 'AI cost / task', default: 0.05, prefix: '$' },
+    ],
+    compute: v => {
+      const laborSaved = v.tasks * (v.minutes / 60) * v.hourly
+      const aiCost = v.tasks * v.aiCost
+      const net = laborSaved - aiCost
+      return {
+        metrics: [
+          { label: 'Net savings / mo', value: money(net), highlight: true },
+          { label: 'Annualized', value: money(net * 12), highlight: true },
+          { label: 'ROI', value: pct(aiCost > 0 ? net / aiCost : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Labor saved', money(laborSaved)], ['AI cost', money(aiCost)], ['Net savings', money(net)]],
+        note: `AI automation ROI is usually enormous per task because AI cost per task is pennies against human minutes. The real work is redesigning the workflow so the saved time is actually reclaimed, not just shifted. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'chatbot-deflection-simulator', name: 'Support Chatbot Deflection Simulator', category: 'AI',
+    tagline: 'The savings from deflecting support tickets.',
+    description: 'Model ticket volume and deflection rate against human and AI costs to see net support savings.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tickets', label: 'Tickets / month', default: 20000 },
+      { key: 'deflection', label: 'Deflection rate', default: 40, suffix: '%' },
+      { key: 'humanCost', label: 'Cost / human ticket', default: 6, prefix: '$' },
+      { key: 'aiCost', label: 'AI cost / conversation', default: 0.2, prefix: '$' },
+    ],
+    compute: v => {
+      const deflected = v.tickets * (v.deflection / 100)
+      const savings = deflected * v.humanCost
+      const aiCost = deflected * v.aiCost
+      const net = savings - aiCost
+      return {
+        metrics: [
+          { label: 'Net savings / mo', value: money(net), highlight: true },
+          { label: 'Annualized', value: money(net * 12), highlight: true },
+          { label: 'Tickets deflected', value: Math.round(deflected).toLocaleString() },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Human cost avoided', money(savings)], ['AI cost', money(aiCost)], ['Net savings', money(net)]],
+        note: `Deflection saves real money, but the quality bar matters — a bot that frustrates customers costs more in churn than it saves in tickets. Measure resolution and satisfaction, not just deflection rate. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'life-insurance-needs-simulator', name: 'Life Insurance Needs Simulator', category: 'Money',
+    tagline: 'How much coverage your family actually needs.',
+    description: 'Add income replacement, debts, and future costs, net of assets, to estimate the life insurance coverage to carry.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'income', label: 'Annual income', default: 80000, prefix: '$' },
+      { key: 'years', label: 'Years to replace', default: 10 },
+      { key: 'debts', label: 'Debts (incl. mortgage)', default: 250000, prefix: '$' },
+      { key: 'education', label: 'Future education', default: 150000, prefix: '$' },
+      { key: 'assets', label: 'Existing assets', default: 100000, prefix: '$' },
+      { key: 'existing', label: 'Existing coverage', default: 100000, prefix: '$' },
+    ],
+    compute: v => {
+      const need = v.income * v.years + v.debts + v.education - v.assets - v.existing
+      return {
+        metrics: [
+          { label: 'Coverage needed', value: money(Math.max(0, need)), highlight: true },
+          { label: 'Income replacement', value: money(v.income * v.years) },
+          { label: 'Obligations', value: money(v.debts + v.education) },
+        ],
+        columns: ['Component', 'Amount'],
+        rows: [['Income replacement', money(v.income * v.years)], ['Debts', money(v.debts)], ['Education', money(v.education)], ['Less assets + coverage', money(-(v.assets + v.existing))], ['Coverage gap', money(Math.max(0, need))]],
+        note: `The "DIME" method (Debt, Income, Mortgage, Education) sizes coverage to what your family would actually need. Term insurance covers this cheaply during your working years — the gap, not a round number, is the goal. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'term-vs-whole-simulator', name: 'Term vs. Whole Life (BTID) Simulator', category: 'Money',
+    tagline: 'Buy term and invest the difference?',
+    description: 'Compare a whole-life premium to buying cheap term and investing the difference over the years.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'term', label: 'Term premium / year', default: 600, prefix: '$' },
+      { key: 'whole', label: 'Whole life premium / year', default: 6000, prefix: '$' },
+      { key: 'return', label: 'Investment return', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 30 },
+    ],
+    compute: v => {
+      const diff = v.whole - v.term
+      let fv = 0
+      const yrs = Math.min(Math.max(v.years, 1), 60)
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.return / 100) + diff
+      return {
+        metrics: [
+          { label: 'BTID investment value', value: money(fv), highlight: true },
+          { label: 'Annual difference invested', value: money(diff) },
+          { label: 'Total invested', value: money(diff * yrs) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Whole life premium', money(v.whole)], ['Term premium', money(v.term)], ['Difference invested / yr', money(diff)], ['Value after ' + yrs + ' yrs', money(fv)]],
+        note: `"Buy term and invest the difference" often beats whole life's cash value — if you actually invest the difference every year. Whole life's value is forced savings and tax features; the discipline question is the real one. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'social-security-claiming-simulator', name: 'Social Security Claiming Age Simulator', category: 'Money',
+    tagline: 'Claim at 62, 67, or 70?',
+    description: 'Model your benefit at each claiming age and find the break-even age where waiting pays off.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'fra', label: 'Benefit at full retirement (67)', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const at62 = v.fra * 0.7, at70 = v.fra * 1.24
+      const monthsForgone = 96
+      const extra = at70 - at62
+      const breakevenMonthsAfter70 = extra > 0 ? (at62 * monthsForgone) / extra : 0
+      const breakevenAge = 70 + breakevenMonthsAfter70 / 12
+      return {
+        metrics: [
+          { label: 'At 62', value: money(at62), highlight: true },
+          { label: 'At 70', value: money(at70), highlight: true },
+          { label: 'Break-even age (62 vs 70)', value: `${breakevenAge.toFixed(0)}`, highlight: true },
+        ],
+        columns: ['Claim Age', 'Monthly Benefit'],
+        rows: [['62 (early)', money(at62)], ['67 (full)', money(v.fra)], ['70 (delayed)', money(at70)]],
+        note: `Waiting to 70 boosts the monthly check ~77% over claiming at 62 — worth it if you live past about age ${breakevenAge.toFixed(0)}. Claim early if you need the money or have health concerns; delay if longevity is likely and you can wait. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'student-loan-payoff-simulator', name: 'Student Loan Payoff Simulator', category: 'Money',
+    tagline: 'How long, and how much interest.',
+    description: 'Model a student loan balance, rate, and payment to see payoff time and total interest.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Balance', default: 40000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate', default: 6.5, suffix: '%' },
+      { key: 'payment', label: 'Monthly payment', default: 450, prefix: '$' },
+    ],
+    compute: v => {
+      const r = v.rate / 1200
+      if (v.payment <= v.balance * r) return { metrics: [{ label: 'Payoff', value: 'Never', highlight: true }, { label: 'Note', value: 'Payment ≤ interest' }], columns: ['Line', 'Value'], rows: [['Balance', money(v.balance)]], note: `Your payment barely covers interest — increase it to make progress. Educational only.` }
+      let bal = v.balance, months = 0, interest = 0
+      while (bal > 0 && months < 600) { const i = bal * r; bal -= (v.payment - i); interest += i; months++ }
+      return {
+        metrics: [
+          { label: 'Payoff time', value: `${(months / 12).toFixed(1)} yr`, highlight: true },
+          { label: 'Total interest', value: money(interest), highlight: true },
+          { label: 'Total paid', value: money(v.balance + interest) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Balance', money(v.balance)], ['Months to payoff', months.toString()], ['Total interest', money(interest)]],
+        note: `Paid off in ${(months / 12).toFixed(1)} years. Refinancing to a lower rate or adding to the payment cuts both the time and interest sharply — but weigh federal protections (income-driven plans, forgiveness) before refinancing federal loans away. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mortgage-refi-simulator', name: 'Mortgage Refinance Break-Even Simulator', category: 'Money',
+    tagline: 'Is refinancing worth the closing costs?',
+    description: 'Compare your current rate to a new one, net of closing costs, to see monthly savings and the break-even month.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Loan balance', default: 350000, prefix: '$' },
+      { key: 'current', label: 'Current rate', default: 7, suffix: '%' },
+      { key: 'newRate', label: 'New rate', default: 5.5, suffix: '%' },
+      { key: 'closing', label: 'Closing costs', default: 6000, prefix: '$' },
+      { key: 'years', label: 'Remaining term (years)', default: 27 },
+    ],
+    compute: v => {
+      const pay = (rate: number) => { const r = rate / 1200, n = v.years * 12; return r === 0 ? v.balance / n : (v.balance * r) / (1 - Math.pow(1 + r, -n)) }
+      const cur = pay(v.current), nw = pay(v.newRate)
+      const savings = cur - nw
+      const breakeven = savings > 0 ? v.closing / savings : 0
+      return {
+        metrics: [
+          { label: 'Monthly savings', value: money(savings), highlight: true },
+          { label: 'Break-even', value: savings > 0 ? `${breakeven.toFixed(0)} mo` : 'Never', highlight: true },
+          { label: 'Savings over term', value: money(savings * v.years * 12 - v.closing) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Current payment', money(cur)], ['New payment', money(nw)], ['Monthly savings', money(savings)], ['Closing costs', money(v.closing)]],
+        note: `You recoup the closing costs in about ${breakeven.toFixed(0)} months — refinance only if you'll stay past that. Resetting the term also matters: a lower rate on a longer clock can cost more total interest. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'home-affordability-simulator', name: 'Home Affordability Simulator', category: 'Money',
+    tagline: 'The most house your income supports.',
+    description: 'Model income, debts, rate, and down payment against the 36% rule to estimate a maximum home price.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'income', label: 'Annual income', default: 100000, prefix: '$' },
+      { key: 'debts', label: 'Monthly debts', default: 500, prefix: '$' },
+      { key: 'rate', label: 'Mortgage rate', default: 6.5, suffix: '%' },
+      { key: 'down', label: 'Down payment', default: 60000, prefix: '$' },
+      { key: 'taxIns', label: 'Taxes + insurance / mo', default: 400, prefix: '$' },
+    ],
+    compute: v => {
+      const maxPITI = (v.income / 12) * 0.36 - v.debts
+      const maxPI = Math.max(0, maxPITI - v.taxIns)
+      const r = v.rate / 1200, n = 360
+      const loan = r === 0 ? maxPI * n : maxPI * (1 - Math.pow(1 + r, -n)) / r
+      const price = loan + v.down
+      return {
+        metrics: [
+          { label: 'Max home price', value: money(price), highlight: true },
+          { label: 'Max loan', value: money(loan), highlight: true },
+          { label: 'Max total payment', value: money(maxPI + v.taxIns) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Max PITI (36% rule)', money(maxPITI)], ['Max P&I', money(maxPI)], ['Supported loan', money(loan)], ['+ down payment', money(v.down)]],
+        note: `Lenders cap total debt around 36% of gross income — but "max" isn't "wise." Buying below your limit leaves room for maintenance, savings, and rate changes. The bank's number is a ceiling, not a target. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'rmd-simulator', name: 'Required Minimum Distribution (RMD) Simulator', category: 'Money',
+    tagline: 'What you must withdraw from retirement accounts.',
+    description: 'Enter your balance and age to estimate your Required Minimum Distribution using the IRS Uniform Lifetime Table.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'balance', label: 'Account balance (prior year-end)', default: 800000, prefix: '$' },
+      { key: 'age', label: 'Age', default: 75 },
+    ],
+    compute: v => {
+      const table: Record<number, number> = { 73: 26.5, 74: 25.5, 75: 24.6, 76: 23.7, 77: 22.9, 78: 22.0, 79: 21.1, 80: 20.2, 81: 19.4, 82: 18.5, 83: 17.7, 84: 16.8, 85: 16.0, 86: 15.2, 87: 14.4, 88: 13.7, 89: 12.9, 90: 12.2, 91: 11.5, 92: 10.8, 93: 10.1, 94: 9.5, 95: 8.9 }
+      const age = Math.min(95, Math.max(73, Math.round(v.age)))
+      const divisor = table[age]
+      const rmd = v.balance / divisor
+      return {
+        metrics: [
+          { label: 'Required distribution', value: money(rmd), highlight: true },
+          { label: 'As % of balance', value: pct(1 / divisor), highlight: true },
+          { label: 'Life-expectancy divisor', value: divisor.toFixed(1) },
+        ],
+        columns: ['Line', 'Value'],
+        rows: [['Balance', money(v.balance)], ['Divisor (age ' + age + ')', divisor.toFixed(1)], ['RMD', money(rmd)]],
+        note: `RMDs begin at 73 and rise as a percentage each year — miss one and the penalty is steep. Planning withdrawals (or Roth conversions) before RMDs hit can lower lifetime taxes. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'dcf-valuation-simulator', name: 'DCF Valuation Simulator', category: 'Finance',
+    tagline: 'Value a business on its future cash flows.',
+    description: 'Project free cash flow, discount it, and add a terminal value to estimate enterprise value the way analysts do.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'fcf', label: 'Next-year free cash flow', default: 1000000, prefix: '$' },
+      { key: 'growth', label: 'FCF growth / yr', default: 10, suffix: '%' },
+      { key: 'discount', label: 'Discount rate (WACC)', default: 12, suffix: '%' },
+      { key: 'terminal', label: 'Terminal growth', default: 3, suffix: '%' },
+      { key: 'years', label: 'Explicit years', default: 5 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      const d = v.discount / 100
+      let fcf = v.fcf, pvExplicit = 0
+      const yrs = Math.min(Math.max(v.years, 1), 10)
+      for (let y = 1; y <= yrs; y++) {
+        if (y > 1) fcf *= 1 + v.growth / 100
+        const pv = fcf / Math.pow(1 + d, y)
+        pvExplicit += pv
+        rows.push([`Year ${y}`, money(fcf), money(pv)])
+      }
+      const terminalFCF = fcf * (1 + v.terminal / 100)
+      const terminalValue = d > v.terminal / 100 ? terminalFCF / (d - v.terminal / 100) : 0
+      const pvTerminal = terminalValue / Math.pow(1 + d, yrs)
+      const ev = pvExplicit + pvTerminal
+      return {
+        metrics: [
+          { label: 'Enterprise value', value: money(ev), highlight: true },
+          { label: 'PV of terminal value', value: money(pvTerminal), highlight: true },
+          { label: 'PV of explicit FCF', value: money(pvExplicit) },
+        ],
+        columns: ['Year', 'FCF', 'Present Value'],
+        rows,
+        note: `Most of a DCF's value usually sits in the terminal value — which makes it highly sensitive to the discount and terminal-growth assumptions. Small input changes swing the answer a lot, so always run a range. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
+  {
+    id: 'wacc-simulator', name: 'WACC Simulator', category: 'Finance',
+    tagline: 'Your blended cost of capital.',
+    description: 'Weight the cost of equity and after-tax cost of debt to get the weighted average cost of capital — the discount rate behind every valuation.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'equity', label: 'Equity value', default: 8000000, prefix: '$' },
+      { key: 'debt', label: 'Debt value', default: 2000000, prefix: '$' },
+      { key: 'costEquity', label: 'Cost of equity', default: 12, suffix: '%' },
+      { key: 'costDebt', label: 'Cost of debt', default: 7, suffix: '%' },
+      { key: 'tax', label: 'Tax rate', default: 21, suffix: '%' },
+    ],
+    compute: v => {
+      const total = v.equity + v.debt
+      const we = total > 0 ? v.equity / total : 0
+      const wd = total > 0 ? v.debt / total : 0
+      const wacc = we * (v.costEquity / 100) + wd * (v.costDebt / 100) * (1 - v.tax / 100)
+      return {
+        metrics: [
+          { label: 'WACC', value: pct(wacc), highlight: true },
+          { label: 'Equity weight', value: pct(we) },
+          { label: 'Debt weight', value: pct(wd) },
+        ],
+        columns: ['Component', 'Value'],
+        rows: [['Equity weight × cost', pct(we * (v.costEquity / 100))], ['Debt weight × after-tax cost', pct(wd * (v.costDebt / 100) * (1 - v.tax / 100))], ['WACC', pct(wacc)]],
+        note: `Debt is cheaper than equity — and tax-deductible — so more leverage lowers WACC, up to a point. Beyond it, rising financial risk pushes both costs up. WACC is the hurdle every project and valuation must clear. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'liquidation-preference-simulator', name: 'Liquidation Preference Waterfall', category: 'Fundraising',
+    tagline: 'Who gets what when the company sells.',
+    description: 'Model a 1x preference against common ownership to see whether investors take their preference or convert — and what founders keep.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'exit', label: 'Exit value', default: 30000000, prefix: '$' },
+      { key: 'invested', label: 'Preferred invested', default: 5000000, prefix: '$' },
+      { key: 'multiple', label: 'Preference multiple', default: 1 },
+      { key: 'ownership', label: 'Investor ownership', default: 30, suffix: '%' },
+    ],
+    compute: v => {
+      const pref = v.invested * v.multiple
+      const asConverted = v.exit * (v.ownership / 100)
+      const takesPref = pref > asConverted
+      const investor = Math.max(pref, asConverted)
+      const common = v.exit - investor
+      return {
+        metrics: [
+          { label: 'Investor payout', value: money(investor), highlight: true },
+          { label: 'Common payout', value: money(common), highlight: true },
+          { label: 'Investor chooses', value: takesPref ? 'Preference' : 'Convert', highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Exit value', money(v.exit)], ['Preference (' + v.multiple + 'x)', money(pref)], ['As-converted value', money(asConverted)], ['Investor takes', money(investor)], ['Common (founders/team)', money(common)]],
+        note: takesPref ? `At this exit the investor takes the ${v.multiple}x preference — it beats converting. Preferences protect investors in low exits, and that protection comes straight out of common's share.` : `At this exit the investor converts to common — the upside beats the preference. Preferences only bite in modest exits; in a big one everyone rides the same equity. Educational only.`,
+      }
+    },
+    sells: 'cap-table-model',
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
