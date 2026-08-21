@@ -14053,6 +14053,406 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'i-bond-ladder-simulator', name: 'I-Bond Ladder Simulator', category: 'Finance',
+    tagline: 'Inflation-protected savings, laddered.',
+    description: 'Model annual I-bond purchases compounding at a composite rate. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'annual', label: 'Annual purchase', default: 10000, prefix: '$' },
+      { key: 'rate', label: 'Composite rate', default: 4, suffix: '%' },
+      { key: 'years', label: 'Years', default: 5 },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 30)
+      let fv = 0
+      for (let y = 1; y <= yrs; y++) fv = fv * (1 + v.rate / 100) + v.annual
+      const contributed = v.annual * yrs
+      return {
+        metrics: [
+          { label: 'Ladder value', value: money(fv), highlight: true },
+          { label: 'Total purchased', value: money(contributed) },
+          { label: 'Interest earned', value: money(fv - contributed), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Annual purchase', money(v.annual)], ['Total purchased', money(contributed)], ['Ladder value', money(fv)]],
+        note: `I-bonds protect savings from inflation — the composite rate resets with CPI, and interest is state-tax-free (federal-deferred until redemption). There's a $10k/person/year cap and a 1-year lockup (plus a 3-month interest penalty before 5 years), so laddering purchases builds flexible, inflation-proof cash. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dividend-growth-simulator', name: 'Dividend Growth Simulator', category: 'Finance',
+    tagline: 'Watch a dividend income stream compound.',
+    description: 'Model a portfolio’s dividend income growing over time to see yield-on-cost. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'portfolio', label: 'Portfolio value', default: 200000, prefix: '$' },
+      { key: 'yield', label: 'Starting dividend yield', default: 3, suffix: '%' },
+      { key: 'growth', label: 'Annual dividend growth', default: 7, suffix: '%' },
+      { key: 'years', label: 'Years', default: 20 },
+    ],
+    compute: v => {
+      const currentIncome = v.portfolio * (v.yield / 100)
+      const futureIncome = currentIncome * Math.pow(1 + v.growth / 100, Math.min(Math.max(v.years, 1), 50))
+      const yieldOnCost = v.portfolio > 0 ? futureIncome / v.portfolio : 0
+      return {
+        metrics: [
+          { label: 'Income today', value: money(currentIncome) },
+          { label: `Income in ${Math.round(v.years)} yrs`, value: money(futureIncome), highlight: true },
+          { label: 'Yield on cost', value: pct(yieldOnCost), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Portfolio', money(v.portfolio)], ['Income today', money(currentIncome)], ['Future income', money(futureIncome)], ['Yield on cost', pct(yieldOnCost)]],
+        note: `Dividend growth investing plays the long game — a modest starting yield that grows 7-8% a year becomes a large yield-on-cost over decades, and reinvesting dividends compounds it further. Payout consistency and dividend-growth track record matter more than the highest current yield. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'annuity-income-simulator', name: 'Annuity Income Simulator', category: 'Finance',
+    tagline: 'Turn a lump sum into lifetime income.',
+    description: 'Model an income annuity’s payout from a premium to see annual and lifetime income. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'premium', label: 'Premium (lump sum)', default: 500000, prefix: '$' },
+      { key: 'payoutRate', label: 'Annual payout rate', default: 6, suffix: '%' },
+      { key: 'years', label: 'Expected payout years', default: 25 },
+    ],
+    compute: v => {
+      const annualIncome = v.premium * (v.payoutRate / 100)
+      const totalPayout = annualIncome * Math.min(Math.max(v.years, 1), 50)
+      return {
+        metrics: [
+          { label: 'Annual income', value: money(annualIncome), highlight: true },
+          { label: 'Monthly income', value: money(annualIncome / 12), highlight: true },
+          { label: 'Total over period', value: money(totalPayout) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Premium', money(v.premium)], ['Annual income', money(annualIncome)], ['Monthly income', money(annualIncome / 12)], ['Lifetime total', money(totalPayout)]],
+        note: `An income annuity converts savings into a paycheck you can't outlive — you trade liquidity and legacy for longevity insurance. Payout rates rise with age and interest rates; the tradeoff is giving up control of the principal. Best used to cover essential expenses, not your whole portfolio. Educational only, not financial advice.`,
+      }
+    },
+  },
+  {
+    id: 'roth-conversion-ladder-simulator', name: 'Roth Conversion Ladder Simulator', category: 'Finance',
+    tagline: 'Access retirement funds early, tax-smart.',
+    description: 'Model annual Traditional-to-Roth conversions and the tax cost of building a ladder. Educational only.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'conversion', label: 'Annual conversion', default: 40000, prefix: '$' },
+      { key: 'taxRate', label: 'Tax rate on conversion', default: 22, suffix: '%' },
+      { key: 'years', label: 'Ladder years', default: 5 },
+    ],
+    compute: v => {
+      const yrs = Math.min(Math.max(v.years, 1), 30)
+      const annualTax = v.conversion * (v.taxRate / 100)
+      const totalConverted = v.conversion * yrs
+      const totalTax = annualTax * yrs
+      return {
+        metrics: [
+          { label: 'Annual tax cost', value: money(annualTax), highlight: true },
+          { label: 'Total converted', value: money(totalConverted), highlight: true },
+          { label: 'Total tax paid', value: money(totalTax) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Annual conversion', money(v.conversion)], ['Annual tax', money(annualTax)], ['Total converted', money(totalConverted)], ['Total tax', money(totalTax)]],
+        note: `A Roth conversion ladder is the early-retiree's trick: convert Traditional IRA money to Roth each year, pay ordinary tax now, and after 5 years each conversion's principal comes out penalty-free before age 59½. Do conversions in low-income years to minimize the tax. Educational only, not tax advice.`,
+      }
+    },
+  },
+  {
+    id: 'limo-service-simulator', name: 'Limo Service Simulator', category: 'Logistics',
+    tagline: 'Project a livery / black-car business.',
+    description: 'Model fleet size and daily trips against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cars', label: 'Vehicles', default: 6 },
+      { key: 'trips', label: 'Trips / car / day', default: 4 },
+      { key: 'fare', label: 'Average fare', default: 120, prefix: '$' },
+      { key: 'cost', label: 'Driver + fuel %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+      { key: 'days', label: 'Operating days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.cars * v.trips * v.fare * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / vehicle', value: money(v.cars > 0 ? profit / v.cars : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Driver + fuel', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Livery profits on utilization and contract work — corporate accounts, airport runs, and events beat one-off rides for predictability. Premium vehicles command premium fares; the fixed cost of vehicle payments and insurance means idle cars bleed money fast. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mini-golf-simulator', name: 'Mini Golf Simulator', category: 'Entertainment',
+    tagline: 'Project a miniature golf attraction.',
+    description: 'Model daily rounds and price against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rounds', label: 'Rounds / day', default: 150 },
+      { key: 'price', label: 'Price per round', default: 12, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.rounds * v.price * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Mini golf is low-variable-cost entertainment — once the course is built, each round is nearly pure margin. Snack bar, arcade, and party bookings drive per-cap spend; weather and seasonality are the swing factors, so covered or indoor courses stabilize the year. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'go-kart-track-simulator', name: 'Go-Kart Track Simulator', category: 'Entertainment',
+    tagline: 'Project a karting entertainment center.',
+    description: 'Model daily races and price against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'races', label: 'Races / day', default: 120 },
+      { key: 'price', label: 'Price per race', default: 20, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.races * v.price * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Karting centers carry heavy equipment and maintenance cost, so throughput per session and per-cap spend drive profit. Memberships, leagues, corporate events, and an arcade/food attach turn a one-off race into a full outing. Indoor tracks beat weather dependence. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'bowling-alley-simulator', name: 'Bowling Alley Simulator', category: 'Entertainment',
+    tagline: 'Project a bowling & entertainment center.',
+    description: 'Model lane play plus food & beverage against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'lanes', label: 'Lanes', default: 24 },
+      { key: 'games', label: 'Games / lane / day', default: 20 },
+      { key: 'price', label: 'Price per game', default: 6, prefix: '$' },
+      { key: 'foodBev', label: 'Food & bev revenue / mo', default: 30000, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 55000, prefix: '$' },
+    ],
+    compute: v => {
+      const laneRevenue = v.lanes * v.games * v.price * 30
+      const revenue = laneRevenue + v.foodBev
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Lane revenue', money(laneRevenue)], ['Food & bev', money(v.foodBev)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Modern bowling centers are food-and-beverage businesses with lanes attached — the bar, kitchen, and arcade often out-earn the bowling. Leagues fill weekday off-peak; parties and corporate events drive weekend per-cap. Utilization against the heavy fixed cost is the game. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'laser-tag-simulator', name: 'Laser Tag Arena Simulator', category: 'Entertainment',
+    tagline: 'Project a laser tag attraction.',
+    description: 'Model daily games and players against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'games', label: 'Games / day', default: 40 },
+      { key: 'players', label: 'Players / game', default: 10 },
+      { key: 'price', label: 'Price per player', default: 12, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.games * v.players * v.price * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Laser tag is high-margin once the arena is built — near-zero marginal cost per player. Birthday parties and group bookings carry the weekends; bundling with arcade, food, and other attractions (the FEC model) lifts per-visit spend and smooths the seasonality. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'smoke-shop-simulator', name: 'Smoke Shop Simulator', category: 'Retail',
+    tagline: 'Project a tobacco / vape retail shop.',
+    description: 'Model daily sales and gross margin against fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dailySales', label: 'Daily sales', default: 1500, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed (rent, labor)', default: 14000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dailySales * 30
+      const profit = revenue * (v.margin / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(revenue * (v.margin / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Smoke/vape shops carry strong margins on accessories and glass, thinner ones on cigarettes. Regulation, licensing, and age-verification compliance are real operating burdens, and excise taxes vary widely by state. Product mix toward high-margin accessories drives profit. Age-restricted; sell responsibly and legally. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'comic-game-store-simulator', name: 'Comic & Game Store Simulator', category: 'Retail',
+    tagline: 'Project a hobby retail & events shop.',
+    description: 'Model retail sales plus event revenue against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dailySales', label: 'Daily retail sales', default: 900, prefix: '$' },
+      { key: 'margin', label: 'Retail gross margin', default: 40, suffix: '%' },
+      { key: 'eventRev', label: 'Event revenue / month', default: 4000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const retailProfit = v.dailySales * 30 * (v.margin / 100)
+      const profit = retailProfit + v.eventRev - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Retail gross profit', value: money(retailProfit) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Retail gross profit', money(retailProfit)], ['Event revenue', money(v.eventRev)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Hobby stores live on community — in-store play (Magic, Warhammer, D&D nights), tournaments, and preorders build a loyal, recurring base that Amazon can't replicate. Events drive foot traffic and singles/accessory sales, the highest-margin lines. The community is the moat. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'thrift-store-simulator', name: 'Thrift Store Simulator', category: 'Retail',
+    tagline: 'Project a resale / consignment shop.',
+    description: 'Model daily sales and gross margin against fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dailySales', label: 'Daily sales', default: 1200, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 65, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dailySales * 30
+      const profit = revenue * (v.margin / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(revenue * (v.margin / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Thrift and consignment enjoy exceptional gross margins — donated inventory costs nothing, consigned goods only pay out on sale. The work is in sourcing, sorting, and pricing volume; online resale (eBay, Poshmark) of the best finds captures far more than the shelf. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'commercial-cleaning-simulator', name: 'Commercial Cleaning Simulator', category: 'Home Services',
+    tagline: 'Project a janitorial contract business.',
+    description: 'Model contract accounts and value against labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'accounts', label: 'Contract accounts', default: 40 },
+      { key: 'contract', label: 'Monthly contract value', default: 1200, prefix: '$' },
+      { key: 'labor', label: 'Labor + supplies %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.accounts * v.contract
+      const profit = revenue * (1 - v.labor / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Labor + supplies', money(revenue * (v.labor / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Janitorial is recurring B2B revenue — nightly/weekly office contracts create steady MRR with high retention once you're in the building. Labor is the dominant cost, so crew productivity and route density drive margin; the account base sells for a solid multiple. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'snow-removal-simulator', name: 'Snow Removal Simulator', category: 'Home Services',
+    tagline: 'Project a seasonal snow & ice business.',
+    description: 'Model seasonal contracts and value against cost to see season profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'contracts', label: 'Seasonal contracts', default: 120 },
+      { key: 'seasonValue', label: 'Avg season revenue / contract', default: 1500, prefix: '$' },
+      { key: 'cost', label: 'Labor + fuel %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Season fixed cost', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.contracts * v.seasonValue
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Season profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Season revenue', value: money(revenue) },
+          { label: 'Profit / contract', value: money(v.contracts > 0 ? profit / v.contracts : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + fuel', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Snow removal is feast-or-famine — seasonal contracts (fixed price regardless of snowfall) trade upside for predictable revenue, while per-push pricing bets on a heavy winter. Commercial lots and salting are the profit centers; it pairs perfectly with landscaping to use crews year-round. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'landscaping-design-simulator', name: 'Landscape Design & Build Simulator', category: 'Home Services',
+    tagline: 'Project a design-build landscaping business.',
+    description: 'Model monthly projects and value against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'projects', label: 'Projects / month', default: 8 },
+      { key: 'avgProject', label: 'Average project', default: 12000, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.projects * v.avgProject
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Design-build lands bigger tickets than mow-and-blow maintenance — patios, hardscape, outdoor kitchens, and irrigation carry real margin. Design fees and a strong portfolio justify premium pricing; pairing installs with recurring maintenance contracts keeps crews busy and revenue compounding. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
