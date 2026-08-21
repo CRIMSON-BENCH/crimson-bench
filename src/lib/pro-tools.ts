@@ -3724,6 +3724,404 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'dental-implant-roi-simulator', name: 'Dental Implant ROI Simulator', category: 'Dental',
+    tagline: 'The profit behind a high-value procedure.',
+    description: 'Model implant volume and price against lab and chair-time costs to see the profit of adding implants to a practice.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'implants', label: 'Implants / month', default: 30 },
+      { key: 'price', label: 'Price per implant', default: 3500, prefix: '$' },
+      { key: 'lab', label: 'Lab cost per implant', default: 400, prefix: '$' },
+      { key: 'chairHours', label: 'Chair hours per implant', default: 2 },
+      { key: 'overhead', label: 'Overhead per chair hour', default: 200, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.implants * v.price
+      const cost = v.implants * (v.lab + v.chairHours * v.overhead)
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Profit / implant', value: money(v.implants > 0 ? profit / v.implants : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Lab + chair cost', money(cost)],
+          ['Profit', money(profit)],
+        ],
+        note: `Implants are among the highest-margin procedures in dentistry — the case is whether to invest in the training and equipment to keep them in-house vs. referring them out. This shows the profit you'd keep.`,
+      }
+    },
+  },
+  {
+    id: 'optometry-retail-simulator', name: 'Optometry Practice Simulator', category: 'Healthcare',
+    tagline: 'Exams plus eyewear retail — the real revenue.',
+    description: 'Model exam volume and eyewear attach to see how retail turns an optometry practice’s economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'exams', label: 'Exams / month', default: 500 },
+      { key: 'examFee', label: 'Exam fee', default: 90, prefix: '$' },
+      { key: 'attach', label: 'Eyewear attach rate', default: 60, suffix: '%' },
+      { key: 'frame', label: 'Average eyewear sale', default: 220, prefix: '$' },
+      { key: 'cogs', label: 'Eyewear COGS %', default: 40, suffix: '%' },
+    ],
+    compute: v => {
+      const examRev = v.exams * v.examFee
+      const buyers = v.exams * (v.attach / 100)
+      const frameRev = buyers * v.frame
+      const frameProfit = frameRev * (1 - v.cogs / 100)
+      const total = examRev + frameProfit
+      return {
+        metrics: [
+          { label: 'Total contribution / mo', value: money(total), highlight: true },
+          { label: 'Retail profit', value: money(frameProfit), highlight: true },
+          { label: 'Exam revenue', value: money(examRev) },
+        ],
+        columns: ['Source', 'Amount'],
+        rows: [
+          ['Exam revenue', money(examRev)],
+          ['Eyewear revenue', money(frameRev)],
+          ['Eyewear profit', money(frameProfit)],
+          ['Total contribution', money(total)],
+        ],
+        note: `Exams get patients in the door; eyewear retail is where the margin lives. A few points of attach rate — and higher-value frames — move practice profit more than seeing more patients.`,
+      }
+    },
+  },
+  {
+    id: 'semiconductor-yield-simulator', name: 'Semiconductor Yield Simulator', category: 'Manufacturing',
+    tagline: 'Why yield is everything in chips.',
+    description: 'Model wafers, dies per wafer, and yield against wafer cost to see how good-die yield drives chip revenue and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'wafers', label: 'Wafers / month', default: 1000 },
+      { key: 'dies', label: 'Dies per wafer', default: 500 },
+      { key: 'yield', label: 'Yield', default: 85, suffix: '%' },
+      { key: 'price', label: 'Price per good die', default: 8, prefix: '$' },
+      { key: 'cost', label: 'Cost per wafer', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const goodDies = v.wafers * v.dies * (v.yield / 100)
+      const revenue = goodDies * v.price
+      const cost = v.wafers * v.cost
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Good dies / mo', value: Math.round(goodDies).toLocaleString(), highlight: true },
+          { label: 'Revenue', value: money(revenue), highlight: true },
+          { label: 'Profit', value: money(profit) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Good dies', Math.round(goodDies).toLocaleString()],
+          ['Revenue', money(revenue)],
+          ['Wafer cost', money(cost)],
+          ['Profit', money(profit)],
+        ],
+        note: `Wafer cost is fixed whether yield is 60% or 95% — so every point of yield drops almost entirely to profit. This is why fabs obsess over yield, and why leading-edge nodes are so hard to make money on early.`,
+      }
+    },
+  },
+  {
+    id: 'hardware-razor-blade-simulator', name: 'Hardware + Subscription (Razor-Blade) Simulator', category: 'SaaS',
+    tagline: 'Lose on the device, win on the subscription?',
+    description: 'Model selling a device at or below cost to earn recurring subscription revenue, and see the true customer LTV and payback.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'devicePrice', label: 'Device price', default: 99, prefix: '$' },
+      { key: 'deviceCost', label: 'Device cost', default: 130, prefix: '$' },
+      { key: 'subscription', label: 'Subscription / month', default: 15, prefix: '$' },
+      { key: 'months', label: 'Avg. subscription months', default: 24 },
+      { key: 'cac', label: 'CAC', default: 40, prefix: '$' },
+    ],
+    compute: v => {
+      const deviceMargin = v.devicePrice - v.deviceCost
+      const subLTV = v.subscription * v.months
+      const ltv = deviceMargin + subLTV - v.cac
+      const upfrontLoss = -(deviceMargin) + v.cac
+      const payback = v.subscription > 0 ? upfrontLoss / v.subscription : 0
+      return {
+        metrics: [
+          { label: 'Customer LTV', value: money(ltv), highlight: true },
+          { label: 'Payback', value: `${payback.toFixed(1)} mo`, highlight: true },
+          { label: 'Subscription LTV', value: money(subLTV) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Device margin', money(deviceMargin)],
+          ['Subscription LTV', money(subLTV)],
+          ['Less CAC', money(-v.cac)],
+          ['Net customer LTV', money(ltv)],
+        ],
+        note: `The razor-blade model bets recurring revenue outweighs the hardware loss — it only works if retention holds past payback (month ${payback.toFixed(1)} here). Subsidize the device too much and short-lived customers sink you.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
+  {
+    id: 'sports-franchise-simulator', name: 'Sports Franchise Revenue Simulator', category: 'Entertainment',
+    tagline: 'How a team makes its money.',
+    description: 'Model gate, concessions, sponsorship, and media to see a sports franchise’s total revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'games', label: 'Home games / year', default: 41 },
+      { key: 'capacity', label: 'Capacity', default: 18000 },
+      { key: 'attendance', label: 'Attendance', default: 85, suffix: '%' },
+      { key: 'ticket', label: 'Average ticket', default: 60, prefix: '$' },
+      { key: 'concessions', label: 'Concessions / fan', default: 25, prefix: '$' },
+      { key: 'sponsorship', label: 'Sponsorship / year', default: 15000000, prefix: '$' },
+      { key: 'media', label: 'Media rights / year', default: 40000000, prefix: '$' },
+    ],
+    compute: v => {
+      const fans = v.games * v.capacity * (v.attendance / 100)
+      const gate = fans * (v.ticket + v.concessions)
+      const total = gate + v.sponsorship + v.media
+      return {
+        metrics: [
+          { label: 'Total revenue', value: money(total), highlight: true },
+          { label: 'Gate + concessions', value: money(gate), highlight: true },
+          { label: 'Revenue / game', value: money(v.games > 0 ? total / v.games : 0) },
+        ],
+        columns: ['Source', 'Annual Revenue'],
+        rows: [
+          ['Gate + concessions', money(gate)],
+          ['Sponsorship', money(v.sponsorship)],
+          ['Media rights', money(v.media)],
+          ['Total', money(total)],
+        ],
+        note: `For modern franchises, media and sponsorship dwarf ticket sales — the building is almost a media studio. That's why franchise values keep climbing even when a team struggles at the gate.`,
+      }
+    },
+  },
+  {
+    id: 'concert-tour-simulator', name: 'Concert Tour Profit Simulator', category: 'Entertainment',
+    tagline: 'Project the economics of a tour.',
+    description: 'Model shows, capacity, and ticket price against per-show costs to see tour revenue and profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'shows', label: 'Shows', default: 30 },
+      { key: 'capacity', label: 'Capacity / show', default: 8000 },
+      { key: 'attendance', label: 'Attendance', default: 90, suffix: '%' },
+      { key: 'ticket', label: 'Average ticket', default: 75, prefix: '$' },
+      { key: 'costPerShow', label: 'Cost per show', default: 120000, prefix: '$' },
+    ],
+    compute: v => {
+      const revPerShow = v.capacity * (v.attendance / 100) * v.ticket
+      const revenue = v.shows * revPerShow
+      const cost = v.shows * v.costPerShow
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Tour revenue', value: money(revenue), highlight: true },
+          { label: 'Tour profit', value: money(profit), highlight: true },
+          { label: 'Profit / show', value: money(v.shows > 0 ? profit / v.shows : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue per show', money(revPerShow)],
+          ['Total revenue', money(revenue)],
+          ['Total cost', money(cost)],
+          ['Profit', money(profit)],
+        ],
+        note: `Touring is now where music money is made — but production, crew, and travel costs per show are heavy. Merch and VIP packages (not modeled here) often carry the real margin on top of ticket sales.`,
+      }
+    },
+  },
+  {
+    id: 'film-roi-simulator', name: 'Film Box-Office ROI Simulator', category: 'Entertainment',
+    tagline: 'Did the movie actually make money?',
+    description: 'Model budget, marketing, box office, and the studio’s share to see film profit, ROI, and break-even box office.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'budget', label: 'Production budget', default: 20000000, prefix: '$' },
+      { key: 'marketing', label: 'Marketing spend', default: 15000000, prefix: '$' },
+      { key: 'boxOffice', label: 'Global box office', default: 80000000, prefix: '$' },
+      { key: 'studioShare', label: 'Studio share of gross', default: 50, suffix: '%' },
+    ],
+    compute: v => {
+      const studioRev = v.boxOffice * (v.studioShare / 100)
+      const totalCost = v.budget + v.marketing
+      const profit = studioRev - totalCost
+      const breakeven = v.studioShare > 0 ? totalCost / (v.studioShare / 100) : 0
+      return {
+        metrics: [
+          { label: 'Studio profit', value: money(profit), highlight: profit < 0 },
+          { label: 'ROI', value: pct(totalCost > 0 ? profit / totalCost : 0), highlight: true },
+          { label: 'Break-even box office', value: money(breakeven), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Studio revenue', money(studioRev)],
+          ['Production budget', money(v.budget)],
+          ['Marketing', money(v.marketing)],
+          ['Profit', money(profit)],
+        ],
+        note: `Studios keep only about half of box office (theaters take the rest), and marketing often rivals the budget — so a film needs to gross roughly ${money(breakeven)} just to break even here. Merchandising and streaming are where franchises really pay off.`,
+      }
+    },
+  },
+  {
+    id: 'staking-yield-simulator', name: 'Staking Yield Simulator', category: 'Money',
+    tagline: 'Project compounding yield on a staked balance.',
+    description: 'Model a balance earning a stated APY with monthly compounding to see the value and yield over time. Educational only — yields and principal can vary widely.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'amount', label: 'Staked amount', default: 10000, prefix: '$' },
+      { key: 'apy', label: 'APY', default: 6, suffix: '%' },
+      { key: 'months', label: 'Months', default: 24 },
+    ],
+    compute: v => {
+      const r = v.apy / 1200
+      const rows: string[][] = []
+      let bal = v.amount
+      const mo = Math.min(Math.max(v.months, 1), 120)
+      for (let m = 1; m <= mo; m++) {
+        bal = bal * (1 + r)
+        if (m % 6 === 0 || m === mo) rows.push([`Month ${m}`, money(bal), money(bal - v.amount)])
+      }
+      return {
+        metrics: [
+          { label: 'Ending value', value: money(bal), highlight: true },
+          { label: 'Total yield', value: money(bal - v.amount), highlight: true },
+          { label: 'Monthly income (end)', value: money(bal * r) },
+        ],
+        columns: ['Month', 'Value', 'Yield'],
+        rows,
+        note: `Compounding turns a steady APY into an accelerating balance. Remember this is mechanical math — real yields, token prices, and platform risk all vary. This is an educational tool, not investment advice.`,
+      }
+    },
+  },
+  {
+    id: 'mining-rig-simulator', name: 'Mining Rig Profit Simulator', category: 'Money',
+    tagline: 'Does the rig out-earn the power bill?',
+    description: 'Model mining revenue against electricity cost to see daily and monthly profit — and your break-even power rate. Highly variable with prices and difficulty.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'revPerDay', label: 'Gross revenue / day', default: 12, prefix: '$' },
+      { key: 'watts', label: 'Power draw (watts)', default: 3000 },
+      { key: 'rate', label: 'Electricity rate / kWh', default: 0.1, prefix: '$' },
+    ],
+    compute: v => {
+      const powerCost = (v.watts / 1000) * 24 * v.rate
+      const dailyProfit = v.revPerDay - powerCost
+      const breakeven = (v.watts / 1000) * 24 > 0 ? v.revPerDay / ((v.watts / 1000) * 24) : 0
+      return {
+        metrics: [
+          { label: 'Daily profit', value: money(dailyProfit), highlight: dailyProfit < 0 },
+          { label: 'Monthly profit', value: money(dailyProfit * 30), highlight: true },
+          { label: 'Break-even rate / kWh', value: `$${breakeven.toFixed(3)}` },
+        ],
+        columns: ['Line', 'Daily Amount'],
+        rows: [
+          ['Revenue', money(v.revPerDay)],
+          ['Power cost', money(powerCost)],
+          ['Profit', money(dailyProfit)],
+        ],
+        note: `Mining is a race against your power rate — above about $${breakeven.toFixed(3)}/kWh this rig loses money. Revenue also swings with coin price and network difficulty, so today's profit is not tomorrow's. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'fx-exposure-simulator', name: 'FX Exposure & Hedge Simulator', category: 'Finance',
+    tagline: 'How much a currency move costs you — hedged or not.',
+    description: 'Model foreign-currency exposure and a hedge ratio against an adverse rate move to see the P&L impact.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'exposure', label: 'Foreign exposure', default: 1000000, prefix: '$' },
+      { key: 'move', label: 'Adverse rate move', default: 5, suffix: '%' },
+      { key: 'hedge', label: 'Hedge ratio', default: 60, suffix: '%' },
+    ],
+    compute: v => {
+      const unhedged = v.exposure * (1 - v.hedge / 100)
+      const hedged = v.exposure * (v.hedge / 100)
+      const loss = unhedged * (v.move / 100)
+      const lossUnhedgedAll = v.exposure * (v.move / 100)
+      return {
+        metrics: [
+          { label: 'Loss (this hedge)', value: money(loss), highlight: true },
+          { label: 'Loss if unhedged', value: money(lossUnhedgedAll) },
+          { label: 'Protection', value: money(lossUnhedgedAll - loss), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Total exposure', money(v.exposure)],
+          ['Hedged portion', money(hedged)],
+          ['Unhedged portion', money(unhedged)],
+          ['P&L from the move', money(-loss)],
+        ],
+        note: `Hedging trades away upside for certainty — the ${v.hedge}% hedge cuts this loss to ${money(loss)}. The right ratio depends on how much currency risk your margins can absorb, not on predicting the rate.`,
+      }
+    },
+  },
+  {
+    id: 'import-landed-cost-simulator', name: 'Import Landed Cost Simulator', category: 'E-Commerce',
+    tagline: 'What imported goods really cost after duty and freight.',
+    description: 'Model unit cost, freight, duty, and fees to see the true landed cost and the margin it leaves at your sell price.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'unit', label: 'Unit cost (factory)', default: 8, prefix: '$' },
+      { key: 'freight', label: 'Freight / unit', default: 1.2, prefix: '$' },
+      { key: 'duty', label: 'Import duty', default: 12, suffix: '%' },
+      { key: 'fees', label: 'Other fees / unit', default: 0.5, prefix: '$' },
+      { key: 'price', label: 'Sell price', default: 30, prefix: '$' },
+    ],
+    compute: v => {
+      const landed = v.unit + v.freight + v.unit * (v.duty / 100) + v.fees
+      const profit = v.price - landed
+      return {
+        metrics: [
+          { label: 'Landed cost', value: money(landed), highlight: true },
+          { label: 'Profit / unit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(v.price > 0 ? profit / v.price : 0), highlight: true },
+        ],
+        columns: ['Component', 'Per Unit'],
+        rows: [
+          ['Factory cost', money(v.unit)],
+          ['Freight', money(v.freight)],
+          ['Duty', money(v.unit * (v.duty / 100))],
+          ['Other fees', money(v.fees)],
+          ['Landed cost', money(landed)],
+        ],
+        note: `A "cheap" factory price can arrive expensive once freight and duty stack on — this is the number to price and negotiate against. Tariff changes hit this line directly, so build in a buffer.`,
+      }
+    },
+  },
+  {
+    id: 'international-expansion-simulator', name: 'International Expansion Simulator', category: 'SaaS',
+    tagline: 'When does a new market pay back its cost?',
+    description: 'Model localization investment against ramping new-market revenue to find the payback month and net position.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cost', label: 'Localization / setup cost', default: 200000, prefix: '$' },
+      { key: 'newMRR', label: 'New MRR added / month (full)', default: 30000, prefix: '$' },
+      { key: 'ramp', label: 'Ramp to full (months)', default: 6 },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let running = 0, cum = 0, payback = 0
+      for (let m = 1; m <= 24; m++) {
+        running += v.newMRR * Math.min(m / v.ramp, 1)
+        cum += running
+        if (payback === 0 && cum >= v.cost) payback = m
+        if (m % 3 === 0) rows.push([`Month ${m}`, money(running), money(cum - v.cost)])
+      }
+      return {
+        metrics: [
+          { label: 'Payback month', value: payback ? `Month ${payback}` : '> 24mo', highlight: true },
+          { label: 'MRR (mo 24)', value: money(running), highlight: true },
+          { label: 'Net (mo 24)', value: money(cum - v.cost) },
+        ],
+        columns: ['Month', 'New-Market MRR', 'Cumulative Net'],
+        rows,
+        note: `New markets carry upfront localization, legal, and support cost before revenue ramps — this shows when they turn net-positive. Expand where the payback is clear; a long payback ties up cash you may need at home.`,
+      }
+    },
+    sells: 'saas-metrics-dashboard',
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
