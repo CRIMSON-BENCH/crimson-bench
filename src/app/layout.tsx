@@ -80,9 +80,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <p className="font-mono text-xs tracking-widest uppercase text-slate-400 mb-4">Resources</p>
                 <ul className="space-y-2">
                   {[
+                    ['Search','search'],
+                    ['Role Bundles','bundles'],
+                    ['Affiliate Program','affiliate'],
+                    ['Guarantee','guarantee'],
+                    ['What’s New','changelog'],
                     ['Blog','blog'],
                     ['Glossary','glossary'],
-                    ['Templates','templates'],
                     ['Compare','compare'],
                     ['Sitemap','sitemap.xml'],
                   ].map(([label,href]) => (
