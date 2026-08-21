@@ -5,6 +5,7 @@ import MegaSimRunner from '@/components/MegaSimRunner'
 import Breadcrumb from '@/components/Breadcrumb'
 import CTABlock from '@/components/CTABlock'
 import JsonLd from '@/components/JsonLd'
+import BuyButton from '@/components/BuyButton'
 import { faqSchema, breadcrumbSchema } from '@/lib/schema'
 
 export function generateStaticParams() {
@@ -28,7 +29,6 @@ export default async function CompanyModelPage({ params }: { params: Promise<{ s
   if (!sim) notFound()
 
   const related = MEGA_SIMS.filter(s => s.id !== sim.id).slice(0, 6)
-  const buyHref = '/contact'
 
   const faqs = [
     { q: `What is the ${sim.name}?`, a: `${sim.description}` },
@@ -63,7 +63,7 @@ export default async function CompanyModelPage({ params }: { params: Promise<{ s
           <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed mb-6">{sim.tagline}</p>
           <div className="flex items-center gap-4">
             <span className="font-mono text-3xl font-bold text-[#B01C24] tabular-nums">${sim.price}</span>
-            <a href={buyHref} className="btn-crimson py-3 px-6">Get This Model →</a>
+            <BuyButton type="company_model" itemId={sim.id} className="btn-crimson py-3 px-6">Get This Model →</BuyButton>
           </div>
         </div>
       </section>
@@ -149,7 +149,7 @@ export default async function CompanyModelPage({ params }: { params: Promise<{ s
                 <li className="flex gap-2"><span className="text-[#B01C24]">✓</span><span>Base / bull / bear scenarios</span></li>
                 <li className="flex gap-2"><span className="text-[#B01C24]">✓</span><span>Documented methodology</span></li>
               </ul>
-              <a href={buyHref} className="btn-crimson w-full text-center block mb-3">Get This Model →</a>
+              <BuyButton type="company_model" itemId={sim.id} className="btn-crimson w-full text-center block mb-3">Get This Model →</BuyButton>
               <p className="text-xs text-slate-400 text-center font-mono">One-time · instant download</p>
             </div>
 

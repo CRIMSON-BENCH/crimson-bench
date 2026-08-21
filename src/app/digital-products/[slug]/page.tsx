@@ -11,6 +11,7 @@ import {
 import Breadcrumb from '@/components/Breadcrumb'
 import CTABlock from '@/components/CTABlock'
 import JsonLd from '@/components/JsonLd'
+import BuyButton from '@/components/BuyButton'
 import { productSchema, faqSchema, breadcrumbSchema } from '@/lib/schema'
 
 export async function generateStaticParams() {
@@ -45,8 +46,6 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
   const parent = product.baseId ? getDigitalProductById(product.baseId) : null
 
   // Stripe Payment Link when wired; falls back to the contact page until then.
-  const buyHref = product.paymentLink || '/contact'
-  const buyExternal = Boolean(product.paymentLink)
 
   const productFaqs = [
     {
@@ -97,15 +96,15 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             {product.tagline}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <a
-              href={buyHref}
-              {...(buyExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            <BuyButton
+              type={product.isSubscription ? 'subscription_monthly' : 'toolkit'}
+              itemId={product.id}
               className="btn-crimson py-3 px-6"
             >
               {product.isSubscription
                 ? `Start Toolkit Pro — ${formatDigitalPrice(product)} →`
                 : `Buy & Download — ${formatDigitalPrice(product)} →`}
-            </a>
+            </BuyButton>
             <a href="/digital-products" className="btn-outline py-3 px-6">Browse All {DIGITAL_PRODUCTS.length}+ Products</a>
           </div>
         </div>
@@ -256,13 +255,13 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
                 </li>
               ))}
             </ul>
-            <a
-              href={buyHref}
-              {...(buyExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            <BuyButton
+              type={product.isSubscription ? 'subscription_monthly' : 'toolkit'}
+              itemId={product.id}
               className="btn-crimson w-full text-center block mb-3"
             >
               {product.isSubscription ? 'Start Toolkit Pro →' : 'Buy & Download →'}
-            </a>
+            </BuyButton>
             <p className="text-xs text-slate-400 text-center font-mono">
               {product.isSubscription ? 'Cancel anytime · new files added continuously' : 'Instant download · Lifetime updates'}
             </p>
