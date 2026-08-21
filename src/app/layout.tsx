@@ -92,6 +92,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   {[
                     ['Terms of Service','legal/terms'],
                     ['Privacy Policy','legal/privacy'],
+                    ['Refund Policy','legal/refund'],
+                    ['Subscription Terms','legal/subscription-terms'],
+                    ['Product License','legal/license'],
+                    ['Acceptable Use','legal/acceptable-use'],
+                    ['Cookie Policy','legal/cookies'],
                     ['Disclaimer','legal/disclaimer'],
                   ].map(([label,href]) => (
                     <li key={href}><a href={`/${href}`} className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#B01C24] transition-colors">{label}</a></li>
