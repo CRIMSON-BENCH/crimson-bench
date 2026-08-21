@@ -3325,6 +3325,405 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'self-storage-simulator', name: 'Self-Storage Lease-Up Simulator', category: 'Real Estate',
+    tagline: 'Project occupancy, NOI, and value for a storage facility.',
+    description: 'Model a self-storage facility leasing up over a year to see stabilized revenue, NOI, and value at your cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 300 },
+      { key: 'occ', label: 'Starting occupancy', default: 70, suffix: '%' },
+      { key: 'ramp', label: 'Occupancy gain / mo (pts)', default: 2 },
+      { key: 'rent', label: 'Rent / unit / mo', default: 120, prefix: '$' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 35, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 6.5, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let occ = v.occ
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) occ = Math.min(92, occ + v.ramp)
+        if (m % 3 === 0) rows.push([`Month ${m}`, `${occ.toFixed(0)}%`, money(v.units * (occ / 100) * v.rent)])
+      }
+      const monthlyRev = v.units * (occ / 100) * v.rent
+      const noi = monthlyRev * 12 * (1 - v.expenseRatio / 100)
+      const value = noi / (v.capRate / 100)
+      return {
+        metrics: [
+          { label: 'Stabilized monthly rev', value: money(monthlyRev), highlight: true },
+          { label: 'Annual NOI', value: money(noi), highlight: true },
+          { label: 'Estimated value', value: money(value), highlight: true },
+        ],
+        columns: ['Month', 'Occupancy', 'Monthly Revenue'],
+        rows,
+        note: `Self-storage runs on low expenses and sticky tenants — once leased up, the NOI is remarkably stable. Value is NOI ÷ cap rate, so raising rents on existing tenants flows almost entirely to value.`,
+      }
+    },
+  },
+  {
+    id: 'airbnb-str-simulator', name: 'Short-Term Rental (Airbnb) Simulator', category: 'Real Estate',
+    tagline: 'Project the monthly profit of a short-term rental.',
+    description: 'Model nightly rate, occupancy, and costs to see the real monthly and annual profit of an STR after expenses and mortgage.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rate', label: 'Nightly rate', default: 180, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 65, suffix: '%' },
+      { key: 'expenses', label: 'Monthly operating expenses', default: 1500, prefix: '$' },
+      { key: 'mortgage', label: 'Monthly mortgage', default: 1400, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.rate * (v.occupancy / 100) * 30
+      const net = gross - v.expenses - v.mortgage
+      return {
+        metrics: [
+          { label: 'Net monthly', value: money(net), highlight: net < 0 },
+          { label: 'Net annual', value: money(net * 12), highlight: true },
+          { label: 'Revenue / avail. night', value: money(v.rate * (v.occupancy / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Gross monthly revenue', money(gross)],
+          ['Operating expenses', money(v.expenses)],
+          ['Mortgage', money(v.mortgage)],
+          ['Net profit', money(net)],
+        ],
+        note: `STR income swings with seasonality and occupancy far more than a long-term lease — model a conservative occupancy. And it's a hospitality business: cleaning, messaging, and reviews are real work, not passive income.`,
+      }
+    },
+  },
+  {
+    id: 'car-wash-simulator', name: 'Car Wash Profit Simulator', category: 'Small Business',
+    tagline: 'Project a car wash’s profit as volume grows.',
+    description: 'Model daily car count growth against per-car cost and fixed overhead to see monthly profit build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cars', label: 'Cars / day', default: 150 },
+      { key: 'price', label: 'Price per wash', default: 12, prefix: '$' },
+      { key: 'variable', label: 'Cost per car', default: 3, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed cost', default: 25000, prefix: '$' },
+      { key: 'growth', label: 'Volume growth / mo', default: 3, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let cars = v.cars
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) cars *= 1 + v.growth / 100
+        const profit = cars * (v.price - v.variable) * 30 - v.fixed
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(cars).toString(), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Profit (mo 12)', value: money(cars * (v.price - v.variable) * 30 - v.fixed), highlight: true },
+          { label: 'Annualized', value: money((cars * (v.price - v.variable) * 30 - v.fixed) * 12), highlight: true },
+          { label: 'Cars / day (mo 12)', value: Math.round(cars).toString() },
+        ],
+        columns: ['Month', 'Cars / Day', 'Monthly Profit'],
+        rows,
+        note: `Car washes are high-fixed-cost, low-variable-cost — so profit explodes once you clear break-even volume. Membership/unlimited plans smooth revenue and are the industry's big profit unlock.`,
+      }
+    },
+  },
+  {
+    id: 'laundromat-simulator', name: 'Laundromat Profit Simulator', category: 'Small Business',
+    tagline: 'Project a laundromat’s monthly profit.',
+    description: 'Model machines and cycle volume against utility and fixed costs to see monthly profit and revenue per machine.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'Machines', default: 30 },
+      { key: 'cycles', label: 'Cycles / machine / day', default: 4 },
+      { key: 'price', label: 'Price per cycle', default: 3.5, prefix: '$' },
+      { key: 'utility', label: 'Utility cost / cycle', default: 0.9, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed cost', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const monthlyCycles = v.machines * v.cycles * 30
+      const revenue = monthlyCycles * v.price
+      const utilities = monthlyCycles * v.utility
+      const profit = revenue - utilities - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / machine', value: money(v.machines > 0 ? revenue / v.machines : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Monthly cycles', Math.round(monthlyCycles).toLocaleString()],
+          ['Revenue', money(revenue)],
+          ['Utilities', money(utilities)],
+          ['Fixed costs', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Laundromats are beloved for being semi-passive and cash-flowing — but utility cost per cycle and vend price set the whole margin. Add-ons (wash-and-fold, vending) lift revenue per square foot meaningfully.`,
+      }
+    },
+  },
+  {
+    id: 'vending-machine-simulator', name: 'Vending Machine Business Simulator', category: 'Small Business',
+    tagline: 'Project profit across a route of machines.',
+    description: 'Model revenue per machine against product cost and servicing to see route-level profit and profit per machine.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'Machines', default: 20 },
+      { key: 'revPer', label: 'Revenue / machine / mo', default: 600, prefix: '$' },
+      { key: 'cogs', label: 'Product cost %', default: 55, suffix: '%' },
+      { key: 'servicing', label: 'Servicing / machine / mo', default: 40, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.machines * v.revPer
+      const cogs = revenue * (v.cogs / 100)
+      const servicing = v.machines * v.servicing
+      const profit = revenue - cogs - servicing
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Profit / machine', value: money(v.machines > 0 ? profit / v.machines : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Product cost', money(cogs)],
+          ['Servicing', money(servicing)],
+          ['Profit', money(profit)],
+        ],
+        note: `Vending scales by adding machines in good locations — profit per machine is small, so location quality and route density (less driving) make or break the economics.`,
+      }
+    },
+  },
+  {
+    id: 'food-truck-simulator', name: 'Food Truck Profit Simulator', category: 'Hospitality',
+    tagline: 'Project a food truck’s monthly profit.',
+    description: 'Model service days, covers, and ticket size against food, labor, and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'days', label: 'Service days / month', default: 22 },
+      { key: 'covers', label: 'Covers / day', default: 120 },
+      { key: 'ticket', label: 'Average ticket', default: 12, prefix: '$' },
+      { key: 'foodPct', label: 'Food cost %', default: 30, suffix: '%' },
+      { key: 'laborPerDay', label: 'Labor / day', default: 300, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 4000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.covers * v.ticket * v.days
+      const food = revenue * (v.foodPct / 100)
+      const labor = v.laborPerDay * v.days
+      const profit = revenue - food - labor - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / day', value: money(v.days > 0 ? profit / v.days : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Food cost', money(food)],
+          ['Labor', money(labor)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Food trucks trade a restaurant's rent for lower overhead — but covers per day swing wildly with location and weather. High-traffic spots and catering gigs are what turn a good day into a good month.`,
+      }
+    },
+  },
+  {
+    id: 'parking-lot-simulator', name: 'Parking Lot Simulator', category: 'Real Estate',
+    tagline: 'Project revenue and profit from a parking asset.',
+    description: 'Model spaces, daily rate, and occupancy against expenses to see monthly profit and revenue per space.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'spaces', label: 'Spaces', default: 200 },
+      { key: 'rate', label: 'Daily rate', default: 15, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 70, suffix: '%' },
+      { key: 'days', label: 'Paid days / month', default: 26 },
+      { key: 'expenses', label: 'Monthly expenses', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.spaces * (v.occupancy / 100) * v.rate * v.days
+      const profit = revenue - v.expenses
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / space', value: money(v.spaces > 0 ? revenue / v.spaces : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Expenses', money(v.expenses)],
+          ['Profit', money(profit)],
+        ],
+        note: `Parking is low-effort cash flow with minimal staffing — and pricing power in dense areas. Dynamic pricing (events, peak hours) and monthly contracts lift revenue per space without adding a single spot.`,
+      }
+    },
+  },
+  {
+    id: 'atm-business-simulator', name: 'ATM Business Simulator', category: 'Small Business',
+    tagline: 'Project profit from a fleet of ATMs.',
+    description: 'Model transactions and surcharge across machines against costs to see monthly profit and profit per machine.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'ATMs', default: 10 },
+      { key: 'tx', label: 'Transactions / machine / mo', default: 300 },
+      { key: 'surcharge', label: 'Surcharge', default: 3, prefix: '$' },
+      { key: 'cost', label: 'Cost / machine / mo', default: 60, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.machines * v.tx * v.surcharge
+      const cost = v.machines * v.cost
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: true },
+          { label: 'Profit / machine', value: money(v.machines > 0 ? profit / v.machines : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Surcharge revenue', money(revenue)],
+          ['Machine costs', money(cost)],
+          ['Profit', money(profit)],
+        ],
+        note: `ATM economics live or die on transactions per machine — location traffic is everything. The main working-capital constraint is the cash you must load into each machine, which ties up capital as you scale.`,
+      }
+    },
+  },
+  {
+    id: 'podcast-monetization-simulator', name: 'Podcast Monetization Simulator', category: 'Creator',
+    tagline: 'Project podcast revenue from ads and memberships.',
+    description: 'Model downloads, ad CPM, ad slots, and membership revenue to see total monthly podcast income.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'downloads', label: 'Downloads / episode', default: 20000 },
+      { key: 'episodes', label: 'Episodes / month', default: 4 },
+      { key: 'cpm', label: 'Ad CPM', default: 25, prefix: '$' },
+      { key: 'slots', label: 'Ad slots / episode', default: 3 },
+      { key: 'membership', label: 'Membership revenue / mo', default: 2000, prefix: '$' },
+    ],
+    compute: v => {
+      const ad = (v.downloads / 1000) * v.cpm * v.slots * v.episodes
+      const total = ad + v.membership
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(total), highlight: true },
+          { label: 'Ad revenue', value: money(ad) },
+          { label: 'Annualized', value: money(total * 12), highlight: true },
+        ],
+        columns: ['Source', 'Monthly Revenue'],
+        rows: [
+          ['Ad revenue', money(ad)],
+          ['Memberships', money(v.membership)],
+          ['Total', money(total)],
+        ],
+        note: `Ad revenue scales with downloads, but memberships and premium feeds monetize your true fans at far higher value per listener. The biggest shows layer ads, memberships, courses, and live events on the same audience.`,
+      }
+    },
+    sells: 'email-marketing-kit',
+  },
+  {
+    id: 'medspa-simulator', name: 'Med Spa Profit Simulator', category: 'Healthcare',
+    tagline: 'Project a med spa’s monthly profit.',
+    description: 'Model treatment volume and price against consumables, provider pay, and fixed costs to see profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'treatments', label: 'Treatments / month', default: 400 },
+      { key: 'price', label: 'Average price', default: 250, prefix: '$' },
+      { key: 'consumables', label: 'Consumable cost %', default: 20, suffix: '%' },
+      { key: 'providerPay', label: 'Provider pay %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.treatments * v.price
+      const cons = revenue * (v.consumables / 100)
+      const pay = revenue * (v.providerPay / 100)
+      const profit = revenue - cons - pay - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Consumables', money(cons)],
+          ['Provider pay', money(pay)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Med spas blend healthcare and retail margins — cash-pay, high-ticket, repeat treatments. Memberships and packages (prepaid series) smooth revenue and dramatically raise client lifetime value.`,
+      }
+    },
+  },
+  {
+    id: 'boutique-fitness-simulator', name: 'Boutique Fitness Studio Simulator', category: 'Fitness',
+    tagline: 'Project a class-based studio’s profit.',
+    description: 'Model class volume and attendance against instructor pay and rent to see a boutique studio’s monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'classes', label: 'Classes / week', default: 40 },
+      { key: 'attendees', label: 'Avg. attendees', default: 12 },
+      { key: 'price', label: 'Price per class', default: 22, prefix: '$' },
+      { key: 'instructorPay', label: 'Instructor pay / class', default: 40, prefix: '$' },
+      { key: 'rent', label: 'Monthly rent + fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const monthlyClasses = v.classes * 4.33
+      const revenue = monthlyClasses * v.attendees * v.price
+      const instructor = monthlyClasses * v.instructorPay
+      const profit = revenue - instructor - v.rent
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / class', value: money(v.attendees * v.price) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Instructor pay', money(instructor)],
+          ['Rent + fixed', money(v.rent)],
+          ['Profit', money(profit)],
+        ],
+        note: `Boutique fitness lives on class fill — a half-empty class costs the same instructor and rent as a full one. Memberships, class packs, and retail lift revenue per member above the drop-in rate.`,
+      }
+    },
+  },
+  {
+    id: 'coworking-simulator', name: 'Coworking Space Simulator', category: 'Real Estate',
+    tagline: 'Project a coworking space’s profit.',
+    description: 'Model desks, occupancy, and price against operating costs and rent to see monthly profit and revenue per desk.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'desks', label: 'Desks', default: 120 },
+      { key: 'occupancy', label: 'Occupancy', default: 80, suffix: '%' },
+      { key: 'price', label: 'Price / desk / mo', default: 350, prefix: '$' },
+      { key: 'opex', label: 'Opex / desk / mo', default: 120, prefix: '$' },
+      { key: 'rent', label: 'Monthly rent', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const occupied = v.desks * (v.occupancy / 100)
+      const revenue = occupied * v.price
+      const opex = occupied * v.opex + v.rent
+      const profit = revenue - opex
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / desk', value: money(v.desks > 0 ? revenue / v.desks : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Opex + rent', money(opex)],
+          ['Profit', money(profit)],
+        ],
+        note: `Coworking is a spread business — you lease space wholesale and sell it retail by the desk. The risk is the mismatch: long lease obligations against month-to-month members, which is exactly what bites in a downturn.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
