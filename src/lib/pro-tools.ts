@@ -8748,6 +8748,439 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'property-management-simulator', name: 'Property Management Company Simulator', category: 'Real Estate',
+    tagline: 'Project a per-door management business.',
+    description: 'Model units managed and management fees plus leasing income against staff cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units managed', default: 500 },
+      { key: 'rent', label: 'Avg rent / unit', default: 1500, prefix: '$' },
+      { key: 'fee', label: 'Management fee', default: 8, suffix: '%' },
+      { key: 'leasing', label: 'Leasing fees / month', default: 15000, prefix: '$' },
+      { key: 'staff', label: 'Staff cost / month', default: 40000, prefix: '$' },
+      { key: 'fixed', label: 'Other fixed / month', default: 10000, prefix: '$' },
+    ],
+    compute: v => {
+      const mgmt = v.units * v.rent * (v.fee / 100)
+      const revenue = mgmt + v.leasing
+      const profit = revenue - v.staff - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / door', value: money(v.units > 0 ? revenue / v.units : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Management fees', money(mgmt)], ['Leasing fees', money(v.leasing)], ['Staff', money(v.staff)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Property management is a per-door recurring business — steady fee revenue that scales and sells for a multiple of managed doors. Door count and staff efficiency (doors per employee) drive the margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'real-estate-brokerage-simulator', name: 'Real Estate Brokerage Simulator', category: 'Real Estate',
+    tagline: 'Project a brokerage’s profit from agent production.',
+    description: 'Model agents and transactions with a commission split to see gross commission income and brokerage profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'agents', label: 'Agents', default: 40 },
+      { key: 'transactions', label: 'Transactions / agent / yr', default: 8 },
+      { key: 'price', label: 'Average home price', default: 400000, prefix: '$' },
+      { key: 'commission', label: 'Commission %', default: 2.5, suffix: '%' },
+      { key: 'split', label: 'Brokerage split %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const gci = v.agents * v.transactions * v.price * (v.commission / 100)
+      const brokerageRev = gci * (v.split / 100)
+      const profit = brokerageRev - v.fixed * 12
+      return {
+        metrics: [
+          { label: 'Gross commission income', value: money(gci), highlight: true },
+          { label: 'Brokerage revenue', value: money(brokerageRev), highlight: true },
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['GCI', money(gci)], ['Brokerage split', money(brokerageRev)], ['Fixed (annual)', money(v.fixed * 12)], ['Profit', money(profit)]],
+        note: `Brokerages profit on the commission split × agent production — but the model is under pressure as top agents demand higher splits (or go flat-fee). Agent count, retention, and ancillary services (mortgage, title) matter. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'mortgage-brokerage-simulator', name: 'Mortgage Brokerage Simulator', category: 'Finance',
+    tagline: 'Project a mortgage broker’s profit.',
+    description: 'Model loan volume and commission (in basis points) against loan-officer cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'loans', label: 'Loans / month', default: 30 },
+      { key: 'avgLoan', label: 'Average loan', default: 350000, prefix: '$' },
+      { key: 'bps', label: 'Commission (bps)', default: 150 },
+      { key: 'loCost', label: 'LO cost / loan', default: 1500, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.loans * v.avgLoan * (v.bps / 10000)
+      const loCost = v.loans * v.loCost
+      const profit = revenue - loCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly revenue', value: money(revenue), highlight: true },
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue / loan', value: money(v.avgLoan * (v.bps / 10000)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['LO compensation', money(loCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Mortgage brokering is highly rate-cycle sensitive — volume booms in refi waves and dries up when rates rise. Purchase-focused referral relationships provide steadier flow than refi-dependent shops. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'title-company-simulator', name: 'Title Company Simulator', category: 'Real Estate',
+    tagline: 'Project a title & escrow business’s profit.',
+    description: 'Model closing volume and average fee against per-closing and fixed costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'closings', label: 'Closings / month', default: 200 },
+      { key: 'fee', label: 'Average fee', default: 900, prefix: '$' },
+      { key: 'variable', label: 'Cost / closing', default: 200, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.closings * v.fee
+      const variable = v.closings * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(variable)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Title runs on transaction volume (rate-cycle sensitive) with high fixed staff cost. Underwriter relationships and a strong referral network from agents and lenders drive the closings that carry the office. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'therapy-practice-simulator', name: 'Group Therapy Practice Simulator', category: 'Healthcare',
+    tagline: 'Project a group mental-health practice.',
+    description: 'Model therapists and session volume against a therapist pay split to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'therapists', label: 'Therapists', default: 8 },
+      { key: 'sessions', label: 'Sessions / therapist / week', default: 25 },
+      { key: 'rate', label: 'Rate / session', default: 120, prefix: '$' },
+      { key: 'pay', label: 'Therapist pay %', default: 60, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const sessions = v.therapists * v.sessions * 4.33
+      const revenue = sessions * v.rate
+      const therapistPay = revenue * (v.pay / 100)
+      const profit = revenue - therapistPay - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Margin / session', value: money(v.rate * (1 - v.pay / 100)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Therapist pay', money(therapistPay)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `The group model profits on the spread between what insurance/clients pay and the therapist's split, times filled caseloads. Billing, credentialing, and keeping therapists' schedules full are the operational levers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dermatology-practice-simulator', name: 'Dermatology Practice Simulator', category: 'Healthcare',
+    tagline: 'Where cosmetic margins carry the practice.',
+    description: 'Model insurance-based medical visits plus cash-pay cosmetic revenue to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Medical visits / day', default: 40 },
+      { key: 'reimbursement', label: 'Medical reimbursement / visit', default: 130, prefix: '$' },
+      { key: 'cosmetic', label: 'Cosmetic revenue / month', default: 100000, prefix: '$' },
+      { key: 'cosmeticMargin', label: 'Cosmetic margin', default: 60, suffix: '%' },
+      { key: 'providerCost', label: 'Provider cost % (medical)', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 80000, prefix: '$' },
+    ],
+    compute: v => {
+      const medicalRev = v.visits * v.reimbursement * 22
+      const medicalProfit = medicalRev * (1 - v.providerCost / 100)
+      const cosmeticProfit = v.cosmetic * (v.cosmeticMargin / 100)
+      const profit = medicalProfit + cosmeticProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Cosmetic profit', value: money(cosmeticProfit), highlight: true },
+          { label: 'Medical profit', value: money(medicalProfit) },
+        ],
+        columns: ['Source', 'Profit'],
+        rows: [['Medical', money(medicalProfit)], ['Cosmetic', money(cosmeticProfit)], ['Fixed', money(-v.fixed)], ['Profit', money(profit)]],
+        note: `Cash-pay cosmetic procedures (Botox, fillers, lasers) carry far higher margins than insurance-reimbursed medical derm — which is why the specialty is a private-equity favorite. The medical side drives referrals; cosmetic drives profit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'hotel-development-simulator', name: 'Hotel Development Pro Forma', category: 'Real Estate',
+    tagline: 'Does the hotel build pencil out?',
+    description: 'Model cost-per-key against ADR, occupancy, and an exit cap rate to see stabilized NOI, value, and development profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rooms', label: 'Rooms (keys)', default: 120 },
+      { key: 'costPerKey', label: 'Cost per key', default: 150000, prefix: '$' },
+      { key: 'adr', label: 'Average daily rate', default: 160, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 70, suffix: '%' },
+      { key: 'expenseRatio', label: 'Expense ratio', default: 60, suffix: '%' },
+      { key: 'exitCap', label: 'Exit cap rate', default: 8, suffix: '%' },
+    ],
+    compute: v => {
+      const devCost = v.rooms * v.costPerKey
+      const annualRevenue = v.rooms * v.adr * (v.occupancy / 100) * 365
+      const noi = annualRevenue * (1 - v.expenseRatio / 100)
+      const exitValue = noi / (v.exitCap / 100)
+      const profit = exitValue - devCost
+      return {
+        metrics: [
+          { label: 'Development cost', value: money(devCost) },
+          { label: 'Stabilized NOI', value: money(noi), highlight: true },
+          { label: 'Development profit', value: money(profit), highlight: profit < 0 },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Development cost', money(devCost)], ['Annual revenue', money(annualRevenue)], ['NOI', money(noi)], ['Exit value', money(exitValue)], ['Profit', money(profit)]],
+        note: `Hotels are the most operationally intense real estate — high expense ratios (labor, turnover) and daily-repriced "leases." RevPAR (ADR × occupancy) and brand/flag drive value; it's a business as much as an asset. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'house-hack-simulator', name: 'House Hack Simulator', category: 'Real Estate',
+    tagline: 'How much rent slashes your housing cost.',
+    description: 'Model buying a small multi-unit, living in one, and renting the rest to see your net housing cost.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'price', label: 'Purchase price', default: 500000, prefix: '$' },
+      { key: 'down', label: 'Down payment', default: 5, suffix: '%' },
+      { key: 'rate', label: 'Mortgage rate', default: 6.5, suffix: '%' },
+      { key: 'rent', label: 'Rent collected (other units)', default: 1800, prefix: '$' },
+      { key: 'other', label: 'Taxes/ins/maint / mo', default: 700, prefix: '$' },
+    ],
+    compute: v => {
+      const loan = v.price * (1 - v.down / 100)
+      const r = v.rate / 1200, n = 360
+      const pi = r === 0 ? loan / n : (loan * r) / (1 - Math.pow(1 + r, -n))
+      const totalCost = pi + v.other
+      const net = totalCost - v.rent
+      return {
+        metrics: [
+          { label: 'Net housing cost / mo', value: money(net), highlight: net < 0 },
+          { label: 'Monthly mortgage (P&I)', value: money(pi) },
+          { label: 'Rent offset', value: money(v.rent), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Mortgage (P&I)', money(pi)], ['Taxes/ins/maint', money(v.other)], ['Rent collected', money(-v.rent)], ['Net housing cost', money(net)]],
+        note: net < 0 ? `The rent more than covers your housing — you're being paid to live there while building equity. That's the house-hack dream and the fastest, lowest-money way into real estate.` : `Rent cuts your housing cost to about ${money(net)}/month — while a tenant helps pay down your mortgage and you build equity. A powerful head start. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'adu-rental-simulator', name: 'ADU Rental ROI Simulator', category: 'Real Estate',
+    tagline: 'The return on building a backyard rental.',
+    description: 'Model an accessory dwelling unit’s build cost against rent to see cash-on-cash return and payback.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'build', label: 'Build cost', default: 120000, prefix: '$' },
+      { key: 'rent', label: 'Monthly rent', default: 1800, prefix: '$' },
+      { key: 'expenses', label: 'Monthly expenses', default: 300, prefix: '$' },
+    ],
+    compute: v => {
+      const net = v.rent - v.expenses
+      const annualNet = net * 12
+      const roi = v.build > 0 ? annualNet / v.build : 0
+      const payback = annualNet > 0 ? v.build / annualNet : 0
+      return {
+        metrics: [
+          { label: 'Monthly net', value: money(net), highlight: true },
+          { label: 'Cash-on-cash ROI', value: pct(roi), highlight: true },
+          { label: 'Payback', value: `${payback.toFixed(1)} yr` },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Build cost', money(v.build)], ['Monthly net income', money(net)], ['Annual net', money(annualNet)]],
+        note: `An ADU adds rental income and property value on land you already own — often a strong cash-on-cash return. It also boosts resale value beyond the rent, and can house family. Check local rules before you build. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'seller-financing-note-simulator', name: 'Seller Financing Note Simulator', category: 'Finance',
+    tagline: 'The income stream of carrying a note.',
+    description: 'Model a seller-financed note to see the monthly payment you’d collect and total interest over the term.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'amount', label: 'Note amount', default: 200000, prefix: '$' },
+      { key: 'rate', label: 'Interest rate', default: 7, suffix: '%' },
+      { key: 'years', label: 'Term (years)', default: 15 },
+    ],
+    compute: v => {
+      const r = v.rate / 1200, n = v.years * 12
+      const pmt = r === 0 ? v.amount / n : (v.amount * r) / (1 - Math.pow(1 + r, -n))
+      const total = pmt * n
+      return {
+        metrics: [
+          { label: 'Monthly payment', value: money(pmt), highlight: true },
+          { label: 'Total interest', value: money(total - v.amount), highlight: true },
+          { label: 'Total collected', value: money(total) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Note amount', money(v.amount)], ['Monthly payment', money(pmt)], ['Total interest', money(total - v.amount)]],
+        note: `Carrying a note turns a sale into passive income — and often lets you command a higher price or defer tax via installment sale. The risk is buyer default; underwrite the buyer and keep a strong lien position. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'buy-sell-agreement-simulator', name: 'Buy-Sell Agreement Funding Simulator', category: 'Finance',
+    tagline: 'The insurance to fund a partner buyout.',
+    description: 'Model business value and partner count to size the life insurance a funded buy-sell agreement needs.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'value', label: 'Business value', default: 5000000, prefix: '$' },
+      { key: 'partners', label: 'Partners', default: 3 },
+      { key: 'existing', label: 'Existing coverage', default: 0, prefix: '$' },
+    ],
+    compute: v => {
+      const perShare = v.partners > 0 ? v.value / v.partners : 0
+      const totalNeeded = v.value * ((v.partners - 1) / v.partners) - v.existing
+      return {
+        metrics: [
+          { label: "Each partner's share", value: money(perShare), highlight: true },
+          { label: 'Coverage per partner', value: money(perShare), highlight: true },
+          { label: 'Total funding needed', value: money(Math.max(0, totalNeeded)) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Business value', money(v.value)], ['Per-partner share', money(perShare)], ['Total buyout funding', money(Math.max(0, totalNeeded))]],
+        note: `A funded buy-sell agreement guarantees a smooth, fairly-priced transition when a partner dies or exits — life insurance provides the cash so survivors aren't forced to sell or take on a deceased partner's family. Every partnership should have one. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'aquaculture-simulator', name: 'Fish Farm (Aquaculture) Simulator', category: 'Manufacturing',
+    tagline: 'Project a fish farming operation’s profit.',
+    description: 'Model fish count and grow cycles against feed cost and price per pound to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'fish', label: 'Fish per cycle', default: 50000 },
+      { key: 'weight', label: 'Harvest weight (lbs)', default: 1.5 },
+      { key: 'price', label: 'Price per lb', default: 4, prefix: '$' },
+      { key: 'feed', label: 'Feed cost / fish', default: 2, prefix: '$' },
+      { key: 'cycles', label: 'Cycles / year', default: 2 },
+      { key: 'fixed', label: 'Annual fixed', default: 80000, prefix: '$' },
+    ],
+    compute: v => {
+      const annualFish = v.fish * v.cycles
+      const revenue = annualFish * v.weight * v.price
+      const feed = annualFish * v.feed
+      const profit = revenue - feed - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Margin / fish', value: money(v.weight * v.price - v.feed) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Feed cost', money(feed)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Aquaculture runs on feed-conversion efficiency and survival rates — small improvements compound across huge fish counts. Recirculating systems raise control (and cost); disease and water quality are the operational risks. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'greenhouse-simulator', name: 'Greenhouse Simulator', category: 'Manufacturing',
+    tagline: 'Project a greenhouse operation’s profit.',
+    description: 'Model grow area and yield against energy and labor cost to see annual profit and per-sq-ft economics.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'sqft', label: 'Grow area (sq ft)', default: 30000 },
+      { key: 'yield', label: 'Yield / sq ft / year (lbs)', default: 25 },
+      { key: 'price', label: 'Price per lb', default: 3, prefix: '$' },
+      { key: 'energy', label: 'Energy cost / sq ft / year', default: 8, prefix: '$' },
+      { key: 'labor', label: 'Labor + fixed / month', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const annualYield = v.sqft * v.yield
+      const revenue = annualYield * v.price
+      const energy = v.sqft * v.energy
+      const profit = revenue - energy - v.labor * 12
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / sq ft', value: money(v.sqft > 0 ? profit / v.sqft : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Energy', money(energy)], ['Labor + fixed', money(v.labor * 12)], ['Profit', money(profit)]],
+        note: `Greenhouses extend the growing season and boost yield per square foot, but heating/cooling energy is the swing cost. High-value crops (tomatoes, peppers, cannabis where legal) and local premium pricing make the numbers work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'courier-delivery-simulator', name: 'Courier / Delivery Service Simulator', category: 'Transportation',
+    tagline: 'Project a last-mile delivery business.',
+    description: 'Model drivers and delivery volume against driver pay and fuel to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'drivers', label: 'Drivers', default: 10 },
+      { key: 'deliveries', label: 'Deliveries / driver / day', default: 30 },
+      { key: 'fee', label: 'Fee / delivery', default: 8, prefix: '$' },
+      { key: 'driverPay', label: 'Driver pay %', default: 60, suffix: '%' },
+      { key: 'fuel', label: 'Fuel / delivery', default: 1.5, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalDeliveries = v.drivers * v.deliveries * 26
+      const revenue = totalDeliveries * v.fee
+      const driverPay = revenue * (v.driverPay / 100)
+      const fuel = totalDeliveries * v.fuel
+      const profit = revenue - driverPay - fuel - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Margin / delivery', value: money(v.fee * (1 - v.driverPay / 100) - v.fuel) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Driver pay', money(driverPay)], ['Fuel', money(fuel)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Last-mile is thin-margin and volume-driven — route density and deliveries per hour are everything. Recurring B2B contracts (pharmacy, parts, food distribution) beat gig-style one-offs for stability. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'limo-black-car-simulator', name: 'Limo / Black Car Simulator', category: 'Transportation',
+    tagline: 'Project a livery service’s profit.',
+    description: 'Model vehicles and trip volume against driver pay and vehicle cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'vehicles', label: 'Vehicles', default: 5 },
+      { key: 'trips', label: 'Trips / vehicle / day', default: 6 },
+      { key: 'fare', label: 'Average fare', default: 90, prefix: '$' },
+      { key: 'driverPay', label: 'Driver pay %', default: 40, suffix: '%' },
+      { key: 'vehicleCost', label: 'Fuel + maintenance / trip', default: 15, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const totalTrips = v.vehicles * v.trips * 26
+      const revenue = totalTrips * v.fare
+      const driverPay = revenue * (v.driverPay / 100)
+      const vehicleCost = totalTrips * v.vehicleCost
+      const profit = revenue - driverPay - vehicleCost - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Margin / trip', value: money(v.fare * (1 - v.driverPay / 100) - v.vehicleCost) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Driver pay', money(driverPay)], ['Fuel + maintenance', money(vehicleCost)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Corporate accounts and airport runs provide steady, premium demand that beats competing with rideshare on price. Vehicle utilization and driver scheduling around peak hours drive the margin. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
