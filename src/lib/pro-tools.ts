@@ -5363,6 +5363,410 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'brewery-simulator', name: 'Brewery Profit Simulator', category: 'Manufacturing',
+    tagline: 'Project a brewery’s profit as volume grows.',
+    description: 'Model barrel volume against cost per barrel and fixed overhead to see monthly profit and margin build.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'barrels', label: 'Barrels / month', default: 200 },
+      { key: 'revenue', label: 'Revenue per barrel', default: 250, prefix: '$' },
+      { key: 'cogs', label: 'Cost per barrel', default: 90, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+      { key: 'growth', label: 'Volume growth / mo', default: 3, suffix: '%' },
+    ],
+    compute: v => {
+      const rows: string[][] = []
+      let barrels = v.barrels
+      for (let m = 1; m <= 12; m++) {
+        if (m > 1) barrels *= 1 + v.growth / 100
+        const profit = barrels * (v.revenue - v.cogs) - v.fixed
+        if (m % 2 === 0) rows.push([`Month ${m}`, Math.round(barrels).toString(), money(profit)])
+      }
+      return {
+        metrics: [
+          { label: 'Profit (mo 12)', value: money(barrels * (v.revenue - v.cogs) - v.fixed), highlight: true },
+          { label: 'Annualized', value: money((barrels * (v.revenue - v.cogs) - v.fixed) * 12), highlight: true },
+          { label: 'Barrels (mo 12)', value: Math.round(barrels).toString() },
+        ],
+        columns: ['Month', 'Barrels', 'Monthly Profit'],
+        rows,
+        note: `Taproom pints carry far higher margin per barrel than wholesale kegs — the sales mix drives profit as much as volume. Reaching the break-even barrel count is the whole early-stage game. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cannabis-dispensary-simulator', name: 'Cannabis Dispensary Simulator', category: 'Retail',
+    tagline: 'Project profit after the heavy taxes.',
+    description: 'Model transaction volume and basket size against margin, excise tax, and fixed costs to see a dispensary’s real profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'tx', label: 'Transactions / day', default: 300 },
+      { key: 'basket', label: 'Average basket', default: 65, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 50, suffix: '%' },
+      { key: 'excise', label: 'Excise / sales tax', default: 15, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.tx * v.basket * 30
+      const gross = revenue * (v.margin / 100)
+      const excise = revenue * (v.excise / 100)
+      const profit = gross - excise - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Tax burden', value: money(excise), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Gross profit', money(gross)],
+          ['Excise/sales tax', money(excise)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Cannabis retail carries brutal tax treatment — heavy excise taxes plus federal rules (280E) that block normal deductions can leave slim net margins on healthy revenue. Compliance and tax planning are survival skills here. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pharmacy-simulator', name: 'Independent Pharmacy Simulator', category: 'Healthcare',
+    tagline: 'Where a pharmacy actually makes its money.',
+    description: 'Model prescription volume and front-end retail to see how thin Rx margins are carried by OTC sales.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'scripts', label: 'Scripts / day', default: 250 },
+      { key: 'gpPerScript', label: 'Gross profit / script', default: 12, prefix: '$' },
+      { key: 'otc', label: 'OTC sales / month', default: 40000, prefix: '$' },
+      { key: 'otcMargin', label: 'OTC margin', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 55000, prefix: '$' },
+    ],
+    compute: v => {
+      const rxProfit = v.scripts * v.gpPerScript * 26
+      const otcProfit = v.otc * (v.otcMargin / 100)
+      const profit = rxProfit + otcProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Rx gross profit', value: money(rxProfit) },
+          { label: 'Front-end profit', value: money(otcProfit), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Rx gross profit', money(rxProfit)],
+          ['OTC/front-end profit', money(otcProfit)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Reimbursement pressure and DIR fees keep squeezing prescription margins — which is why the profitable independents lean on the front-end (OTC, supplements, services). Script volume brings people in; retail keeps the lights on. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'electrician-shop-simulator', name: 'Electrician Shop Simulator', category: 'Construction',
+    tagline: 'Project an electrical contractor’s monthly profit.',
+    description: 'Model job volume and ticket size against material and labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / week', default: 25 },
+      { key: 'ticket', label: 'Average ticket', default: 450, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 30, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * 4.33
+      const profit = revenue * (1 - (v.material + v.labor) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Material + labor', money(revenue * ((v.material + v.labor) / 100))],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Trade shops profit on the spread between billed rate and true labor+material cost — plus enough job volume to cover the truck, tools, and office. Service agreements and callbacks add recurring, higher-margin work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'roofing-company-simulator', name: 'Roofing Company Simulator', category: 'Construction',
+    tagline: 'Project a roofing contractor’s profit.',
+    description: 'Model job volume and average job value against material, labor, and overhead to see monthly profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 12 },
+      { key: 'avgJob', label: 'Average job value', default: 14000, prefix: '$' },
+      { key: 'material', label: 'Material %', default: 35, suffix: '%' },
+      { key: 'labor', label: 'Labor %', default: 30, suffix: '%' },
+      { key: 'overhead', label: 'Monthly overhead', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const gross = revenue * (1 - (v.material + v.labor) / 100)
+      const profit = gross - v.overhead
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Material + labor', money(revenue * ((v.material + v.labor) / 100))],
+          ['Overhead', money(v.overhead)],
+          ['Profit', money(profit)],
+        ],
+        note: `Roofing is high-ticket and demand-spiky (storms drive it). Accurate estimating and crew productivity protect the margin; underbidding a big job can wipe out a month. Insurance/storm work is where the volume swings. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pool-service-simulator', name: 'Pool Service Route Simulator', category: 'Home Services',
+    tagline: 'Project a recurring pool-service route’s profit.',
+    description: 'Model accounts and monthly fees against per-account cost and fixed overhead to see route profit and per-account margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'accounts', label: 'Accounts', default: 300 },
+      { key: 'fee', label: 'Monthly fee', default: 150, prefix: '$' },
+      { key: 'cost', label: 'Cost / account / mo', default: 55, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.accounts * v.fee
+      const variable = v.accounts * v.cost
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / account', value: money(v.accounts > 0 ? profit / v.accounts : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Service cost', money(variable)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Recurring route businesses are prized for predictable revenue and easy resale value — buyers pay a multiple of the monthly recurring. Route density (accounts close together) cuts drive time and lifts profit per account. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'moving-company-simulator', name: 'Moving Company Simulator', category: 'Logistics',
+    tagline: 'Project a moving company’s monthly profit.',
+    description: 'Model job volume and average revenue against labor and truck costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 60 },
+      { key: 'revenue', label: 'Average job revenue', default: 1200, prefix: '$' },
+      { key: 'labor', label: 'Labor %', default: 35, suffix: '%' },
+      { key: 'truck', label: 'Truck + fuel %', default: 12, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const rev = v.jobs * v.revenue
+      const profit = rev * (1 - (v.labor + v.truck) / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Profit / job', value: money(v.jobs > 0 ? profit / v.jobs : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(rev)],
+          ['Labor + truck', money(rev * ((v.labor + v.truck) / 100))],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Moving is seasonal and labor-heavy — summer carries the year. Long-distance jobs and packing/supply add-ons lift the average ticket and margin above local hourly moves. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'equipment-rental-simulator', name: 'Equipment Rental Simulator', category: 'Small Business',
+    tagline: 'Project return on a rental fleet.',
+    description: 'Model utilization and daily rate against maintenance to see monthly profit and return on the fleet investment.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'units', label: 'Units', default: 20 },
+      { key: 'rate', label: 'Daily rate', default: 120, prefix: '$' },
+      { key: 'utilization', label: 'Utilization', default: 40, suffix: '%' },
+      { key: 'maintenance', label: 'Maintenance / unit / mo', default: 150, prefix: '$' },
+      { key: 'unitCost', label: 'Cost per unit', default: 8000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.units * v.rate * (v.utilization / 100) * 30
+      const maint = v.units * v.maintenance
+      const profit = revenue - maint - v.fixed
+      const fleetCost = v.units * v.unitCost
+      const roi = fleetCost > 0 ? (profit * 12) / fleetCost : 0
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annual ROI on fleet', value: pct(roi), highlight: true },
+          { label: 'Revenue / unit', value: money(v.units > 0 ? revenue / v.units : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Maintenance', money(maint)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Utilization is the whole game — a unit sitting in the yard earns nothing but still depreciates. High-utilization, high-demand equipment pays back fast; the wrong mix ties up capital in idle iron. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'escape-room-simulator', name: 'Escape Room Simulator', category: 'Entertainment',
+    tagline: 'Project an escape-room venue’s profit.',
+    description: 'Model rooms and session volume against per-session cost and fixed overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'rooms', label: 'Rooms', default: 4 },
+      { key: 'sessions', label: 'Sessions / room / day', default: 6 },
+      { key: 'groupSize', label: 'Avg. group size', default: 4 },
+      { key: 'price', label: 'Price per person', default: 32, prefix: '$' },
+      { key: 'variable', label: 'Variable cost / session', default: 15, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 14000, prefix: '$' },
+    ],
+    compute: v => {
+      const sessions = v.rooms * v.sessions * 26
+      const revenue = sessions * v.groupSize * v.price
+      const variable = sessions * v.variable
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue / room', value: money(v.rooms > 0 ? revenue / v.rooms : 0) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Variable cost', money(variable)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Escape rooms are high-fixed-cost, low-variable — once built, each additional booking is nearly pure profit, but rooms go stale and need refreshing. Booking utilization (especially weekends) drives the whole model. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'movie-theater-simulator', name: 'Movie Theater Simulator', category: 'Entertainment',
+    tagline: 'Why theaters live on popcorn, not tickets.',
+    description: 'Model attendance across screens with tickets (studio takes half) and concessions to see where the profit really comes from.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'screens', label: 'Screens', default: 8 },
+      { key: 'seats', label: 'Seats / screen', default: 150 },
+      { key: 'showings', label: 'Showings / day', default: 4 },
+      { key: 'occupancy', label: 'Occupancy', default: 30, suffix: '%' },
+      { key: 'ticket', label: 'Ticket price', default: 12, prefix: '$' },
+      { key: 'concession', label: 'Concession / guest', default: 8, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 90000, prefix: '$' },
+    ],
+    compute: v => {
+      const guests = v.screens * v.seats * v.showings * (v.occupancy / 100) * 30
+      const ticketRev = guests * v.ticket
+      const concessionRev = guests * v.concession
+      const profit = ticketRev * 0.5 + concessionRev - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Concession revenue', value: money(concessionRev), highlight: true },
+          { label: 'Guests / month', value: Math.round(guests).toLocaleString() },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Ticket revenue', money(ticketRev)],
+          ['Studio share (~50%)', money(-(ticketRev * 0.5))],
+          ['Concession revenue', money(concessionRev)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Studios take roughly half of ticket sales — sometimes more on opening weekends — so concessions, with their ~85% margin, are where theaters actually profit. Attendance drives concessions, which drives the whole P&L. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pet-boarding-simulator', name: 'Pet Boarding & Daycare Simulator', category: 'Pet',
+    tagline: 'Project a boarding facility’s profit.',
+    description: 'Model capacity and occupancy against per-pet cost and fixed overhead to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'capacity', label: 'Capacity (pets)', default: 40 },
+      { key: 'occupancy', label: 'Occupancy', default: 65, suffix: '%' },
+      { key: 'rate', label: 'Daily rate', default: 45, prefix: '$' },
+      { key: 'cost', label: 'Cost / pet / day', default: 12, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+    ],
+    compute: v => {
+      const petDays = v.capacity * (v.occupancy / 100) * 30
+      const revenue = petDays * v.rate
+      const variable = petDays * v.cost
+      const profit = revenue - variable - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+          { label: 'Revenue', value: money(revenue) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Care cost', money(variable)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Occupancy is everything — holidays and summer fill you up, slow weeks bleed. Add-ons (grooming, training, daycare) raise revenue per pet and smooth the seasonal swings. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'recording-studio-simulator', name: 'Recording Studio Simulator', category: 'Creator',
+    tagline: 'Project a studio’s monthly profit.',
+    description: 'Model booked hours and rate against engineer cost and fixed overhead to see monthly profit and margin.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'hours', label: 'Booked hours / month', default: 200 },
+      { key: 'rate', label: 'Hourly rate', default: 75, prefix: '$' },
+      { key: 'engineer', label: 'Engineer cost / hour', default: 30, prefix: '$' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.hours * v.rate
+      const engineer = v.hours * v.engineer
+      const profit = revenue - engineer - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Margin', value: pct(revenue > 0 ? profit / revenue : 0), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [
+          ['Revenue', money(revenue)],
+          ['Engineer cost', money(engineer)],
+          ['Fixed', money(v.fixed)],
+          ['Profit', money(profit)],
+        ],
+        note: `Studios profit on booked-hour utilization against high fixed rent and gear. Packages, mixing/mastering, and content creation (podcasts, video) fill the off-hours and lift revenue per available hour. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
