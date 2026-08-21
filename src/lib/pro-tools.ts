@@ -12061,6 +12061,410 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'car-wash-simulator', name: 'Car Wash Simulator', category: 'Real Assets',
+    tagline: 'Project an express/tunnel car wash.',
+    description: 'Model daily car volume and ticket against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cars', label: 'Cars / day', default: 250 },
+      { key: 'ticket', label: 'Average ticket', default: 15, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 35000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.cars * v.ticket * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Express washes are near-fixed-cost machines with tiny marginal cost per car — the profit engine is the unlimited monthly membership, which turns weather-dependent one-offs into recurring revenue. Throughput per hour and membership penetration are everything. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'laundromat-simulator', name: 'Laundromat Simulator', category: 'Real Assets',
+    tagline: 'Project a coin/card laundry’s profit.',
+    description: 'Model machine count and daily turns against utilities cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'Machines', default: 40 },
+      { key: 'turns', label: 'Turns / machine / day', default: 4 },
+      { key: 'price', label: 'Price per turn', default: 3.5, prefix: '$' },
+      { key: 'variable', label: 'Utilities + variable %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.machines * v.turns * v.price * 30
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Utilities + variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Laundromats are semi-absentee cash machines — no inventory, few employees, and demand that holds through recessions. Turns per machine per day is the key metric; wash-dry-fold service, vending, and card systems lift revenue per square foot. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'parking-lot-simulator', name: 'Parking Lot Simulator', category: 'Real Assets',
+    tagline: 'Project a surface parking operation.',
+    description: 'Model spaces and daily rate against occupancy and opex to see NOI and value at a cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'spaces', label: 'Spaces', default: 300 },
+      { key: 'dailyRate', label: 'Daily rate / space', default: 18, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 70, suffix: '%' },
+      { key: 'opex', label: 'Operating expense %', default: 25, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 7, suffix: '%' },
+    ],
+    compute: v => {
+      const grossMonthly = v.spaces * v.dailyRate * (v.occupancy / 100) * 30
+      const noiMonthly = grossMonthly * (1 - v.opex / 100)
+      const noiAnnual = noiMonthly * 12
+      const value = v.capRate > 0 ? noiAnnual / (v.capRate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Monthly NOI', value: money(noiMonthly), highlight: true },
+          { label: 'Annual NOI', value: money(noiAnnual) },
+          { label: 'Value at cap', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross monthly', money(grossMonthly)], ['Operating expenses', money(grossMonthly * (v.opex / 100))], ['Monthly NOI', money(noiMonthly)], ['Value at cap', money(value)]],
+        note: `Surface parking is a land-banking play with income — low opex, high margin, and optionality to redevelop later. Monthly contract parkers stabilize cash flow, while events and dynamic pricing capture the peaks. The dirt's future use often matters more than the parking income. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'vending-route-simulator', name: 'Vending Route Simulator', category: 'Real Assets',
+    tagline: 'Project a vending machine portfolio.',
+    description: 'Model machine count and per-machine revenue against COGS to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'machines', label: 'Machines', default: 60 },
+      { key: 'revenuePerMachine', label: 'Revenue / machine / mo', default: 350, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 50, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 4000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.machines * v.revenuePerMachine
+      const profit = revenue * (1 - v.cogs / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / machine', value: money(v.machines > 0 ? profit / v.machines : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS', money(revenue * (v.cogs / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Vending scales machine by machine — the whole game is location quality (foot traffic) and route density so restocking stays efficient. Locking in high-traffic accounts and upgrading to card readers (which lift spend per visit) drive per-machine profit. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'medical-courier-simulator', name: 'Medical Courier Simulator', category: 'Logistics',
+    tagline: 'Project a lab/specimen courier business.',
+    description: 'Model route count and per-route revenue against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'routes', label: 'Daily routes', default: 12 },
+      { key: 'revenuePerRoute', label: 'Revenue / route / day', default: 220, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 15000, prefix: '$' },
+      { key: 'days', label: 'Operating days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.routes * v.revenuePerRoute * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Medical courier work is contracted, recurring, and time-sensitive — labs, hospitals, and pharmacies need reliable daily pickups. STAT and after-hours runs command premiums; route density and driver reliability are what win and keep the contracts. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'auto-transport-simulator', name: 'Auto Transport Simulator', category: 'Logistics',
+    tagline: 'Project a car-hauling carrier business.',
+    description: 'Model monthly cars moved and revenue per car against operating cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cars', label: 'Cars / month', default: 300 },
+      { key: 'revenuePerCar', label: 'Revenue per car', default: 650, prefix: '$' },
+      { key: 'cost', label: 'Fuel + driver cost %', default: 65, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cars * v.revenuePerCar
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Fuel + driver', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Car hauling profits on load-per-mile and deadhead avoidance — a full 9-car trailer both ways is the goal. Dealer contracts and auction lanes provide steady volume over spot loads; fuel and insurance are the margin killers. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'moving-company-simulator', name: 'Moving Company Simulator', category: 'Logistics',
+    tagline: 'Project a residential moving business.',
+    description: 'Model job volume and value against labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 120 },
+      { key: 'avgJob', label: 'Average job', default: 900, prefix: '$' },
+      { key: 'labor', label: 'Labor + variable %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 25000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.labor / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Labor + variable', money(revenue * (v.labor / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Moving is seasonal (summer peak) and labor-heavy — crew productivity and jobs-per-truck-per-day drive margin. Packing services, supplies, and storage add high-margin lines; online reviews and repeat corporate relocation accounts fill the calendar. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'twitch-streamer-simulator', name: 'Live Streamer Simulator', category: 'Media',
+    tagline: 'Project a streamer’s monthly income.',
+    description: 'Model subscriptions, bits/donations, and sponsorships against costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subs', label: 'Subscribers', default: 2000 },
+      { key: 'netPerSub', label: 'Net per sub / mo', default: 3.5, prefix: '$' },
+      { key: 'bits', label: 'Bits + donations / mo', default: 4000, prefix: '$' },
+      { key: 'sponsor', label: 'Sponsor revenue / mo', default: 3000, prefix: '$' },
+      { key: 'fixed', label: 'Monthly costs', default: 1500, prefix: '$' },
+    ],
+    compute: v => {
+      const subRevenue = v.subs * v.netPerSub
+      const total = subRevenue + v.bits + v.sponsor
+      const profit = total - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Total revenue', value: money(total) },
+          { label: 'Sub revenue', value: money(subRevenue), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Subscriptions', money(subRevenue)], ['Bits + donations', money(v.bits)], ['Sponsorships', money(v.sponsor)], ['Costs', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Streaming income is a diversified stack — subs, bits, donations, sponsorships, and YouTube VOD each add a layer. Sub count and average viewership drive sponsor rates; consistency of schedule and community engagement compound the audience that everything else scales from. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'online-course-platform-simulator', name: 'Online Course Simulator', category: 'Media',
+    tagline: 'Project a digital course business.',
+    description: 'Model monthly enrollments and price against fees and refunds to see net monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'students', label: 'Enrollments / month', default: 400 },
+      { key: 'price', label: 'Course price', default: 200, prefix: '$' },
+      { key: 'fee', label: 'Platform + processing %', default: 8, suffix: '%' },
+      { key: 'refund', label: 'Refund rate', default: 5, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed (ads, ops)', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const gross = v.students * v.price * (1 - v.refund / 100)
+      const profit = gross * (1 - v.fee / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Net monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Net revenue', value: money(gross) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross (after refunds)', money(gross)], ['Platform + fees', money(gross * (v.fee / 100))], ['Fixed', money(v.fixed)], ['Net profit', money(profit)]],
+        note: `Courses are build-once, sell-forever digital products — near-100% marginal margin once produced. The real cost is customer acquisition; a strong free funnel (YouTube, email) plus order bumps and a high-ticket cohort/coaching tier drive profit per student. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'membership-community-simulator', name: 'Membership Community Simulator', category: 'Media',
+    tagline: 'Project a paid community’s recurring revenue.',
+    description: 'Model member count and monthly fee against a platform fee to see net monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'members', label: 'Members', default: 1500 },
+      { key: 'fee', label: 'Monthly fee', default: 40, prefix: '$' },
+      { key: 'platform', label: 'Platform + processing %', default: 10, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.members * v.fee
+      const profit = revenue * (1 - v.platform / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Net monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'MRR', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['MRR', money(revenue)], ['Platform + fees', money(revenue * (v.platform / 100))], ['Fixed', money(v.fixed)], ['Net profit', money(profit)]],
+        note: `Paid communities monetize belonging — recurring dues, high margin, and retention driven by the value members get from each other, not just you. Churn is the enemy; onboarding, events, and member wins keep the flywheel spinning. Annual plans smooth cash flow. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dog-daycare-simulator', name: 'Dog Daycare & Boarding Simulator', category: 'Pets',
+    tagline: 'Project a dog daycare / boarding facility.',
+    description: 'Model daily dog count and rate against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dogs', label: 'Dogs / day', default: 45 },
+      { key: 'rate', label: 'Daily rate', default: 35, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 18000, prefix: '$' },
+      { key: 'days', label: 'Open days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.dogs * v.rate * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Daycare fills the weekdays and overnight boarding fills the holidays and weekends — the combo smooths utilization. Add-ons (grooming, training, baths, webcams) and membership packages lift revenue per dog well above the base daily rate. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'horse-boarding-simulator', name: 'Horse Boarding Simulator', category: 'Pets',
+    tagline: 'Project an equestrian boarding facility.',
+    description: 'Model stall count and board rate against occupancy and cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stalls', label: 'Stalls', default: 40 },
+      { key: 'board', label: 'Monthly board / stall', default: 700, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 90, suffix: '%' },
+      { key: 'variable', label: 'Feed + variable %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 8000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.stalls * v.board * (v.occupancy / 100)
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Board revenue', money(revenue)], ['Feed + variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Boarding is the base, but lessons, training, arena rental, and clinics are where equestrian facilities actually make money — full-care board barely covers feed and labor. Land ownership and a strong trainer/program drive both occupancy and the ancillary income. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cattle-ranch-simulator', name: 'Cattle Ranch Simulator', category: 'Agriculture',
+    tagline: 'Project a cow-calf ranch’s annual profit.',
+    description: 'Model head sold and price against per-head and fixed costs to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'head', label: 'Head sold / year', default: 200 },
+      { key: 'price', label: 'Price per head', default: 1400, prefix: '$' },
+      { key: 'costPerHead', label: 'Cost per head', default: 900, prefix: '$' },
+      { key: 'fixed', label: 'Annual fixed cost', default: 60000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.head * v.price
+      const cost = v.head * v.costPerHead + v.fixed
+      const profit = revenue - cost
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / head', value: money(v.head > 0 ? profit / v.head : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Per-head cost', money(v.head * v.costPerHead)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Cow-calf margins are thin and cyclical — cattle prices, feed cost, and drought swing profitability year to year. Land appreciation and direct-to-consumer beef often matter more to total return than the commodity sale. Genetics and rotational grazing improve the per-head economics. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'vineyard-winery-simulator', name: 'Vineyard & Winery Simulator', category: 'Agriculture',
+    tagline: 'Project a boutique winery’s profit.',
+    description: 'Model case production and price against COGS to see annual profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cases', label: 'Cases / year', default: 8000 },
+      { key: 'price', label: 'Revenue per case', default: 150, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Annual fixed cost', default: 400000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cases * v.price
+      const profit = revenue * (1 - v.cogs / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Annual profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / case', value: money(v.cases > 0 ? profit / v.cases : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS', money(revenue * (v.cogs / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Wineries make their margin on the tasting room and wine club — direct-to-consumer bottles capture full retail versus a fraction through distributors. It's capital-intensive with long lead times (vines take years, wine ages), so brand, club membership, and agritourism carry the economics. Serve responsibly. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dermatology-practice-simulator', name: 'Dermatology Practice Simulator', category: 'Healthcare',
+    tagline: 'Project a dermatology clinic’s profit.',
+    description: 'Model daily patient volume and revenue per patient against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'patients', label: 'Patients / day', default: 40 },
+      { key: 'revenuePerPatient', label: 'Revenue / patient', default: 180, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 45000, prefix: '$' },
+      { key: 'days', label: 'Clinic days / month', default: 21 },
+    ],
+    compute: v => {
+      const revenue = v.patients * v.revenuePerPatient * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Dermatology blends insurance-based medical visits with high-margin cash cosmetic work (Botox, fillers, lasers) — the cosmetic and skin-cancer/Mohs lines carry the practice. Patient throughput, mid-level providers, and a cosmetic menu drive revenue per clinic day. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
