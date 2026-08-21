@@ -11657,6 +11657,410 @@ export const PRO_TOOLS: ProTool[] = [
       }
     },
   },
+
+  {
+    id: 'foundation-repair-simulator', name: 'Foundation Repair Simulator', category: 'Construction',
+    tagline: 'Project a foundation & waterproofing business.',
+    description: 'Model job volume and value against material/labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / month', default: 12 },
+      { key: 'avgJob', label: 'Average job', default: 8500, prefix: '$' },
+      { key: 'cost', label: 'Material + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 22000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Material + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Foundation repair is high-ticket, urgent, and low-competition — cracks and settling won't wait, and transferable warranties help close the sale. Financing offers and a strong inspection-to-quote process drive conversion. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'septic-service-simulator', name: 'Septic Service Simulator', category: 'Home Services',
+    tagline: 'Project a septic pumping & service business.',
+    description: 'Model daily jobs and price against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 8 },
+      { key: 'price', label: 'Average price', default: 350, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 30, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 12000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.price * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Septic pumping is recurring by nature — tanks need service every 3-5 years, so a route of maintenance customers is an annuity. Repairs, installs, and inspections at real-estate closings add high-ticket work on top of the base route. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'pressure-washing-simulator', name: 'Pressure Washing Simulator', category: 'Home Services',
+    tagline: 'Project a pressure/soft-wash business.',
+    description: 'Model daily jobs and price against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 5 },
+      { key: 'avgJob', label: 'Average job', default: 350, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 25, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 6000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.avgJob * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Pressure washing is low-startup, high-margin, and highly visible — before/after results sell themselves on social. Commercial contracts (storefronts, HOAs, fleets) and recurring house-wash plans turn one-off jobs into predictable revenue. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'chimney-sweep-simulator', name: 'Chimney Sweep Simulator', category: 'Home Services',
+    tagline: 'Project a chimney & fireplace business.',
+    description: 'Model daily jobs and ticket against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'jobs', label: 'Jobs / day', default: 6 },
+      { key: 'ticket', label: 'Average ticket', default: 250, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 20, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 7000, prefix: '$' },
+      { key: 'days', label: 'Working days / month', default: 26 },
+    ],
+    compute: v => {
+      const revenue = v.jobs * v.ticket * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Chimney work is seasonal (fall/winter peak) and safety-driven — inspections lead to lucrative repairs, relines, and cap installs. Booking summer maintenance and dryer-vent cleaning smooths the off-season. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'cheese-shop-simulator', name: 'Cheese Shop Simulator', category: 'Retail',
+    tagline: 'Project a specialty cheese & gourmet shop.',
+    description: 'Model daily sales and gross margin against fixed cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'dailySales', label: 'Daily sales', default: 1800, prefix: '$' },
+      { key: 'margin', label: 'Gross margin', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed (rent, labor)', default: 18000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.dailySales * 30
+      const grossProfit = revenue * (v.margin / 100)
+      const profit = grossProfit - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Gross profit', money(grossProfit)], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Specialty cheese carries strong margins but real spoilage risk — turns and a knowledgeable counter drive it. Catering boards, gift baskets, and paired accompaniments (charcuterie, wine, crackers) lift the average basket well above a single wedge. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'food-truck-fleet-simulator', name: 'Food Truck Fleet Simulator', category: 'Hospitality',
+    tagline: 'Project a multi-truck food operation.',
+    description: 'Model truck count and daily revenue against food + labor cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'trucks', label: 'Number of trucks', default: 4 },
+      { key: 'dailyRevenue', label: 'Daily revenue / truck', default: 1200, prefix: '$' },
+      { key: 'cost', label: 'Food + labor %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 20000, prefix: '$' },
+      { key: 'days', label: 'Service days / month', default: 24 },
+    ],
+    compute: v => {
+      const revenue = v.trucks * v.dailyRevenue * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Profit / truck', value: money(v.trucks > 0 ? profit / v.trucks : 0), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + labor', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A fleet turns one truck's economics into a brand — commissary sharing, catering contracts, and prime event/lunch spots drive per-truck revenue. Routing, permits, and staffing across trucks are the operational challenge that separates one profitable truck from a scalable business. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'ghost-kitchen-simulator', name: 'Ghost Kitchen Simulator', category: 'Hospitality',
+    tagline: 'Project a delivery-only virtual kitchen.',
+    description: 'Model daily orders and ticket against food + delivery cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'orders', label: 'Orders / day', default: 120 },
+      { key: 'ticket', label: 'Average ticket', default: 22, prefix: '$' },
+      { key: 'cost', label: 'Food + delivery/commission %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 14000, prefix: '$' },
+      { key: 'days', label: 'Service days / month', default: 30 },
+    ],
+    compute: v => {
+      const revenue = v.orders * v.ticket * v.days
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Food + delivery', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Ghost kitchens skip the dining room — low rent, no front-of-house — but delivery-app commissions (often 15-30%) eat the margin the storefront would keep. Running multiple virtual brands from one kitchen and driving direct orders are how operators claw margin back. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'brewery-taproom-simulator', name: 'Brewery Taproom Simulator', category: 'Hospitality',
+    tagline: 'Project a craft brewery’s monthly profit.',
+    description: 'Model barrel output and revenue per barrel against COGS to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'barrels', label: 'Barrels / month', default: 200 },
+      { key: 'revenuePerBarrel', label: 'Revenue per barrel', default: 900, prefix: '$' },
+      { key: 'cogs', label: 'COGS %', default: 35, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.barrels * v.revenuePerBarrel
+      const profit = revenue * (1 - v.cogs / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['COGS', money(revenue * (v.cogs / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `The taproom is a brewery's best channel — selling a pint on-premise captures far more per barrel than distributing kegs to bars or cans to stores. Blend on-premise margin with wholesale volume; events, merch, and a food program deepen the taproom draw. Serve responsibly. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'wound-care-clinic-simulator', name: 'Wound Care Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project a specialty wound care practice.',
+    description: 'Model daily visits and reimbursement against variable cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'visits', label: 'Visits / day', default: 30 },
+      { key: 'reimbursement', label: 'Avg reimbursement / visit', default: 220, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 40000, prefix: '$' },
+      { key: 'days', label: 'Clinic days / month', default: 22 },
+    ],
+    compute: v => {
+      const revenue = v.visits * v.reimbursement * v.days
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Chronic wound care rides an aging, diabetic population and repeat visits — patients return weekly for months. Advanced therapies (hyperbaric, skin substitutes) and hospital outpatient partnerships drive the higher-reimbursement work. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'fertility-clinic-simulator', name: 'Fertility Clinic Simulator', category: 'Healthcare',
+    tagline: 'Project an IVF / reproductive practice.',
+    description: 'Model monthly cycles and average fee against cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'cycles', label: 'Cycles / month', default: 40 },
+      { key: 'fee', label: 'Average cycle fee', default: 15000, prefix: '$' },
+      { key: 'cost', label: 'Variable cost %', default: 55, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 120000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.cycles * v.fee
+      const profit = revenue * (1 - v.cost / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.cost / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Fertility is one of the fastest-growing, largely cash-pay specialties — delayed parenthood and expanding employer IVF benefits fuel demand. High-cost lab and embryology infrastructure means volume and success rates drive both reputation and margin. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'dialysis-center-simulator', name: 'Dialysis Center Simulator', category: 'Healthcare',
+    tagline: 'Project a dialysis clinic’s economics.',
+    description: 'Model station count and treatment volume against reimbursement and cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'stations', label: 'Stations', default: 20 },
+      { key: 'treatments', label: 'Treatments / station / mo', default: 30 },
+      { key: 'reimbursement', label: 'Reimbursement / treatment', default: 250, prefix: '$' },
+      { key: 'variable', label: 'Variable cost %', default: 45, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 130000, prefix: '$' },
+    ],
+    compute: v => {
+      const revenue = v.stations * v.treatments * v.reimbursement
+      const profit = revenue * (1 - v.variable / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Revenue', value: money(revenue) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Revenue', money(revenue)], ['Variable', money(revenue * (v.variable / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `Dialysis is recurring, non-discretionary care — patients treat three times a week indefinitely, so station utilization is remarkably stable. Payer mix (commercial vs. Medicare) is the swing factor on margin; nursing labor and consumables are the main variable cost. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'newsletter-substack-simulator', name: 'Paid Newsletter Simulator', category: 'Media',
+    tagline: 'Project a subscription newsletter.',
+    description: 'Model list size and paid conversion against a platform fee to see net monthly revenue.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'subscribers', label: 'Total subscribers', default: 50000 },
+      { key: 'conversion', label: 'Paid conversion', default: 5, suffix: '%' },
+      { key: 'price', label: 'Monthly price', default: 8, prefix: '$' },
+      { key: 'fee', label: 'Platform + processing fee', default: 13, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 3000, prefix: '$' },
+    ],
+    compute: v => {
+      const paidSubs = v.subscribers * (v.conversion / 100)
+      const revenue = paidSubs * v.price
+      const profit = revenue * (1 - v.fee / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Net monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Paid subscribers', value: Math.round(paidSubs).toLocaleString('en-US'), highlight: true },
+          { label: 'Annualized', value: money(profit * 12) },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross revenue', money(revenue)], ['Platform + fees', money(revenue * (v.fee / 100))], ['Fixed', money(v.fixed)], ['Net profit', money(profit)]],
+        note: `Paid newsletters live or die on conversion — a small % of a large free list, times price, times retention. Annual plans and a premium tier lift lifetime value; the free list is the top of the funnel, so audience growth compounds everything below it. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'youtube-channel-simulator', name: 'YouTube Channel Simulator', category: 'Media',
+    tagline: 'Project ad + sponsor revenue for a channel.',
+    description: 'Model monthly views and RPM plus sponsorships against costs to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'views', label: 'Monthly views', default: 3000000 },
+      { key: 'rpm', label: 'Ad RPM (per 1,000 views)', default: 5, prefix: '$' },
+      { key: 'sponsor', label: 'Sponsor revenue / month', default: 8000, prefix: '$' },
+      { key: 'fixed', label: 'Production cost / month', default: 6000, prefix: '$' },
+    ],
+    compute: v => {
+      const adRevenue = (v.views / 1000) * v.rpm
+      const total = adRevenue + v.sponsor
+      const profit = total - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Total revenue', value: money(total) },
+          { label: 'Ad revenue', value: money(adRevenue), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Ad revenue', money(adRevenue)], ['Sponsorships', money(v.sponsor)], ['Production cost', money(v.fixed)], ['Profit', money(profit)]],
+        note: `AdSense is the floor, not the ceiling — sponsorships, memberships, merch, and affiliate income usually dwarf ad revenue for established channels. RPM swings hard by niche (finance and B2B pay multiples of entertainment). Consistency and back-catalog views compound. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'billboard-outdoor-media-simulator', name: 'Billboard / Outdoor Media Simulator', category: 'Real Assets',
+    tagline: 'Project an out-of-home advertising portfolio.',
+    description: 'Model board count and rates against occupancy and opex to see NOI and value at a cap rate.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'boards', label: 'Billboard faces', default: 40 },
+      { key: 'rate', label: 'Monthly rate / face', default: 1500, prefix: '$' },
+      { key: 'occupancy', label: 'Occupancy', default: 85, suffix: '%' },
+      { key: 'opex', label: 'Operating expense %', default: 30, suffix: '%' },
+      { key: 'capRate', label: 'Cap rate', default: 8, suffix: '%' },
+    ],
+    compute: v => {
+      const grossMonthly = v.boards * v.rate * (v.occupancy / 100)
+      const noiMonthly = grossMonthly * (1 - v.opex / 100)
+      const noiAnnual = noiMonthly * 12
+      const value = v.capRate > 0 ? noiAnnual / (v.capRate / 100) : 0
+      return {
+        metrics: [
+          { label: 'Monthly NOI', value: money(noiMonthly), highlight: true },
+          { label: 'Annual NOI', value: money(noiAnnual) },
+          { label: 'Value at cap', value: money(value), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross monthly', money(grossMonthly)], ['Operating expenses', money(grossMonthly * (v.opex / 100))], ['Monthly NOI', money(noiMonthly)], ['Value at cap', money(value)]],
+        note: `Outdoor media is a real-asset annuity — permitted billboard locations are scarce and grandfathered, so supply is effectively capped. Ground leases and low opex mean high-margin, inflation-linked cash flow; digital conversion multiplies faces sold per structure. Educational only.`,
+      }
+    },
+  },
+  {
+    id: 'freight-brokerage-simulator', name: 'Freight Brokerage Simulator', category: 'Logistics',
+    tagline: 'Project a truckload freight brokerage.',
+    description: 'Model monthly loads and margin per load against operating cost to see monthly profit.',
+    price: 'Toolkit Pro',
+    inputs: [
+      { key: 'loads', label: 'Loads / month', default: 600 },
+      { key: 'margin', label: 'Gross margin / load', default: 250, prefix: '$' },
+      { key: 'ops', label: 'Operating cost %', default: 40, suffix: '%' },
+      { key: 'fixed', label: 'Monthly fixed', default: 30000, prefix: '$' },
+    ],
+    compute: v => {
+      const grossMargin = v.loads * v.margin
+      const profit = grossMargin * (1 - v.ops / 100) - v.fixed
+      return {
+        metrics: [
+          { label: 'Monthly profit', value: money(profit), highlight: profit < 0 },
+          { label: 'Gross margin', value: money(grossMargin) },
+          { label: 'Annualized', value: money(profit * 12), highlight: true },
+        ],
+        columns: ['Line', 'Amount'],
+        rows: [['Gross margin', money(grossMargin)], ['Operating cost', money(grossMargin * (v.ops / 100))], ['Fixed', money(v.fixed)], ['Profit', money(profit)]],
+        note: `A brokerage is a spread business — you sell the shipper a rate, pay the carrier less, and keep the margin per load with no trucks to own. Volume, carrier network, and a TMS to move loads efficiently are the levers; margin per load compresses when capacity is loose. Educational only.`,
+      }
+    },
+  },
 ]
 
 export function getProToolById(id: string): ProTool | undefined {
