@@ -15,7 +15,7 @@ export type CheckoutType =
  *  For one-time toolkits, pass name + amount (in cents) so it charges the exact price. */
 export async function startCheckout(
   type: CheckoutType,
-  opts: { itemId?: string; name?: string; amount?: number } = {}
+  opts: { itemId?: string; name?: string; amount?: number; items?: string[] } = {}
 ): Promise<void> {
   if (!CHECKOUT_ENDPOINT) { window.location.href = '/contact'; return }
   try {
@@ -28,6 +28,8 @@ export async function startCheckout(
         item_id: opts.itemId,
         name: opts.name,
         amount: opts.amount,
+        // For bundles: the member product ids the webhook should grant on purchase.
+        items: opts.items,
         return_origin: window.location.origin,
       }),
     })

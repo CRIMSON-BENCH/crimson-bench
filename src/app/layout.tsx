@@ -85,7 +85,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ul className="space-y-2">
                   {[
                     ['Search','search'],
-                    ['Role Bundles','bundles'],
+                    ['Bundles — Save 20%','bundles'],
+                    ['Ecosystem','ecosystem'],
                     ['Affiliate Program','affiliate'],
                     ['Guarantee','guarantee'],
                     ['What’s New','changelog'],

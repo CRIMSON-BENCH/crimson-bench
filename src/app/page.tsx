@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { ROLES } from '@/lib/roles'
 import { PRODUCTS, formatPrice } from '@/lib/pricing'
 import CTABlock from '@/components/CTABlock'
+import EmailCapture from '@/components/EmailCapture'
 import JsonLd from '@/components/JsonLd'
 import { orgSchema, faqSchema } from '@/lib/schema'
 
@@ -249,6 +250,12 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="py-20 px-6 bg-slate-50 dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
+        <div className="max-w-4xl mx-auto">
+          <EmailCapture source="homepage" />
         </div>
       </section>
 

@@ -7,6 +7,7 @@ export default function BuyButton({
   itemId,
   name,
   amount,
+  items,
   className,
   children,
 }: {
@@ -16,11 +17,13 @@ export default function BuyButton({
   name?: string
   /** For one-time toolkits: exact price in cents (so it charges the real price). */
   amount?: number
+  /** For bundles: member product ids to grant on purchase. */
+  items?: string[]
   className?: string
   children: React.ReactNode
 }) {
   return (
-    <button type="button" onClick={() => startCheckout(type, { itemId, name, amount })} className={className}>
+    <button type="button" onClick={() => startCheckout(type, { itemId, name, amount, items })} className={className}>
       {children}
     </button>
   )

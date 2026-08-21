@@ -12,6 +12,8 @@ import Breadcrumb from '@/components/Breadcrumb'
 import CTABlock from '@/components/CTABlock'
 import JsonLd from '@/components/JsonLd'
 import BuyButton from '@/components/BuyButton'
+import OperatorKit from '@/components/OperatorKit'
+import { bundleForProduct } from '@/lib/bundles'
 import { productSchema, faqSchema, breadcrumbSchema } from '@/lib/schema'
 
 export async function generateStaticParams() {
@@ -38,6 +40,9 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
     .filter(p => p.id !== product.id && !p.industry)
     .slice(0, 4)
   const vault = getDigitalProductById('the-crimson-bench-vault')
+  // Cross-sell: if this toolkit belongs to a priced bundle, offer "complete the system".
+  const bundle = bundleForProduct(product.id)
+  const money = (n: number) => `$${n.toLocaleString('en-US')}`
 
   // Industry editions: if this is a core product, list its variants; if a variant, list its siblings + parent.
   const editions = product.industry
@@ -109,6 +114,11 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             </BuyButton>
             <a href="/digital-products" className="btn-outline py-3 px-6">Browse All {DIGITAL_PRODUCTS.length}+ Products</a>
           </div>
+          {!product.isSubscription && (
+            <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-400 flex items-center gap-2">
+              <span>＋</span> Includes <strong className="font-semibold">The Operator&apos;s Kit</strong> free — cheat sheet, chart pack, checklist &amp; quick-start guide.
+            </p>
+          )}
         </div>
       </section>
 
@@ -162,6 +172,55 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
               ))}
             </ul>
           </div>
+
+          {/* Free bonus: The Operator's Kit (every toolkit) */}
+          {!product.isSubscription && <OperatorKit />}
+
+          {/* Complete the system: the priced bundle this toolkit belongs to */}
+          {bundle && (
+            <div className="border-2 border-[#B01C24]/40 bg-[#B01C24]/5 dark:bg-[#B01C24]/10 p-6">
+              <p className="font-mono text-xs tracking-widest uppercase text-[#B01C24] mb-2">
+                Complete the System · Save {bundle.discountPct}%
+              </p>
+              <h3 className="font-serif text-xl font-normal text-slate-900 dark:text-white mb-1">
+                Part of {bundle.name}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                Get this plus {bundle.members.length - 1} more {bundle.who.toLowerCase()} model
+                {bundle.members.length - 1 === 1 ? '' : 's'} together and save{' '}
+                <span className="font-semibold text-[#B01C24]">{money(bundle.savings)}</span> vs. buying separately.
+              </p>
+              <ul className="space-y-1 mb-4">
+                {bundle.members.map(m => (
+                  <li
+                    key={m.id}
+                    className={`text-sm flex items-center gap-2 ${
+                      m.id === product.id
+                        ? 'text-slate-900 dark:text-white font-medium'
+                        : 'text-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    <span className="text-[#B01C24]">{m.id === product.id ? '●' : '○'}</span>
+                    {m.shortName || m.name}
+                    {m.id === product.id && <span className="text-[10px] text-slate-400">(this one)</span>}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap items-center gap-3">
+                <BuyButton
+                  type="toolkit"
+                  name={`${bundle.name} (Bundle · ${bundle.members.length} toolkits)`}
+                  amount={bundle.bundlePrice * 100}
+                  items={bundle.memberIds}
+                  className="btn-crimson py-2 px-4 text-sm"
+                >
+                  Get the bundle — {money(bundle.bundlePrice)}
+                </BuyButton>
+                <span className="font-mono text-xs text-slate-400 line-through">{money(bundle.listPrice)}</span>
+                <a href="/bundles" className="text-xs text-[#B01C24] hover:underline">See all bundles →</a>
+              </div>
+            </div>
+          )}
 
           {/* Cross-promo: matching simulators */}
           {product.pairsWith && product.pairsWith.length > 0 && (
