@@ -99,6 +99,8 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             <BuyButton
               type={product.isSubscription ? 'subscription_monthly' : 'toolkit'}
               itemId={product.id}
+              name={product.name}
+              amount={product.price * 100}
               className="btn-crimson py-3 px-6"
             >
               {product.isSubscription
@@ -258,6 +260,8 @@ export default async function DigitalProductPage({ params }: { params: Promise<{
             <BuyButton
               type={product.isSubscription ? 'subscription_monthly' : 'toolkit'}
               itemId={product.id}
+              name={product.name}
+              amount={product.price * 100}
               className="btn-crimson w-full text-center block mb-3"
             >
               {product.isSubscription ? 'Start Toolkit Pro →' : 'Buy & Download →'}
